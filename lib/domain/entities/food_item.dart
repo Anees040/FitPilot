@@ -36,8 +36,15 @@ class FoodItem extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [id, name, nameUr, portionLabel, grams, kcalPerPortion, isVerified];
+  List<Object?> get props => [
+    id,
+    name,
+    nameUr,
+    portionLabel,
+    grams,
+    kcalPerPortion,
+    isVerified,
+  ];
 
   @override
   String toString() => 'FoodItem($id, $name)';
