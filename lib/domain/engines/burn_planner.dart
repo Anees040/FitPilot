@@ -47,8 +47,7 @@ class BurnPlanner {
 
       if (!isWalking && !equipmentSatisfied) continue;
 
-      final rawMinutes =
-          kcalOver * 200 / (activity.met * 3.5 * weightKg);
+      final rawMinutes = kcalOver * 200 / (activity.met * 3.5 * weightKg);
 
       // Round UP to next multiple of 5, minimum 5.
       var minutes = (rawMinutes / 5).ceil() * 5;
@@ -60,18 +59,30 @@ class BurnPlanner {
         steps = ((minutes * 100) / 500).round() * 500;
       }
 
-      options.add(BurnOption(
-        activity: activity.name,
-        minutes: minutes,
-        kcal: kcalOver,
-        steps: steps,
-      ));
+      options.add(
+        BurnOption(
+          activity: activity.name,
+          minutes: minutes,
+          kcal: kcalOver,
+          steps: steps,
+        ),
+      );
     }
 
-    // Sort by minutes ascending.
-    options.sort((a, b) => a.minutes.compareTo(b.minutes));
-
-    // Return at most 4.
-    return options.length > 4 ? options.sublist(0, 4) : options;
+    if (options.length > 4) {
+      final walkingOption = options.firstWhere(
+        (o) => o.activity == 'Walking (brisk)',
+      );
+      final nonWalkingOptions = options
+          .where((o) => o.activity != 'Walking (brisk)')
+          .toList();
+      nonWalkingOptions.sort((a, b) => a.minutes.compareTo(b.minutes));
+      final finalOptions = [...nonWalkingOptions.sublist(0, 3), walkingOption];
+      finalOptions.sort((a, b) => a.minutes.compareTo(b.minutes));
+      return finalOptions;
+    } else {
+      options.sort((a, b) => a.minutes.compareTo(b.minutes));
+      return options;
+    }
   }
 }
