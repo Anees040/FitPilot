@@ -123,17 +123,21 @@ class AppDatabase {
 
     // Indexes.
     batch.execute(
-        'CREATE INDEX idx_food_logs_logged_at ON food_logs (logged_at)');
+      'CREATE INDEX idx_food_logs_logged_at ON food_logs (logged_at)',
+    );
     batch.execute(
-        'CREATE INDEX idx_burn_completions_for_date ON burn_completions (for_date)');
-    batch.execute(
-        'CREATE INDEX idx_food_catalog_name ON food_catalog (name)');
+      'CREATE INDEX idx_burn_completions_for_date ON burn_completions (for_date)',
+    );
+    batch.execute('CREATE INDEX idx_food_catalog_name ON food_catalog (name)');
 
     await batch.commit(noResult: true);
   }
 
   static Future<void> _onUpgrade(
-      Database db, int oldVersion, int newVersion) async {
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     // Future migrations go here.
   }
 }
