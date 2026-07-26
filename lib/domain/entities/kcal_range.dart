@@ -25,7 +25,8 @@ class KcalRange extends Equatable {
   KcalRange.exact(int value) : this(value, value);
 
   /// Adds two ranges together (both ends).
-  KcalRange plus(KcalRange other) => KcalRange(min + other.min, max + other.max);
+  KcalRange plus(KcalRange other) =>
+      KcalRange(min + other.min, max + other.max);
 
   /// Scales both ends by [qty], rounding to nearest int.
   ///
