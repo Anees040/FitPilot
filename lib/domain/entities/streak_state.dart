@@ -18,8 +18,12 @@ class StreakState extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [phase, currentStreak, graceDeadline, kcalStillToBurn];
+  List<Object?> get props => [
+    phase,
+    currentStreak,
+    graceDeadline,
+    kcalStillToBurn,
+  ];
 
   @override
   String toString() =>
