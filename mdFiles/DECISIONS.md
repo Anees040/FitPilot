@@ -9,3 +9,4 @@ Format: `YYYY-MM-DD — decision — why`
 - 2026-07-26 — Light theme only, single accent #D9531E — design system frozen with mockups
 - 2026-07-26 — Milestone A is 100% offline (SQLite + bundled seed) — core UX must not depend on network
 - 2026-07-26 — Engines take `now` as parameter — deterministic unit tests
+- 2026-07-26 — Downgraded Riverpod to 2.5.1 — avoided unstable APIs in 3.0 migration
