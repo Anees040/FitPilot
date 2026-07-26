@@ -35,10 +35,15 @@ class DayStatus extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [total, burnedKcal, net, remainingKcal, state, allowanceKcal];
+  List<Object?> get props => [
+    total,
+    burnedKcal,
+    net,
+    remainingKcal,
+    state,
+    allowanceKcal,
+  ];
 
   @override
-  String toString() =>
-      'DayStatus($state, net=$net, remaining=$remainingKcal)';
+  String toString() => 'DayStatus($state, net=$net, remaining=$remainingKcal)';
 }
