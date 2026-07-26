@@ -46,11 +46,15 @@ class StreakEngine {
 
     // First check if yesterday was OVER and grace expired without clearing.
     if (yesterdayStatus != null && yesterdayStatus.state == DayState.over) {
-      final yesterdayDeadline = graceDeadlineFor(today.subtract(const Duration(days: 1)), graceHour);
-      final kcalStillToBurn = (yesterdayStatus.net.midpoint - yesterdayStatus.allowanceKcal)
-          .clamp(0, double.infinity)
-          .toInt();
-          
+      final yesterdayDeadline = graceDeadlineFor(
+        today.subtract(const Duration(days: 1)),
+        graceHour,
+      );
+      final kcalStillToBurn =
+          (yesterdayStatus.net.midpoint - yesterdayStatus.allowanceKcal)
+              .clamp(0, double.infinity)
+              .toInt();
+
       if (kcalStillToBurn > 0) {
         if (now.isAfter(yesterdayDeadline)) {
           // Grace expired without enough burn. BROKEN.
@@ -86,9 +90,10 @@ class StreakEngine {
 
     // Today is OVER — check grace window.
     final deadline = graceDeadlineFor(today, graceHour);
-    final kcalStillToBurn = (todayStatus.net.midpoint - todayStatus.allowanceKcal)
-        .clamp(0, double.infinity)
-        .toInt();
+    final kcalStillToBurn =
+        (todayStatus.net.midpoint - todayStatus.allowanceKcal)
+            .clamp(0, double.infinity)
+            .toInt();
 
     if (now.isAfter(deadline)) {
       // Grace expired.
@@ -150,10 +155,9 @@ class StreakEngine {
         count++;
       } else if (status.state == DayState.over) {
         // Over but has enough burn = cleared → counts.
-        final kcalStillToBurn =
-            (status.net.midpoint - status.allowanceKcal)
-                .clamp(0, double.infinity)
-                .toInt();
+        final kcalStillToBurn = (status.net.midpoint - status.allowanceKcal)
+            .clamp(0, double.infinity)
+            .toInt();
         if (kcalStillToBurn <= 0) {
           count++;
         } else {
