@@ -83,8 +83,9 @@ class LogScreen extends ConsumerWidget {
                   return ListView.separated(
                     itemCount: results.length + 1,
                     separatorBuilder: (context, index) {
-                      if (index == results.length)
+                      if (index == results.length) {
                         return const SizedBox.shrink();
+                      }
                       return const Divider(
                         height: 1,
                         color: AppTheme.hairline,

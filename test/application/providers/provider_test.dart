@@ -9,7 +9,6 @@ import 'package:fitpilot/data/local/seed_importer.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
-import 'package:fitpilot/domain/entities/food_item.dart';
 import 'package:uuid/uuid.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -150,8 +149,8 @@ void main() {
       container.read(foodSearchQueryProvider.notifier).state = 'samosa';
       final results = await container.read(foodSearchProvider.future);
 
-      expect(results?.isNotEmpty, true);
-      expect(results!.first.name.toLowerCase(), contains('samosa'));
+      expect(results.isNotEmpty, true);
+      expect(results.first.name.toLowerCase(), contains('samosa'));
     });
 
     test('search by Roman-Urdu alias', () async {
@@ -159,7 +158,7 @@ void main() {
       container.read(foodSearchQueryProvider.notifier).state = 'chai';
       final results = await container.read(foodSearchProvider.future);
 
-      expect(results?.isNotEmpty, true);
+      expect(results.isNotEmpty, true);
     });
 
     test('empty query returns recents', () async {
@@ -183,7 +182,7 @@ void main() {
       container.read(foodSearchQueryProvider.notifier).state = '';
       final results = await container.read(foodSearchProvider.future);
 
-      expect(results?.isNotEmpty, true);
+      expect(results.isNotEmpty, true);
       // Wait, 'apple-id' doesn't exist in catalog, but it should still return catalog items.
       // The test mainly asserts it returns something when empty.
     });
