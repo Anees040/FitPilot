@@ -11,30 +11,41 @@ void main() {
     });
 
     test('always includes walking, even with no equipment', () {
-      final options = planner.planFor(kcalOver: 200, weightKg: 70, equipment: []);
-      final walking = options.firstWhere((o) => o.activity == 'Walking (brisk)');
+      final options = planner.planFor(
+        kcalOver: 200,
+        weightKg: 70,
+        equipment: [],
+      );
+      final walking = options.firstWhere(
+        (o) => o.activity == 'Walking (brisk)',
+      );
       expect(walking, isNotNull);
       expect(walking.steps, isNotNull);
     });
 
     test('filters exercises by equipment', () {
-      final noEqOptions = planner.planFor(kcalOver: 300, weightKg: 70, equipment: []);
-      expect(
-        noEqOptions.any((o) => o.activity == 'Jump rope'),
-        isFalse,
+      final noEqOptions = planner.planFor(
+        kcalOver: 300,
+        weightKg: 70,
+        equipment: [],
       );
+      expect(noEqOptions.any((o) => o.activity == 'Jump rope'), isFalse);
 
-      final withRopeOptions =
-          planner.planFor(kcalOver: 300, weightKg: 70, equipment: ['rope']);
-      expect(
-        withRopeOptions.any((o) => o.activity == 'Jump rope'),
-        isTrue,
+      final withRopeOptions = planner.planFor(
+        kcalOver: 300,
+        weightKg: 70,
+        equipment: ['rope'],
       );
+      expect(withRopeOptions.any((o) => o.activity == 'Jump rope'), isTrue);
     });
 
     test('rounds minutes UP to next 5, minimum 5', () {
       // Small kcal surplus should clamp to 5 mins.
-      final options = planner.planFor(kcalOver: 10, weightKg: 70, equipment: []);
+      final options = planner.planFor(
+        kcalOver: 10,
+        weightKg: 70,
+        equipment: [],
+      );
       expect(options.every((o) => o.minutes == 5), isTrue);
 
       // walking: 3.5 MET
@@ -56,10 +67,7 @@ void main() {
       expect(options.length, lessThanOrEqualTo(4));
 
       for (int i = 0; i < options.length - 1; i++) {
-        expect(
-          options[i].minutes <= options[i + 1].minutes,
-          isTrue,
-        );
+        expect(options[i].minutes <= options[i + 1].minutes, isTrue);
       }
     });
 
@@ -77,5 +85,72 @@ void main() {
       expect(walking2.minutes, 20); // 80 / 4.2875 = 18.66 -> 20
       expect(walking2.steps, 2000);
     });
+
+    test(
+      'With equipment rope and cycle, walking is last with 70 mins/7000 steps',
+      () {
+        final options = planner.planFor(
+          kcalOver: 300,
+          weightKg: 70,
+          equipment: ['rope', 'cycle'],
+        );
+        expect(options.length, 4);
+
+        final lastOption = options.last;
+        expect(lastOption.activity, 'Walking (brisk)');
+        expect(lastOption.minutes, 70);
+        expect(lastOption.steps, 7000);
+      },
+    );
+
+    test(
+      'With extra/unknown equipment, still 4 options and walking is present',
+      () {
+        final options = planner.planFor(
+          kcalOver: 300,
+          weightKg: 70,
+          equipment: ['rope', 'cycle', 'pool', 'gym'],
+        );
+        expect(options.length, 4);
+        expect(options.any((o) => o.activity == 'Walking (brisk)'), isTrue);
+      },
+    );
+
+    test('With no equipment, walking is present and all are equipment-free', () {
+      final options = planner.planFor(
+        kcalOver: 300,
+        weightKg: 70,
+        equipment: [],
+      );
+      expect(options.any((o) => o.activity == 'Walking (brisk)'), isTrue);
+      // None of the returned options should require equipment (walking, running, burpees don't require equipment)
+      expect(options.any((o) => o.activity == 'Jump rope'), isFalse);
+      expect(options.any((o) => o.activity == 'Cycling'), isFalse);
+    });
+
+    test(
+      'Property-style test: walking is always present for all combinations of rope/cycle',
+      () {
+        final subsets = [
+          <String>[],
+          ['rope'],
+          ['cycle'],
+          ['rope', 'cycle'],
+        ];
+
+        for (final subset in subsets) {
+          final options = planner.planFor(
+            kcalOver: 300,
+            weightKg: 70,
+            equipment: subset,
+          );
+          expect(
+            options.any((o) => o.activity == 'Walking (brisk)'),
+            isTrue,
+            reason: 'Walking missing for equipment subset $subset',
+          );
+        }
+      },
+    );
   });
 }
