@@ -41,8 +41,17 @@ class Exercise extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [id, name, category, equipment, difficulty, muscles, steps, mistakes, met];
+  List<Object?> get props => [
+    id,
+    name,
+    category,
+    equipment,
+    difficulty,
+    muscles,
+    steps,
+    mistakes,
+    met,
+  ];
 
   @override
   String toString() => 'Exercise($id, $name, MET=$met)';
