@@ -25,11 +25,7 @@ class ExerciseRepository {
 
   /// Find an exercise by its id.
   Future<Exercise?> byId(String id) async {
-    final rows = await db.query(
-      'exercises',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final rows = await db.query('exercises', where: 'id = ?', whereArgs: [id]);
     if (rows.isEmpty) return null;
     return _rowToExercise(rows.first);
   }
@@ -38,8 +34,7 @@ class ExerciseRepository {
     return Exercise(
       id: row['id'] as String,
       name: row['name'] as String,
-      category:
-          ExerciseCategory.values.byName(row['category'] as String),
+      category: ExerciseCategory.values.byName(row['category'] as String),
       equipment: _decodeStringList(row['equipment'] as String),
       difficulty: row['difficulty'] as int,
       muscles: _decodeStringList(row['muscles'] as String),
