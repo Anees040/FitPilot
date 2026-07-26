@@ -129,14 +129,21 @@ void main() {
     });
 
     test(
-      'Property-style test: walking is always present for all combinations of rope/cycle',
+      'Property-style test: walking is always present for all combinations of equipment',
       () {
-        final subsets = [
-          <String>[],
-          ['rope'],
-          ['cycle'],
-          ['rope', 'cycle'],
-        ];
+        final equipmentTypes = ['rope', 'cycle', 'pool', 'gym'];
+        final subsets = <List<String>>[];
+        
+        // Generate all 16 subsets
+        for (int i = 0; i < (1 << equipmentTypes.length); i++) {
+          final subset = <String>[];
+          for (int j = 0; j < equipmentTypes.length; j++) {
+            if ((i & (1 << j)) != 0) {
+              subset.add(equipmentTypes[j]);
+            }
+          }
+          subsets.add(subset);
+        }
 
         for (final subset in subsets) {
           final options = planner.planFor(
@@ -148,6 +155,11 @@ void main() {
             options.any((o) => o.activity == 'Walking (brisk)'),
             isTrue,
             reason: 'Walking missing for equipment subset $subset',
+          );
+          expect(
+            options.last.activity,
+            'Walking (brisk)',
+            reason: 'Walking must appear last',
           );
         }
       },

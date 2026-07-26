@@ -21,6 +21,9 @@ class BurnPlanner {
     _Activity('Running', 9.8, null),
     _Activity('Cycling', 7.5, 'cycle'),
     _Activity('Burpees', 8.0, null),
+    _Activity('Stair climbing', 8.8, null),
+    _Activity('Swimming', 8.3, 'pool'),
+    _Activity('Weight training', 5.0, 'gym'),
   ];
 
   /// Generates up to 4 burn options for the given [kcalOver] surplus,

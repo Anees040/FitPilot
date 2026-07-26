@@ -7,6 +7,7 @@ import 'package:fitpilot/features/log/presentation/widgets/kcal_range_text.dart'
 import 'package:fitpilot/features/log/presentation/quantity_sheet.dart';
 import 'package:fitpilot/domain/entities/food_item.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
+import 'package:go_router/go_router.dart';
 
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
@@ -29,19 +30,36 @@ class TodayScreen extends ConsumerWidget {
             slivers: [
               SliverToBoxAdapter(child: _HeroSection(status: state.dayStatus)),
               if (state.dayStatus.state == DayState.over)
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
-                    ),
-                    child: Text(
-                      'Burn plan is coming in Milestone M8...',
-                      style: TextStyle(
-                        color: AppTheme.secondaryText,
-                        fontStyle: FontStyle.italic,
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: InkWell(
+                      onTap: () => context.go('/plan'),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.error.withValues(alpha: 0.1),
+                          border: Border.all(color: AppTheme.error),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded, color: AppTheme.error),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('You are over your limit', style: AppTheme.body.copyWith(fontWeight: FontWeight.bold, color: AppTheme.error)),
+                                  Text('Tap to view your burn plan', style: AppTheme.caption.copyWith(color: AppTheme.error)),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right, color: AppTheme.error),
+                          ],
+                        ),
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),

@@ -12,6 +12,17 @@ class AppTheme {
   static const Color warning = Color(0xFFB7791F);
   static const Color error = Color(0xFFA63232);
 
+  // Aliases for convenience
+  static const Color bg = scaffoldBackground;
+  static const Color text = primaryText;
+
+  // Text Styles
+  static TextStyle get display => GoogleFonts.inter(fontSize: 40, fontWeight: FontWeight.w700, color: primaryText);
+  static TextStyle get title => GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w700, color: primaryText);
+  static TextStyle get body => GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w400, color: primaryText);
+  static TextStyle get secondary => GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w400, color: secondaryText);
+  static TextStyle get caption => GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: secondaryText);
+
   static ThemeData get lightTheme {
     final baseTextTheme = GoogleFonts.interTextTheme();
 

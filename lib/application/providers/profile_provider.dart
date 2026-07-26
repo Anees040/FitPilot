@@ -23,8 +23,9 @@ class ProfileNotifier extends AsyncNotifier<Profile> {
       weightKg: 70.0,
       heightCm: 170, // Arbitrary valid height
       age: 25, // Arbitrary valid age
-      gender: null,
+      gender: Gender.unspecified,
       goal: Goal.maintain,
+      activityLevel: ActivityLevel.light,
       allowanceKcal: 300,
       equipment: const [],
       updatedAt: DateTime.now(),

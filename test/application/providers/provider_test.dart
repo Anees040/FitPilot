@@ -278,7 +278,7 @@ void main() {
           id: '1',
           customName: 'Big Meal',
           quantity: 1,
-          kcal: KcalRange.exact(301),
+          kcal: KcalRange.exact(5000),
           source: LogSource.manual,
           loggedAt: DateTime.now(),
         ),

@@ -66,7 +66,7 @@ class _StepperButton extends StatelessWidget {
           icon,
           color: onPressed != null
               ? AppTheme.accent
-              : AppTheme.secondaryText.withOpacity(0.5),
+              : AppTheme.secondaryText.withValues(alpha: 0.5),
         ),
       ),
     );

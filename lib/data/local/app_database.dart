@@ -13,7 +13,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -24,7 +24,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     return openDatabase(
       inMemoryDatabasePath,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -103,7 +103,9 @@ class AppDatabase {
         age INTEGER,
         gender TEXT,
         goal TEXT,
+        activity_level TEXT NOT NULL DEFAULT 'light',
         allowance_kcal INTEGER NOT NULL DEFAULT 300,
+        target_override INTEGER,
         equipment TEXT NOT NULL DEFAULT '[]',
         updated_at TEXT NOT NULL
       )
@@ -138,6 +140,13 @@ class AppDatabase {
     int oldVersion,
     int newVersion,
   ) async {
-    // Future migrations go here.
+    if (oldVersion < 2) {
+      await db.execute(
+        "ALTER TABLE profile ADD COLUMN activity_level TEXT NOT NULL DEFAULT 'light'",
+      );
+      await db.execute(
+        "ALTER TABLE profile ADD COLUMN target_override INTEGER",
+      );
+    }
   }
 }

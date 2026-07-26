@@ -314,16 +314,18 @@ void main() {
         weightKg: 70,
         heightCm: 170,
         age: 25,
-        gender: 'male',
+        gender: Gender.male,
         goal: Goal.lose,
-        equipment: ['gym', 'rope'],
-        updatedAt: now,
+        equipment: const ['gym', 'rope'],
+        updatedAt: DateTime.now(),
       );
+      final copy = p.copyWith();
+      expect(copy.gender, Gender.male);
       final p2 = p.copyWith(weightKg: 75);
       expect(p2.weightKg, 75);
       expect(p2.heightCm, 170);
       expect(p2.age, 25);
-      expect(p2.gender, 'male');
+      expect(p2.gender, Gender.male);
       expect(p2.goal, Goal.lose);
       expect(p2.equipment, ['gym', 'rope']);
     });
