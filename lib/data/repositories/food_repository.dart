@@ -77,16 +77,17 @@ class FoodRepository {
       nameUr: row['name_ur'] as String?,
       portionLabel: row['portion_label'] as String,
       grams: row['grams'] as int?,
-      kcalPerPortion: KcalRange(
-        row['kcal_min'] as int,
-        row['kcal_max'] as int,
-      ),
+      kcalPerPortion: KcalRange(row['kcal_min'] as int, row['kcal_max'] as int),
       isVerified: (row['is_verified'] as int) == 1,
     );
   }
 
   Future<void> _enqueue(
-      String table, String rowId, String op, Map<String, dynamic> payload) async {
+    String table,
+    String rowId,
+    String op,
+    Map<String, dynamic> payload,
+  ) async {
     await db.insert('sync_queue', {
       'table_name': table,
       'row_id': rowId,
