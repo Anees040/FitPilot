@@ -41,10 +41,40 @@ class FoodLog extends Equatable {
   String? get displayName => customName;
 
   @override
-  List<Object?> get props =>
-      [id, foodId, customName, quantity, kcal, source, loggedAt, deletedAt];
+  List<Object?> get props => [
+    id,
+    foodId,
+    customName,
+    quantity,
+    kcal,
+    source,
+    loggedAt,
+    deletedAt,
+  ];
 
   @override
   String toString() =>
       'FoodLog($id, ${displayName ?? foodId}, qty=$quantity, $kcal)';
+
+  FoodLog copyWith({
+    String? id,
+    String? foodId,
+    String? customName,
+    num? quantity,
+    KcalRange? kcal,
+    LogSource? source,
+    DateTime? loggedAt,
+    DateTime? deletedAt,
+  }) {
+    return FoodLog(
+      id: id ?? this.id,
+      foodId: foodId ?? this.foodId,
+      customName: customName ?? this.customName,
+      quantity: quantity ?? this.quantity,
+      kcal: kcal ?? this.kcal,
+      source: source ?? this.source,
+      loggedAt: loggedAt ?? this.loggedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
+  }
 }
