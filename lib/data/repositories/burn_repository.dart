@@ -14,12 +14,16 @@ class BurnRepository {
 
   /// Record a completed burn.
   Future<void> add(
-      BurnOption option, DateTime forDate, DateTime completedAt) async {
+    BurnOption option,
+    DateTime forDate,
+    DateTime completedAt,
+  ) async {
     final id = _uuid.v4();
-    final forDateStr = DateTime(forDate.year, forDate.month, forDate.day)
-        .toIso8601String()
-        .split('T')
-        .first;
+    final forDateStr = DateTime(
+      forDate.year,
+      forDate.month,
+      forDate.day,
+    ).toIso8601String().split('T').first;
     await db.insert('burn_completions', {
       'id': id,
       'for_date': forDateStr,
@@ -33,10 +37,11 @@ class BurnRepository {
 
   /// Returns total kcal burned for a given day.
   Future<int> burnedKcalForDay(DateTime day) async {
-    final dayStr = DateTime(day.year, day.month, day.day)
-        .toIso8601String()
-        .split('T')
-        .first;
+    final dayStr = DateTime(
+      day.year,
+      day.month,
+      day.day,
+    ).toIso8601String().split('T').first;
     final result = await db.rawQuery(
       'SELECT COALESCE(SUM(kcal), 0) AS total FROM burn_completions WHERE for_date = ?',
       [dayStr],
