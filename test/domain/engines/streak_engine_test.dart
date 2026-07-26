@@ -49,7 +49,11 @@ void main() {
     test('OVER_PENDING when over today and inside grace window', () {
       final now = DateTime(2026, 7, 27, 22, 0); // 10 PM today
       final history = {
-        DateTime(2026, 7, 27): makeStatus(DayState.over, net: 400, allowance: 300),
+        DateTime(2026, 7, 27): makeStatus(
+          DayState.over,
+          net: 400,
+          allowance: 300,
+        ),
         DateTime(2026, 7, 26): makeStatus(DayState.under),
       };
 
@@ -66,19 +70,17 @@ void main() {
 
     test('CLEARED when over today but burned enough', () {
       final now = DateTime(2026, 7, 27, 22, 0);
-      
+
       final clearedStatus = DayStatus(
         total: KcalRange.exact(400),
         burnedKcal: 100,
         net: KcalRange.exact(300),
         remainingKcal: 0,
-        state: DayState.over, 
+        state: DayState.over,
         allowanceKcal: 300,
       );
 
-      final history = {
-        DateTime(2026, 7, 27): clearedStatus,
-      };
+      final history = {DateTime(2026, 7, 27): clearedStatus};
 
       final state = engine.evaluate(dayHistory: history, now: now);
 
@@ -90,7 +92,11 @@ void main() {
     test('BROKEN when grace expired and still over', () {
       final now = DateTime(2026, 7, 28, 12, 1); // Next day 12:01 PM
       final history = {
-        DateTime(2026, 7, 27): makeStatus(DayState.over, net: 400, allowance: 300),
+        DateTime(2026, 7, 27): makeStatus(
+          DayState.over,
+          net: 400,
+          allowance: 300,
+        ),
       };
 
       final state = engine.evaluate(dayHistory: history, now: now);
@@ -114,7 +120,7 @@ void main() {
         DateTime(2026, 7, 27): clearedStatus,
         DateTime(2026, 7, 26): makeStatus(DayState.under),
       };
-      // In StreakEngine, if today is neutral, it checks yesterday. 
+      // In StreakEngine, if today is neutral, it checks yesterday.
       // Wait, if today is the 28th and there's no log, it evaluates today as Neutral.
       // So let's evaluate for the 27th being "now" but time traveled.
       // Actually, StreakEngine looks at `today = _dateOnly(now)`.
@@ -131,7 +137,11 @@ void main() {
     test('Streak broken yesterday means streak is 0 today', () {
       final now = DateTime(2026, 7, 28, 10, 0);
       final history = {
-        DateTime(2026, 7, 27): makeStatus(DayState.over, net: 400, allowance: 300), // Broken yesterday
+        DateTime(2026, 7, 27): makeStatus(
+          DayState.over,
+          net: 400,
+          allowance: 300,
+        ), // Broken yesterday
         DateTime(2026, 7, 26): makeStatus(DayState.under),
       };
 
