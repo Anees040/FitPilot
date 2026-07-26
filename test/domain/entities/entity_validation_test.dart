@@ -185,80 +185,70 @@ void main() {
 
     test('weightKg 24.9 throws', () {
       expect(
-        () => Profile(
-            weightKg: 24.9, heightCm: 170, age: 25, updatedAt: now),
+        () => Profile(weightKg: 24.9, heightCm: 170, age: 25, updatedAt: now),
         throwsArgumentError,
       );
     });
 
     test('weightKg 25.0 passes', () {
       expect(
-        () => Profile(
-            weightKg: 25.0, heightCm: 170, age: 25, updatedAt: now),
+        () => Profile(weightKg: 25.0, heightCm: 170, age: 25, updatedAt: now),
         returnsNormally,
       );
     });
 
     test('weightKg 300 passes', () {
       expect(
-        () => Profile(
-            weightKg: 300, heightCm: 170, age: 25, updatedAt: now),
+        () => Profile(weightKg: 300, heightCm: 170, age: 25, updatedAt: now),
         returnsNormally,
       );
     });
 
     test('weightKg 300.1 throws', () {
       expect(
-        () => Profile(
-            weightKg: 300.1, heightCm: 170, age: 25, updatedAt: now),
+        () => Profile(weightKg: 300.1, heightCm: 170, age: 25, updatedAt: now),
         throwsArgumentError,
       );
     });
 
     test('heightCm 99 throws', () {
       expect(
-        () => Profile(
-            weightKg: 70, heightCm: 99, age: 25, updatedAt: now),
+        () => Profile(weightKg: 70, heightCm: 99, age: 25, updatedAt: now),
         throwsArgumentError,
       );
     });
 
     test('heightCm 100 passes', () {
       expect(
-        () => Profile(
-            weightKg: 70, heightCm: 100, age: 25, updatedAt: now),
+        () => Profile(weightKg: 70, heightCm: 100, age: 25, updatedAt: now),
         returnsNormally,
       );
     });
 
     test('heightCm 250 passes', () {
       expect(
-        () => Profile(
-            weightKg: 70, heightCm: 250, age: 25, updatedAt: now),
+        () => Profile(weightKg: 70, heightCm: 250, age: 25, updatedAt: now),
         returnsNormally,
       );
     });
 
     test('age 12 throws', () {
       expect(
-        () => Profile(
-            weightKg: 70, heightCm: 170, age: 12, updatedAt: now),
+        () => Profile(weightKg: 70, heightCm: 170, age: 12, updatedAt: now),
         throwsArgumentError,
       );
     });
 
     test('age 13 passes', () {
       expect(
-        () => Profile(
-            weightKg: 70, heightCm: 170, age: 13, updatedAt: now),
+        () => Profile(weightKg: 70, heightCm: 170, age: 13, updatedAt: now),
         returnsNormally,
       );
     });
 
     test('age 100 passes', () {
       expect(
-        () => Profile(
-            weightKg: 70, heightCm: 170, age: 100, updatedAt: now),
+        () => Profile(weightKg: 70, heightCm: 170, age: 100, updatedAt: now),
         returnsNormally,
       );
     });
@@ -266,11 +256,12 @@ void main() {
     test('allowanceKcal -1 throws', () {
       expect(
         () => Profile(
-            weightKg: 70,
-            heightCm: 170,
-            age: 25,
-            allowanceKcal: -1,
-            updatedAt: now),
+          weightKg: 70,
+          heightCm: 170,
+          age: 25,
+          allowanceKcal: -1,
+          updatedAt: now,
+        ),
         throwsArgumentError,
       );
     });
@@ -278,11 +269,12 @@ void main() {
     test('allowanceKcal 0 passes', () {
       expect(
         () => Profile(
-            weightKg: 70,
-            heightCm: 170,
-            age: 25,
-            allowanceKcal: 0,
-            updatedAt: now),
+          weightKg: 70,
+          heightCm: 170,
+          age: 25,
+          allowanceKcal: 0,
+          updatedAt: now,
+        ),
         returnsNormally,
       );
     });
@@ -290,11 +282,12 @@ void main() {
     test('allowanceKcal 2000 passes', () {
       expect(
         () => Profile(
-            weightKg: 70,
-            heightCm: 170,
-            age: 25,
-            allowanceKcal: 2000,
-            updatedAt: now),
+          weightKg: 70,
+          heightCm: 170,
+          age: 25,
+          allowanceKcal: 2000,
+          updatedAt: now,
+        ),
         returnsNormally,
       );
     });
@@ -302,11 +295,12 @@ void main() {
     test('allowanceKcal 2001 throws', () {
       expect(
         () => Profile(
-            weightKg: 70,
-            heightCm: 170,
-            age: 25,
-            allowanceKcal: 2001,
-            updatedAt: now),
+          weightKg: 70,
+          heightCm: 170,
+          age: 25,
+          allowanceKcal: 2001,
+          updatedAt: now,
+        ),
         throwsArgumentError,
       );
     });
