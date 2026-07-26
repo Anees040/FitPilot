@@ -1,0 +1,77 @@
+import '../entities/burn_option.dart';
+
+/// Activity entry in the internal MET table.
+class _Activity {
+  final String name;
+  final double met;
+  final String? equipment;
+
+  const _Activity(this.name, this.met, this.equipment);
+}
+
+/// Computes burn plan options using the MET formula.
+///
+/// Pure, deterministic — no side effects.
+class BurnPlanner {
+  const BurnPlanner();
+
+  static const List<_Activity> _activities = [
+    _Activity('Walking (brisk)', 3.5, null),
+    _Activity('Jump rope', 11.0, 'rope'),
+    _Activity('Running', 9.8, null),
+    _Activity('Cycling', 7.5, 'cycle'),
+    _Activity('Burpees', 8.0, null),
+  ];
+
+  /// Generates up to 4 burn options for the given [kcalOver] surplus,
+  /// user [weightKg], and available [equipment].
+  ///
+  /// Returns an empty list when [kcalOver] <= 0.
+  /// Walking is always included regardless of equipment.
+  /// Options sorted by minutes ascending.
+  List<BurnOption> planFor({
+    required int kcalOver,
+    required double weightKg,
+    List<String> equipment = const [],
+  }) {
+    if (kcalOver <= 0) return [];
+
+    final options = <BurnOption>[];
+
+    for (final activity in _activities) {
+      // Include if no equipment needed, or user has the equipment,
+      // or it's walking (always included).
+      final isWalking = activity.name == 'Walking (brisk)';
+      final equipmentSatisfied =
+          activity.equipment == null || equipment.contains(activity.equipment);
+
+      if (!isWalking && !equipmentSatisfied) continue;
+
+      final rawMinutes =
+          kcalOver * 200 / (activity.met * 3.5 * weightKg);
+
+      // Round UP to next multiple of 5, minimum 5.
+      var minutes = (rawMinutes / 5).ceil() * 5;
+      if (minutes < 5) minutes = 5;
+
+      int? steps;
+      if (isWalking) {
+        // steps = minutes * 100, rounded to nearest 500
+        steps = ((minutes * 100) / 500).round() * 500;
+      }
+
+      options.add(BurnOption(
+        activity: activity.name,
+        minutes: minutes,
+        kcal: kcalOver,
+        steps: steps,
+      ));
+    }
+
+    // Sort by minutes ascending.
+    options.sort((a, b) => a.minutes.compareTo(b.minutes));
+
+    // Return at most 4.
+    return options.length > 4 ? options.sublist(0, 4) : options;
+  }
+}
