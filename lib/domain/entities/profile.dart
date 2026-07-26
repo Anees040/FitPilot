@@ -64,15 +64,15 @@ class Profile extends Equatable {
 
   @override
   List<Object?> get props => [
-        weightKg,
-        heightCm,
-        age,
-        gender,
-        goal,
-        allowanceKcal,
-        equipment,
-        updatedAt,
-      ];
+    weightKg,
+    heightCm,
+    age,
+    gender,
+    goal,
+    allowanceKcal,
+    equipment,
+    updatedAt,
+  ];
 
   @override
   String toString() => 'Profile(${weightKg}kg, ${heightCm}cm, age=$age)';
