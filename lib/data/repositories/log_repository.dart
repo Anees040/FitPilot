@@ -66,8 +66,14 @@ class LogRepository {
   /// Returns all non-deleted logs for a given day.
   Future<List<FoodLog>> forDay(DateTime day) async {
     final dayStart = DateTime(day.year, day.month, day.day).toIso8601String();
-    final dayEnd =
-        DateTime(day.year, day.month, day.day, 23, 59, 59).toIso8601String();
+    final dayEnd = DateTime(
+      day.year,
+      day.month,
+      day.day,
+      23,
+      59,
+      59,
+    ).toIso8601String();
     final rows = await db.query(
       'food_logs',
       where: 'logged_at >= ? AND logged_at <= ? AND deleted_at IS NULL',
@@ -79,11 +85,18 @@ class LogRepository {
 
   /// Returns logs grouped by day for a date range, excluding soft-deleted.
   Future<Map<DateTime, List<FoodLog>>> forRange(
-      DateTime from, DateTime to) async {
-    final fromStr =
-        DateTime(from.year, from.month, from.day).toIso8601String();
-    final toStr =
-        DateTime(to.year, to.month, to.day, 23, 59, 59).toIso8601String();
+    DateTime from,
+    DateTime to,
+  ) async {
+    final fromStr = DateTime(from.year, from.month, from.day).toIso8601String();
+    final toStr = DateTime(
+      to.year,
+      to.month,
+      to.day,
+      23,
+      59,
+      59,
+    ).toIso8601String();
     final rows = await db.query(
       'food_logs',
       where: 'logged_at >= ? AND logged_at <= ? AND deleted_at IS NULL',
@@ -95,7 +108,10 @@ class LogRepository {
     for (final row in rows) {
       final log = _rowToFoodLog(row);
       final dayKey = DateTime(
-          log.loggedAt.year, log.loggedAt.month, log.loggedAt.day);
+        log.loggedAt.year,
+        log.loggedAt.month,
+        log.loggedAt.day,
+      );
       map.putIfAbsent(dayKey, () => []).add(log);
     }
     return map;
