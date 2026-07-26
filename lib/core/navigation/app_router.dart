@@ -11,8 +11,12 @@ final rootNavigatorKey = GlobalKey<NavigatorState>();
 final shellNavigatorTodayKey = GlobalKey<NavigatorState>(debugLabel: 'today');
 final shellNavigatorLogKey = GlobalKey<NavigatorState>(debugLabel: 'log');
 final shellNavigatorPlanKey = GlobalKey<NavigatorState>(debugLabel: 'plan');
-final shellNavigatorProgressKey = GlobalKey<NavigatorState>(debugLabel: 'progress');
-final shellNavigatorProfileKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
+final shellNavigatorProgressKey = GlobalKey<NavigatorState>(
+  debugLabel: 'progress',
+);
+final shellNavigatorProfileKey = GlobalKey<NavigatorState>(
+  debugLabel: 'profile',
+);
 
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
@@ -74,10 +78,7 @@ final appRouter = GoRouter(
 );
 
 class ScaffoldWithNavBar extends StatelessWidget {
-  const ScaffoldWithNavBar({
-    required this.navigationShell,
-    super.key,
-  });
+  const ScaffoldWithNavBar({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
@@ -99,10 +100,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
             height: 80,
             decoration: const BoxDecoration(
               border: Border(
-                top: BorderSide(
-                  color: AppTheme.hairline,
-                  width: 1.0,
-                ),
+                top: BorderSide(color: AppTheme.hairline, width: 1.0),
               ),
             ),
             child: BottomNavigationBar(
