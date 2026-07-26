@@ -24,7 +24,7 @@ void main() {
     test('nextResetAt is local midnight tomorrow', () {
       final now = DateTime(2026, 7, 27, 15, 30);
       final reset = policy.nextResetAt(now);
-      
+
       expect(reset.year, 2026);
       expect(reset.month, 7);
       expect(reset.day, 28);
