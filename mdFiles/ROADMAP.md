@@ -1,18 +1,10 @@
-# ROADMAP — full build plan (A → D). STATUS.md tracks live progress.
+# FitPilot — Product Roadmap & Definition of Done
 
-> Agent: you implement ONLY the current task in STATUS.md. This file exists so
-> you understand what comes later and DON'T build it early (no premature
-> scaffolding for future milestones).
+> STATUS.md tracks live, day-to-day progress. This file outlines the overall build plan (Milestones A → D & Phases).
 
-Product goal: public, free-to-use app. Runs entirely on free tiers (Supabase,
-Render, Gemini free quota). Monetization (subscription) is deliberately
-deferred — nothing in the codebase should hard-block adding it later (feature
-gating happens server-side via quota/config values, never hardcoded).
+Product goal: Public, free-to-use app running entirely on free tiers (Supabase, Render, Gemini free quota).
 
-Full specs live in Notion (SRS v1.0, SDS v1.0). Prompts will cite the exact
-FR/section when a task needs it — do not go read the whole spec.
-
-## Milestone A — offline core (30% demo) — CURRENT
+## Milestone A — Offline Core (30% Demo) — CURRENT
 
 Entirely offline: SQLite + bundled seed data. No auth, no network.
 
@@ -27,32 +19,31 @@ Entirely offline: SQLite + bundled seed data. No auth, no network.
 | A7 | StreakEngine + Progress screen (streak + calendar) | FR-7.4–7.7 | M9 |
 | A8 | Local profile (weight/height/goal/allowance/equipment) | FR-1.x (local) | M3 |
 
-Demo test: airplane mode ON → full loop works: log biryani → see range → go
-over → get burn plan → complete it → streak preserved.
+**Demo test:** Airplane mode ON → full loop works: log biryani → see range → go over → get burn plan → complete it → streak preserved.
 
-## Milestone B — accounts + sync (50%)
+## Milestone B — Accounts & Sync (50%)
 
 | Task | Delivers | Realizes | Mockup |
 | --- | --- | --- | --- |
-| B1 | Supabase project, schema, RLS (SDS ch. 3) | NFR-S | — |
+| B1 | Supabase project, schema, RLS | NFR-S | — |
 | B2 | Auth: email+OTP, guest mode, guest→account merge | FR-1.x | M2 |
 | B3 | SyncService: queue push, pull-since, LWW | SDS SD-6 | — |
 | B4 | Label scan: ML Kit OCR + LabelParser + saved products | FR-4.x | M7 |
-| B5 | Weight tracking + trend chart (fl_chart) | FR-6.x | M10 |
+| B5 | Weight tracking + trend chart | FR-6.x | M10 |
 | B6 | Local notifications (meals, grace deadline, workout) | FR-9.x | M16 |
 | B7 | Welcome/onboarding flow | — | M1, M3 |
 
-## Milestone C — AI + training (75%)
+## Milestone C — AI & Proxy Services (75%)
 
 | Task | Delivers | Realizes | Mockup |
 | --- | --- | --- | --- |
-| C1 | Node/Express proxy on Render: JWT check, quota RPC, cache, rate limit (SDS §5.2) | FR-3, NFR-S | — |
+| C1 | Node/Express proxy on Render: JWT check, quota RPC, cache | FR-3, NFR-S | — |
 | C2 | AI photo logging + quota UI + text-parse fallback | FR-3.x | M6 |
 | C3 | Exercise library + detail screens | FR-8.1–8.3 | M11, M12 |
 | C4 | Weekly planner (assign exercises to days, completions) | FR-8.4–8.7 | M13 |
 | C5 | Render deploy + cold-start warm-up ping | OE | — |
 
-## Milestone D — advanced + admin (100%)
+## Milestone D — Advanced Features & Beta Release (100%)
 
 | Task | Delivers | Realizes | Mockup |
 | --- | --- | --- | --- |
@@ -63,10 +54,21 @@ over → get burn plan → complete it → streak preserved.
 | D5 | User reports flow in app | FR-10.x | — |
 | D6 | Hardening: perf pass, security checklist, release builds | NFR-P/S | — |
 
-## Rules that keep this shippable
+## Definition of Done & Rules That Keep This Shippable
 
-- A milestone is DONE only when its demo test passes on the Pixel 6 emulator
-  + 320 px width check.
-- Never start milestone N+1 tasks while STATUS.md shows open N tasks.
-- Free-tier budget is a feature: quota values and limits live in server config,
-  so cost control (and future subscriptions) need no app release.
+1. **Definition of Done (DoD) per Task:**
+   - `flutter analyze` → 0 issues.
+   - `flutter test` → all green.
+   - Update `mdFiles/STATUS.md`.
+   - Append one line to `mdFiles/DECISIONS.md` ONLY if a real design decision was made.
+
+2. **Milestone Rules:**
+   - A milestone is DONE only when its demo test passes on Pixel 6 emulator + 320 px width check.
+   - Never start milestone N+1 tasks while `mdFiles/STATUS.md` shows open milestone N tasks.
+   - Free-tier budget is a feature: quota values and limits live in server config.
+
+## v2 Backlog (Post-Beta)
+- Machine scanner (Gemini vision + curated machine DB)
+- Form check (MediaPipe BlazePose on-device, joint-angle rules)
+- Planner (gym/outdoor/calisthenics templates)
+- Voice logging & Roman Urdu localization
