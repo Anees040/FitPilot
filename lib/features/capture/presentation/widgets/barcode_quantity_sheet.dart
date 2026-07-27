@@ -41,10 +41,10 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
       _netWeightGrams = found.netWeightGrams;
     } else if (widget.offResult is OffFoundMissingEnergy) {
       _productName = (widget.offResult as OffFoundMissingEnergy).productName;
-      _kcalPer100g =
-          0; // The user will need to enter this in a custom flow maybe? Wait, the prompt says "When the basis alone is insufficient...".
-      // If energy is missing entirely, we must ask the user for energy too. But the prompt just says "ask once and then remember the value forever in saved_products".
-      // Let's assume the user will enter kcal if missing. For now, 0.
+      _kcalPer100g = 0;
+    } else {
+      _productName = 'Unknown Product';
+      _kcalPer100g = 0;
     }
 
     _loadSavedQuantity();

@@ -23,6 +23,7 @@
 ## Last completed
 
 - B0+B4 — Barcode, Open Food Facts, and label OCR
+- Bug fixes: Resolved barcode sheet LateInitializationError, quantity sheet RenderFlex overflow, and Dismissible assertion error.
 
 ## Known issues / debt
 

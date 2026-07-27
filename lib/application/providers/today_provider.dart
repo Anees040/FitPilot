@@ -67,6 +67,16 @@ class TodayNotifier extends AsyncNotifier<TodayState> {
 
   /// Soft deletes a log and refreshes.
   Future<void> deleteLog(String logId) async {
+    // Optimistic UI update to prevent Dismissible assertion error
+    final currentState = state.value;
+    if (currentState != null) {
+      final updatedLogs = currentState.logs.where((l) => l.id != logId).toList();
+      state = AsyncData(TodayState(
+        logs: updatedLogs,
+        dayStatus: currentState.dayStatus,
+      ));
+    }
+
     final logRepo = await ref.read(logRepositoryProvider.future);
     await logRepo.softDelete(logId, DateTime.now());
     ref.invalidateSelf();

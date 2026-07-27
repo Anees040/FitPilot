@@ -54,10 +54,18 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
                     });
                   },
                 ),
-                KcalRangeText(
-                  range: multipliedRange,
-                  style: AppTheme.lightTheme.textTheme.displayLarge?.copyWith(
-                    fontSize: 32,
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: KcalRangeText(
+                        range: multipliedRange,
+                        style: AppTheme.lightTheme.textTheme.displayLarge?.copyWith(
+                          fontSize: 32,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
