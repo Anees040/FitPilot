@@ -24,8 +24,15 @@ class ProgressScreen extends ConsumerWidget {
       body: SafeArea(
         child: stateAsync.when(
           data: (state) => _buildBody(context, state),
-          loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.accent)),
-          error: (e, st) => Center(child: Text('Error: $e', style: AppTheme.body.copyWith(color: AppTheme.error))),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppTheme.accent),
+          ),
+          error: (e, st) => Center(
+            child: Text(
+              'Error: $e',
+              style: AppTheme.body.copyWith(color: AppTheme.error),
+            ),
+          ),
         ),
       ),
     );
@@ -62,7 +69,8 @@ class ProgressScreen extends ConsumerWidget {
         phaseColor = AppTheme.success;
         break;
       case StreakPhase.overPending:
-        explanation = 'You are over your limit. Burn it by ${streak.graceDeadline?.hour ?? 11}:59 to save the streak!';
+        explanation =
+            'You are over your limit. Burn it by ${streak.graceDeadline?.hour ?? 11}:59 to save the streak!';
         phaseColor = AppTheme.warning;
         break;
       case StreakPhase.cleared:
@@ -104,9 +112,9 @@ class ProgressScreen extends ConsumerWidget {
     // We'll generate a grid of 5 columns (weeks) x 7 rows (days), or 7 cols x 5 rows.
     // Standard GitHub style is 7 rows (Sun-Sat), but we can just list them sequentially.
     // For simplicity, a Wrap of 35 boxes.
-    
+
     final sortedDates = last35Days.keys.toList()..sort();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -120,12 +128,14 @@ class ProgressScreen extends ConsumerWidget {
             Color color;
             if (status.state == DayState.over) {
               color = AppTheme.error;
-            } else if (status.state == DayState.under || status.state == DayState.near) {
+            } else if (status.state == DayState.under ||
+                status.state == DayState.near) {
               color = AppTheme.success;
             } else {
-              color = AppTheme.hairline; // neutral visually distinct and never punitive
+              color = AppTheme
+                  .hairline; // neutral visually distinct and never punitive
             }
-            
+
             return Container(
               width: 16,
               height: 16,
@@ -167,16 +177,20 @@ class ProgressScreen extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: AppTheme.body.copyWith(color: AppTheme.secondaryText)),
+        Text(
+          label,
+          style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
+        ),
         Text(value, style: AppTheme.body.copyWith(fontWeight: FontWeight.bold)),
       ],
     );
   }
 
   Widget _build7DayList(Map<DateTime, DayStatus> last35Days) {
-    final sortedDates = last35Days.keys.toList()..sort((a, b) => b.compareTo(a));
+    final sortedDates = last35Days.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
     final last7 = sortedDates.take(7).toList();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -191,8 +205,12 @@ class ProgressScreen extends ConsumerWidget {
               style: AppTheme.caption.copyWith(color: AppTheme.secondaryText),
             ),
             trailing: Icon(
-              status.state == DayState.over ? Icons.warning : Icons.check_circle,
-              color: status.state == DayState.over ? AppTheme.error : AppTheme.success,
+              status.state == DayState.over
+                  ? Icons.warning
+                  : Icons.check_circle,
+              color: status.state == DayState.over
+                  ? AppTheme.error
+                  : AppTheme.success,
             ),
           );
         }),

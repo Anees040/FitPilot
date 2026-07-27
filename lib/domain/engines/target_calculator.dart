@@ -58,7 +58,7 @@ class TargetCalculator {
     // Floor clamping
     int floor = 1200;
     if (gender == Gender.male) floor = 1500;
-    
+
     int roundedTarget = target.round();
     return roundedTarget < floor ? floor : roundedTarget;
   }

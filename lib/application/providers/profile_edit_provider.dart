@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 
@@ -13,6 +14,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
 
   Future<void> updateProfile({
     double? weightKg,
+    double? goalWeightKg,
     int? heightCm,
     int? age,
     Gender? gender,
@@ -28,21 +30,25 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
 
     final updated = currentProfile.copyWith(
       weightKg: weightKg,
+      goalWeightKg: goalWeightKg,
       heightCm: heightCm,
       age: age,
       gender: gender,
       goal: goal,
       activityLevel: activityLevel,
       allowanceKcal: allowanceKcal,
-      targetKcalOverride: clearOverride ? null : (targetKcalOverride ?? currentProfile.targetKcalOverride),
+      targetKcalOverride: clearOverride
+          ? null
+          : (targetKcalOverride ?? currentProfile.targetKcalOverride),
       equipment: equipment,
       updatedAt: DateTime.now(),
     );
 
     await repo.save(updated);
-    
+
     // Refresh global states
     ref.invalidate(profileProvider);
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
     // Invalidating profileProvider might automatically invalidate those that watch it
   }
 }

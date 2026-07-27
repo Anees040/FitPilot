@@ -53,7 +53,9 @@ class ProfileRepository {
       age: (row['age'] as num).toInt(),
       gender: Gender.values.byName(row['gender'] as String? ?? 'unspecified'),
       goal: Goal.values.byName(row['goal'] as String? ?? 'maintain'),
-      activityLevel: ActivityLevel.values.byName(row['activity_level'] as String? ?? 'light'),
+      activityLevel: ActivityLevel.values.byName(
+        row['activity_level'] as String? ?? 'light',
+      ),
       allowanceKcal: (row['allowance_kcal'] as num).toInt(),
       targetKcalOverride: row['target_override'] as int?,
       equipment: equipment,

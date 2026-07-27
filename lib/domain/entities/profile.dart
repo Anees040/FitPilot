@@ -13,6 +13,7 @@ enum ActivityLevel { sedentary, light, moderate, active }
 /// User profile — single-row entity.
 class Profile extends Equatable {
   final double weightKg;
+  final double? goalWeightKg;
   final int heightCm;
   final int age;
   final Gender gender;
@@ -27,6 +28,7 @@ class Profile extends Equatable {
 
   Profile({
     required this.weightKg,
+    this.goalWeightKg,
     required this.heightCm,
     required this.age,
     this.gender = Gender.unspecified,
@@ -40,6 +42,9 @@ class Profile extends Equatable {
     if (weightKg < 25 || weightKg > 300) {
       throw ArgumentError('weightKg must be 25–300, got $weightKg');
     }
+    if (goalWeightKg != null && (goalWeightKg! < 25 || goalWeightKg! > 300)) {
+      throw ArgumentError('goalWeightKg must be 25–300, got $goalWeightKg');
+    }
     if (heightCm < 100 || heightCm > 250) {
       throw ArgumentError('heightCm must be 100–250, got $heightCm');
     }
@@ -49,8 +54,11 @@ class Profile extends Equatable {
     if (allowanceKcal < 0 || allowanceKcal > 2000) {
       throw ArgumentError('allowanceKcal must be 0–2000, got $allowanceKcal');
     }
-    if (targetKcalOverride != null && (targetKcalOverride! < 1000 || targetKcalOverride! > 5000)) {
-      throw ArgumentError('targetKcalOverride must be 1000–5000, got $targetKcalOverride');
+    if (targetKcalOverride != null &&
+        (targetKcalOverride! < 1000 || targetKcalOverride! > 5000)) {
+      throw ArgumentError(
+        'targetKcalOverride must be 1000–5000, got $targetKcalOverride',
+      );
     }
   }
 
@@ -58,7 +66,12 @@ class Profile extends Equatable {
     int target = targetKcalOverride ?? 0;
     if (targetKcalOverride == null) {
       const calc = TargetCalculator();
-      final bmr = calc.bmr(weightKg: weightKg, heightCm: heightCm.toDouble(), age: age, gender: gender);
+      final bmr = calc.bmr(
+        weightKg: weightKg,
+        heightCm: heightCm.toDouble(),
+        age: age,
+        gender: gender,
+      );
       final tdee = calc.tdee(bmr, activityLevel);
       target = calc.dailyTarget(tdeeValue: tdee, goal: goal, gender: gender);
     }
@@ -67,6 +80,7 @@ class Profile extends Equatable {
 
   Profile copyWith({
     double? weightKg,
+    double? goalWeightKg,
     int? heightCm,
     int? age,
     Gender? gender,
@@ -79,6 +93,7 @@ class Profile extends Equatable {
   }) {
     return Profile(
       weightKg: weightKg ?? this.weightKg,
+      goalWeightKg: goalWeightKg ?? this.goalWeightKg,
       heightCm: heightCm ?? this.heightCm,
       age: age ?? this.age,
       gender: gender ?? this.gender,
@@ -94,6 +109,7 @@ class Profile extends Equatable {
   @override
   List<Object?> get props => [
     weightKg,
+    goalWeightKg,
     heightCm,
     age,
     gender,
@@ -106,5 +122,6 @@ class Profile extends Equatable {
   ];
 
   @override
-  String toString() => 'Profile(${weightKg}kg, ${heightCm}cm, age=$age, limit=$effectiveDailyLimit)';
+  String toString() =>
+      'Profile(${weightKg}kg, ${heightCm}cm, age=$age, limit=$effectiveDailyLimit)';
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/food_search_provider.dart';
 import 'widgets/food_result_tile.dart';
@@ -27,6 +28,13 @@ class LogScreen extends ConsumerWidget {
                   prefixIcon: const Icon(
                     Icons.search,
                     color: AppTheme.secondaryText,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(
+                      Icons.document_scanner,
+                      color: AppTheme.accent,
+                    ),
+                    onPressed: () => context.push('/capture'),
                   ),
                   filled: true,
                   fillColor: AppTheme.surface,

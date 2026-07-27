@@ -22,8 +22,15 @@ class PlanScreen extends ConsumerWidget {
       body: SafeArea(
         child: stateAsync.when(
           data: (state) => _buildBody(context, ref, state),
-          loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.accent)),
-          error: (e, st) => Center(child: Text('Error: $e', style: AppTheme.body.copyWith(color: AppTheme.error))),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppTheme.accent),
+          ),
+          error: (e, st) => Center(
+            child: Text(
+              'Error: $e',
+              style: AppTheme.body.copyWith(color: AppTheme.error),
+            ),
+          ),
         ),
       ),
     );
@@ -37,7 +44,11 @@ class PlanScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle_outline, size: 64, color: AppTheme.success),
+              const Icon(
+                Icons.check_circle_outline,
+                size: 64,
+                color: AppTheme.success,
+              ),
               const SizedBox(height: 16),
               Text(
                 'You are within your daily limit.',
@@ -89,27 +100,33 @@ class PlanScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(16.0),
       children: [
         Text(
-          isYesterday 
+          isYesterday
               ? 'You were ${state.kcalToBurnOrEat} kcal over yesterday.'
               : 'You are ${state.kcalToBurnOrEat} kcal over today.',
           style: AppTheme.title,
         ),
         const SizedBox(height: 4),
         Text(
-          isYesterday 
+          isYesterday
               ? 'Burn it now to save your streak.'
               : 'Pick an activity to clear your surplus.',
           style: AppTheme.body.copyWith(color: AppTheme.warning),
         ),
         const SizedBox(height: 24),
-        ...state.options.map((option) => _buildOptionCard(context, ref, option)),
+        ...state.options.map(
+          (option) => _buildOptionCard(context, ref, option),
+        ),
       ],
     );
   }
 
-  Widget _buildOptionCard(BuildContext context, WidgetRef ref, BurnOption option) {
+  Widget _buildOptionCard(
+    BuildContext context,
+    WidgetRef ref,
+    BurnOption option,
+  ) {
     final isWalking = option.activity == 'Walking (brisk)';
-    final subtitle = isWalking && option.steps != null 
+    final subtitle = isWalking && option.steps != null
         ? '${option.minutes} min • ~${option.steps} steps'
         : '${option.minutes} min';
 
@@ -127,9 +144,17 @@ class PlanScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(option.activity, style: AppTheme.body.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  option.activity,
+                  style: AppTheme.body.copyWith(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: AppTheme.caption.copyWith(color: AppTheme.secondaryText)),
+                Text(
+                  subtitle,
+                  style: AppTheme.caption.copyWith(
+                    color: AppTheme.secondaryText,
+                  ),
+                ),
               ],
             ),
           ),
@@ -138,7 +163,9 @@ class PlanScreen extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.accent,
               foregroundColor: AppTheme.surface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
               elevation: 0,
             ),
             child: const Text('Mark done'),
@@ -150,7 +177,7 @@ class PlanScreen extends ConsumerWidget {
 
   void _markDone(BuildContext context, WidgetRef ref, BurnOption option) {
     ref.read(burnPlanProvider.notifier).markDone(option);
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Marked ${option.activity} as done!'),

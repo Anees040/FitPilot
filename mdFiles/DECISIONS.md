@@ -10,3 +10,8 @@ Format: `YYYY-MM-DD — decision — why`
 - 2026-07-26 — Milestone A is 100% offline (SQLite + bundled seed) — core UX must not depend on network
 - 2026-07-26 — Engines take `now` as parameter — deterministic unit tests
 - 2026-07-26 — Downgraded Riverpod to 2.5.1 — avoided unstable APIs in 3.0 migration
+- 2026-07-26 — Used profile table query for first-launch routing check — avoids SharedPreferences dependency
+- 2026-07-27 — Used `queued_at` overwrite in `sync_queue` to implement exponential backoff rather than altering DDL to add a `next_retry_at` column.
+- 2026-07-27 — Barcode-before-OCR ordering: The default Capture screen mode is Barcode, requiring users to explicitly switch to OCR, steering them toward the higher-confidence API lookup path.
+- 2026-07-27 — 5% Kcal range spread: When logging from barcode/OCR, an exact value is computed but logged as a range ±5% to reflect declaration tolerance.
+- 2026-07-27 — Barcode caching: Open Food Facts results are cached into `food_catalog` with `is_verified = 0`, and user-defined portions for weightless OFF products are saved to a new `saved_products` table to work fully offline.

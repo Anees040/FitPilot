@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/domain/engines/range_calculator.dart';
@@ -6,6 +7,7 @@ import 'package:fitpilot/domain/engines/streak_engine.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/domain/entities/streak_state.dart';
+import 'package:fitpilot/domain/entities/weight_entry.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -27,12 +29,6 @@ class ProgressState {
   });
 }
 
-class WeightEntry {
-  final DateTime date;
-  final double weightKg;
-
-  const WeightEntry(this.date, this.weightKg);
-}
 
 final progressProvider = AsyncNotifierProvider<ProgressNotifier, ProgressState>(
   ProgressNotifier.new,
@@ -45,20 +41,25 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     final profile = await ref.watch(profileProvider.future);
     final logRepo = await ref.watch(logRepositoryProvider.future);
     final burnRepo = await ref.watch(burnRepositoryProvider.future);
-    
+
     // We need weight entries from the database, let's assume we have a way or query it directly
     final db = await ref.watch(databaseProvider.future);
-    final weightRows = await db.query('weight_entries', orderBy: 'for_date ASC');
+    final weightRows = await db.query(
+      'weight_entries',
+      orderBy: 'for_date ASC',
+    );
     final weightEntries = weightRows.map((r) {
       return WeightEntry(
-        DateTime.parse(r['for_date'] as String),
-        (r['weight_kg'] as num).toDouble(),
+        id: r['id'] as String,
+        date: DateTime.parse(r['for_date'] as String),
+        weightKg: (r['weight_kg'] as num).toDouble(),
+        updatedAt: DateTime.parse(r['updated_at'] as String),
       );
     }).toList();
 
     const calculator = RangeCalculator();
     final history = <DateTime, DayStatus>{};
-    
+
     // 35 days for heatmap
     for (int i = 0; i < 35; i++) {
       final date = DateTime(now.year, now.month, now.day - i);
@@ -99,23 +100,85 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     final db = await ref.read(databaseProvider.future);
     final now = DateTime.now();
     final forDateStr = DateTime(now.year, now.month, now.day).toIso8601String();
-    
+
+    final id = const Uuid().v4();
     await db.insert('weight_entries', {
-      'id': const Uuid().v4(),
+      'id': id,
       'for_date': forDateStr,
       'weight_kg': weightKg,
       'updated_at': now.toIso8601String(),
-    }, conflictAlgorithm: ConflictAlgorithm.replace); // Upsert requires a UNIQUE constraint on for_date, which we have
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+    await db.insert('sync_queue', {
+      'table_name': 'weight_entries',
+      'row_id': id,
+      'op': 'upsert',
+      'payload': null,
+      'queued_at': now.toIso8601String(),
+    }); // Upsert requires a UNIQUE constraint on for_date, which we have
 
     ref.invalidateSelf();
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
     // Invalidate profile because weight might affect burn minutes
-    // Actually profile is separate, let's keep it separate or maybe update profile weight? 
-    // The prompt says "changing weight in the profile changes burn minutes" which means the main source of truth is Profile. 
+    // Actually profile is separate, let's keep it separate or maybe update profile weight?
+    // The prompt says "changing weight in the profile changes burn minutes" which means the main source of truth is Profile.
     // So if the user adds weight here, we should update the Profile too!
     // So if the user adds weight here, we should update the Profile too!
     final currentProfile = await ref.read(profileProvider.future);
     final repo = await ref.read(profileRepositoryProvider.future);
     await repo.save(currentProfile.copyWith(weightKg: weightKg));
     ref.invalidate(profileProvider);
+  }
+
+  Future<void> editWeight(String id, double newWeight) async {
+    final db = await ref.read(databaseProvider.future);
+    final now = DateTime.now();
+
+    await db.update(
+      'weight_entries',
+      {'weight_kg': newWeight, 'updated_at': now.toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    await db.insert('sync_queue', {
+      'table_name': 'weight_entries',
+      'row_id': id,
+      'op': 'upsert',
+      'payload': null,
+      'queued_at': now.toIso8601String(),
+    });
+
+    ref.invalidateSelf();
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+    
+    // Also update profile weight if it was the most recent entry? 
+    // We can just keep it simple and update profile weight to the new weight.
+    final currentProfile = await ref.read(profileProvider.future);
+    final repo = await ref.read(profileRepositoryProvider.future);
+    await repo.save(currentProfile.copyWith(weightKg: newWeight));
+    ref.invalidate(profileProvider);
+  }
+
+  Future<void> deleteWeight(String id) async {
+    final db = await ref.read(databaseProvider.future);
+    final now = DateTime.now();
+
+    await db.delete(
+      'weight_entries',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    await db.insert('sync_queue', {
+      'table_name': 'weight_entries',
+      'row_id': id,
+      'op': 'delete',
+      'payload': null,
+      'queued_at': now.toIso8601String(),
+    });
+
+    ref.invalidateSelf();
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
   }
 }

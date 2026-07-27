@@ -133,7 +133,7 @@ void main() {
       () {
         final equipmentTypes = ['rope', 'cycle', 'pool', 'gym'];
         final subsets = <List<String>>[];
-        
+
         // Generate all 16 subsets
         for (int i = 0; i < (1 << equipmentTypes.length); i++) {
           final subset = <String>[];

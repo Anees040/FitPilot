@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/domain/engines/burn_planner.dart';
@@ -58,10 +59,7 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
       allowanceKcal: profile.effectiveDailyLimit,
     );
 
-    final history = {
-      today: todayStatus,
-      yesterday: yesterdayStatus,
-    };
+    final history = {today: todayStatus, yesterday: yesterdayStatus};
 
     const streakEngine = StreakEngine();
     final streakState = streakEngine.evaluate(dayHistory: history, now: now);
@@ -132,16 +130,13 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     if (stateValue == null) return;
 
     final burnRepo = await ref.read(burnRepositoryProvider.future);
-    
-    await burnRepo.add(
-      option,
-      stateValue.targetDate,
-      DateTime.now(),
-    );
+
+    await burnRepo.add(option, stateValue.targetDate, DateTime.now());
 
     // Refresh state
     ref.invalidateSelf();
     // Also invalidate todayProvider so Today UI refreshes
     ref.invalidate(todayProvider);
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
   }
 }

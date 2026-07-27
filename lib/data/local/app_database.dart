@@ -13,7 +13,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 2,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -24,7 +24,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     return openDatabase(
       inMemoryDatabasePath,
-      version: 2,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -99,6 +99,7 @@ class AppDatabase {
       CREATE TABLE profile (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         weight_kg REAL,
+        goal_weight_kg REAL,
         height_cm INTEGER,
         age INTEGER,
         gender TEXT,
@@ -119,7 +120,27 @@ class AppDatabase {
         op TEXT NOT NULL,
         payload TEXT,
         queued_at TEXT NOT NULL,
-        attempts INTEGER NOT NULL DEFAULT 0
+        attempts INTEGER NOT NULL DEFAULT 0,
+        last_error TEXT
+      )
+    ''');
+
+    batch.execute('''
+      CREATE TABLE saved_products (
+        barcode TEXT PRIMARY KEY,
+        quantity REAL NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
+    batch.execute('''
+      CREATE TABLE notification_prefs (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        meal_reminders_enabled INTEGER NOT NULL DEFAULT 0,
+        meal_times TEXT NOT NULL DEFAULT '["08:00", "13:00", "19:00"]',
+        streak_risk_enabled INTEGER NOT NULL DEFAULT 0,
+        milestones_enabled INTEGER NOT NULL DEFAULT 0,
+        global_mute INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -147,6 +168,38 @@ class AppDatabase {
       await db.execute(
         "ALTER TABLE profile ADD COLUMN target_override INTEGER",
       );
+    }
+    if (oldVersion < 3) {
+      try {
+        await db.execute(
+          "ALTER TABLE sync_queue ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0",
+        );
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE sync_queue ADD COLUMN last_error TEXT");
+      } catch (_) {}
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE saved_products (
+          barcode TEXT PRIMARY KEY,
+          quantity REAL NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 5) {
+      await db.execute("ALTER TABLE profile ADD COLUMN goal_weight_kg REAL");
+      await db.execute('''
+        CREATE TABLE notification_prefs (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          meal_reminders_enabled INTEGER NOT NULL DEFAULT 0,
+          meal_times TEXT NOT NULL DEFAULT '["08:00", "13:00", "19:00"]',
+          streak_risk_enabled INTEGER NOT NULL DEFAULT 0,
+          milestones_enabled INTEGER NOT NULL DEFAULT 0,
+          global_mute INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
     }
   }
 }

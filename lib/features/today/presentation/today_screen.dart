@@ -32,7 +32,10 @@ class TodayScreen extends ConsumerWidget {
               if (state.dayStatus.state == DayState.over)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
                     child: InkWell(
                       onTap: () => context.go('/plan'),
                       borderRadius: BorderRadius.circular(16),
@@ -45,18 +48,35 @@ class TodayScreen extends ConsumerWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.warning_amber_rounded, color: AppTheme.error),
+                            const Icon(
+                              Icons.warning_amber_rounded,
+                              color: AppTheme.error,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('You are over your limit', style: AppTheme.body.copyWith(fontWeight: FontWeight.bold, color: AppTheme.error)),
-                                  Text('Tap to view your burn plan', style: AppTheme.caption.copyWith(color: AppTheme.error)),
+                                  Text(
+                                    'You are over your limit',
+                                    style: AppTheme.body.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.error,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Tap to view your burn plan',
+                                    style: AppTheme.caption.copyWith(
+                                      color: AppTheme.error,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right, color: AppTheme.error),
+                            const Icon(
+                              Icons.chevron_right,
+                              color: AppTheme.error,
+                            ),
                           ],
                         ),
                       ),
@@ -115,6 +135,12 @@ class TodayScreen extends ConsumerWidget {
             style: const TextStyle(color: AppTheme.error),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppTheme.accent,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.document_scanner),
+        onPressed: () => context.push('/capture'),
       ),
     );
   }

@@ -3,6 +3,10 @@
 ## KcalRange
 
 - Immutable `min`/`max` ints, invariant `0 <= min <= max`.
+- Logging requires a custom name OR a valid food catalog ID.
+- Exact quantities (like 250g) are always stored in the log as `quantity = 1` and the pre-computed total is mapped into a `KcalRange`.
+- **Scanner/OCR Rule**: When extracting a point-value energy reading from Open Food Facts or an OCR label, the app applies a **±5% spread** around the computed value to form the `KcalRange`. This reflects standard legal declaration tolerances on packaged nutrition facts.
+- **Basis Conversions**: Energy provided only in kilojoules (kJ) is converted to kilocalories (kcal) by dividing by 4.184.
 - `plus(other)` adds both ends; `times(qty)` scales both; `midpoint` = (min+max)/2.
 - Day total = sum of all log ranges − burn credits (subtract from BOTH ends,
   clamp at 0). Status compares MIDPOINT to allowance, UI shows full range.

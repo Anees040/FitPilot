@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/domain/engines/range_calculator.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
@@ -45,6 +46,7 @@ class TodayNotifier extends AsyncNotifier<TodayState> {
     final logRepo = await ref.read(logRepositoryProvider.future);
     await logRepo.add(log);
     ref.invalidateSelf();
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
   }
 
   /// Updates the quantity of an existing log and refreshes.
@@ -60,6 +62,7 @@ class TodayNotifier extends AsyncNotifier<TodayState> {
 
     await logRepo.update(updated);
     ref.invalidateSelf();
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
   }
 
   /// Soft deletes a log and refreshes.
@@ -67,5 +70,6 @@ class TodayNotifier extends AsyncNotifier<TodayState> {
     final logRepo = await ref.read(logRepositoryProvider.future);
     await logRepo.softDelete(logId, DateTime.now());
     ref.invalidateSelf();
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
   }
 }

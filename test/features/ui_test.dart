@@ -149,7 +149,8 @@ class MockTodayNotifier extends AsyncNotifier<TodayState>
   Future<void> updateLogQuantity(String logId, num newQuantity) async {}
 }
 
-class MockFoodSearchNotifier extends AutoDisposeAsyncNotifier<List<FoodItem>> implements FoodSearchNotifier {
+class MockFoodSearchNotifier extends AutoDisposeAsyncNotifier<List<FoodItem>>
+    implements FoodSearchNotifier {
   @override
   Future<List<FoodItem>> build() async {
     return [];
