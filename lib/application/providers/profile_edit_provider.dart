@@ -24,6 +24,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
     int? targetOverride,
     bool clearOverride = false,
     List<String>? equipment,
+    ThemeModePref? themeMode,
   }) async {
     final repo = await ref.read(profileRepositoryProvider.future);
     final currentProfile = await ref.read(profileProvider.future);
@@ -41,6 +42,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
           ? null
           : (targetOverride ?? currentProfile.targetOverride),
       equipment: equipment,
+      themeMode: themeMode,
       updatedAt: DateTime.now(),
     );
 
