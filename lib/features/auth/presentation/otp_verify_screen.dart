@@ -7,7 +7,6 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
-import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 
 class OtpVerifyScreen extends ConsumerStatefulWidget {
@@ -118,16 +117,23 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
               ),
               const SizedBox(height: 32),
 
-              AppTextField(
-                label: 'CODE',
+              _OtpDigitBoxes(
                 controller: _codeCtrl,
-                keyboardType: TextInputType.number,
-                errorText: _errorText,
+                hasError: _errorText != null,
                 onChanged: (val) {
                   if (_errorText != null) setState(() => _errorText = null);
                   if (val.length == 6 && !_isLoading) _submit();
+                  setState(() {});
                 },
               ),
+              if (_errorText != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _errorText!,
+                  style: theme.textTheme.caption.copyWith(color: theme.extension<AppColors>()!.error),
+                  textAlign: TextAlign.center,
+                ),
+              ],
               const SizedBox(height: 16),
 
               PrimaryButton(
@@ -153,3 +159,105 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     );
   }
 }
+
+class _OtpDigitBoxes extends StatefulWidget {
+  final TextEditingController controller;
+  final bool hasError;
+  final ValueChanged<String> onChanged;
+
+  const _OtpDigitBoxes({
+    required this.controller,
+    required this.hasError,
+    required this.onChanged,
+  });
+
+  @override
+  State<_OtpDigitBoxes> createState() => _OtpDigitBoxesState();
+}
+
+class _OtpDigitBoxesState extends State<_OtpDigitBoxes> {
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_update);
+    _focusNode.addListener(_update);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_update);
+    _focusNode.removeListener(_update);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _update() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = widget.controller.text;
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    final isFocused = _focusNode.hasFocus;
+
+    return Stack(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(6, (index) {
+            final isFilled = index < text.length;
+            final isCurrent = index == text.length && isFocused;
+
+            return Container(
+              width: 48,
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: widget.hasError
+                      ? ext.error
+                      : isCurrent
+                          ? theme.colorScheme.primary
+                          : ext.hairline,
+                  width: isCurrent ? 2 : 1,
+                ),
+              ),
+              child: Text(
+                isFilled ? text[index] : '',
+                style: theme.textTheme.h1.copyWith(
+                  color: widget.hasError ? ext.error : theme.textTheme.display.color,
+                ),
+              ),
+            );
+          }),
+        ),
+        Positioned.fill(
+          child: TextField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            autofocus: true,
+            cursorColor: Colors.transparent,
+            style: const TextStyle(color: Colors.transparent),
+            decoration: const InputDecoration(
+              counterText: '',
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              fillColor: Colors.transparent,
+            ),
+            onChanged: widget.onChanged,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
