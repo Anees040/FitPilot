@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
 import 'package:fitpilot/domain/entities/burn_option.dart';
+import 'package:fitpilot/domain/engines/burn_planner.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/core/ui/select_chip.dart';
 import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 
 class PlanScreen extends ConsumerWidget {
@@ -95,10 +97,42 @@ class PlanScreen extends ConsumerWidget {
         const SizedBox(height: 24),
         Text('AVAILABLE ACTIVITIES', style: theme.textTheme.overline),
         const SizedBox(height: 12),
+        _buildCategoryFilters(context, ref),
+        const SizedBox(height: 16),
         ...state.options.map(
           (option) => _buildOptionCard(context, ref, option),
         ),
       ],
+    );
+  }
+
+  Widget _buildCategoryFilters(BuildContext context, WidgetRef ref) {
+    final currentFilter = ref.watch(burnCategoryFilterProvider);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: SelectChip(
+              label: 'All',
+              isSelected: currentFilter == null,
+              onSelected: () => ref.read(burnCategoryFilterProvider.notifier).state = null,
+            ),
+          ),
+          ...ActivityCategory.values.map((cat) {
+            final label = cat.name[0].toUpperCase() + cat.name.substring(1);
+            return Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: SelectChip(
+                label: label,
+                isSelected: currentFilter == cat,
+                onSelected: () => ref.read(burnCategoryFilterProvider.notifier).state = cat,
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 

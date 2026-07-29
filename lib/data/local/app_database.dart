@@ -23,12 +23,14 @@ class AppDatabase {
 
   /// For testing: open an in-memory database with the same schema.
   static Future<Database> inMemory() async {
-    return openDatabase(
+    final db = await openDatabase(
       inMemoryDatabasePath,
       version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+    await _repairLogs(db);
+    return db;
   }
 
   static Future<void> _onCreate(Database db, int version) async {
@@ -226,7 +228,7 @@ class AppDatabase {
     await db.delete(
       'food_logs',
       where:
-          'kcal_min > kcal_max OR kcal_min < 0 OR quantity <= 0 OR (food_id IS NULL AND (custom_name IS NULL OR trim(custom_name) = ""))',
+          "kcal_min > kcal_max OR kcal_min < 0 OR quantity <= 0 OR (food_id IS NULL AND (custom_name IS NULL OR trim(custom_name) = ''))",
     );
   }
 }

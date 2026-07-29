@@ -24,11 +24,12 @@
 - [x] F3 — Final Screen Redesign & Interaction Prompt
 - [x] F4 — First impression: onboarding, illustration, empty states
 - [x] F5 — Correctness + UX drop
+- [x] F7 — Chrome/web correctness fixes
 
 ## Last completed
 
-- F5 — Correctness + UX drop
-(Included Streak ANR fix, numeric casting fixes, Web Support, OTP UI boxes, and Profile redesign)
+- F7 — Chrome/web correctness fixes
+(Included SQLite web fix, BurnPlanner UI filters, Profile synchronization fixes, and Splash animation)
 
 ## Known issues / debt
 

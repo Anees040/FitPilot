@@ -90,7 +90,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       body: SafeArea(
         child: profileAsync.when(
           data: (profile) {
-            _initForm(profile);
+            if (!_initialized) {
+              _initForm(profile);
+            } else if (!_isSaving) {
+              final weightStr = profile.weightKg.toString();
+              if (_weightCtrl.text != weightStr) {
+                _weightCtrl.text = weightStr;
+              }
+            }
             return _buildForm(context, profile);
           },
           loading: () => const Center(child: CircularProgressIndicator()),

@@ -1,12 +1,15 @@
 import '../entities/burn_option.dart';
 
+/// Exercise category filter for burn plans.
+enum ActivityCategory { indoor, outdoor, gym, equipment }
+
 /// Activity entry in the internal MET table.
 class _Activity {
   final String name;
   final double met;
-  final String? equipment;
+  final ActivityCategory category;
 
-  const _Activity(this.name, this.met, this.equipment);
+  const _Activity(this.name, this.met, this.category);
 }
 
 /// Computes burn plan options using the MET formula.
@@ -16,14 +19,14 @@ class BurnPlanner {
   const BurnPlanner();
 
   static const List<_Activity> _activities = [
-    _Activity('Walking (brisk)', 3.5, null),
-    _Activity('Jump rope', 11.0, 'rope'),
-    _Activity('Running', 9.8, null),
-    _Activity('Cycling', 7.5, 'cycle'),
-    _Activity('Burpees', 8.0, null),
-    _Activity('Stair climbing', 8.8, null),
-    _Activity('Swimming', 8.3, 'pool'),
-    _Activity('Weight training', 5.0, 'gym'),
+    _Activity('Walking (brisk)', 3.5, ActivityCategory.outdoor),
+    _Activity('Jump rope', 11.0, ActivityCategory.equipment),
+    _Activity('Running', 9.8, ActivityCategory.outdoor),
+    _Activity('Cycling', 7.5, ActivityCategory.equipment),
+    _Activity('Burpees', 8.0, ActivityCategory.indoor),
+    _Activity('Stair climbing', 8.8, ActivityCategory.indoor),
+    _Activity('Swimming', 8.3, ActivityCategory.gym),
+    _Activity('Weight training', 5.0, ActivityCategory.gym),
   ];
 
   /// Generates up to 4 burn options for the given [kcalOver] surplus,
@@ -35,20 +38,20 @@ class BurnPlanner {
   List<BurnOption> planFor({
     required int kcalOver,
     required double weightKg,
-    List<String> equipment = const [],
+    ActivityCategory? categoryFilter,
   }) {
     if (kcalOver <= 0) return [];
 
     final options = <BurnOption>[];
 
     for (final activity in _activities) {
-      // Include if no equipment needed, or user has the equipment,
+      // Include if no filter is active, or the category matches,
       // or it's walking (always included).
       final isWalking = activity.name == 'Walking (brisk)';
-      final equipmentSatisfied =
-          activity.equipment == null || equipment.contains(activity.equipment);
+      final categorySatisfied =
+          categoryFilter == null || activity.category == categoryFilter;
 
-      if (!isWalking && !equipmentSatisfied) continue;
+      if (!isWalking && !categorySatisfied) continue;
 
       final rawMinutes = kcalOver * 200 / (activity.met * 3.5 * weightKg);
 

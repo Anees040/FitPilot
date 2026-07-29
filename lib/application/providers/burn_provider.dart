@@ -26,6 +26,8 @@ class BurnPlanState {
   });
 }
 
+final burnCategoryFilterProvider = StateProvider<ActivityCategory?>((ref) => null);
+
 final burnPlanProvider = AsyncNotifierProvider<BurnPlanNotifier, BurnPlanState>(
   BurnPlanNotifier.new,
 );
@@ -34,6 +36,7 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
   @override
   Future<BurnPlanState> build() async {
     final now = DateTime.now();
+    final filter = ref.watch(burnCategoryFilterProvider);
     final profile = await ref.watch(profileProvider.future);
     final logRepo = await ref.watch(logRepositoryProvider.future);
     final burnRepo = await ref.watch(burnRepositoryProvider.future);
@@ -88,7 +91,7 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
       final options = const BurnPlanner().planFor(
         kcalOver: kcalOver,
         weightKg: profile.weightKg,
-        equipment: profile.equipment,
+        categoryFilter: filter,
       );
       return BurnPlanState(
         frame: BurnPlanFrame.surplusYesterday,
@@ -107,7 +110,7 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
         final options = const BurnPlanner().planFor(
           kcalOver: kcalOver,
           weightKg: profile.weightKg,
-          equipment: profile.equipment,
+          categoryFilter: filter,
         );
         return BurnPlanState(
           frame: BurnPlanFrame.surplusToday,

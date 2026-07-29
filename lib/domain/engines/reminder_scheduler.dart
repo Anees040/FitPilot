@@ -73,11 +73,9 @@ class ReminderScheduler {
       final alertTime = streakState.graceDeadline!.subtract(const Duration(hours: 8));
       
       if (alertTime.isAfter(now)) {
-        // Need to find smallest burn option
         final options = _burnPlanner.planFor(
           kcalOver: streakState.kcalStillToBurn,
           weightKg: profile.weightKg,
-          equipment: [], 
         );
 
         if (options.isNotEmpty) {

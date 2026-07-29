@@ -10,10 +10,13 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _pulseController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _pulseAnimation;
+
   bool _isInitStarted = false;
 
   @override
@@ -29,6 +32,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
     );
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _pulseController.repeat(reverse: true);
 
     _controller.forward();
 
@@ -68,6 +81,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void dispose() {
     _controller.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -85,14 +99,17 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 96,
-                  height: 96,
-                  errorBuilder: (c, e, s) => Icon(
-                    Icons.local_fire_department,
-                    size: 64,
-                    color: Theme.of(c).colorScheme.primary,
+                ScaleTransition(
+                  scale: _pulseAnimation,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 96,
+                    height: 96,
+                    errorBuilder: (c, e, s) => Icon(
+                      Icons.local_fire_department,
+                      size: 64,
+                      color: Theme.of(c).colorScheme.primary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
