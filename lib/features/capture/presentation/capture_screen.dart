@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -23,9 +24,9 @@ class CaptureScreen extends ConsumerStatefulWidget {
 }
 
 class _CaptureScreenState extends ConsumerState<CaptureScreen> {
-  CaptureMode _mode = CaptureMode.barcode;
-  late final MobileScannerController _cameraController;
-  final TextRecognizer _textRecognizer = TextRecognizer();
+  CaptureMode _mode = kIsWeb ? CaptureMode.library : CaptureMode.barcode;
+  MobileScannerController? _cameraController;
+  TextRecognizer? _textRecognizer;
 
   bool _isProcessing = false;
   bool _isTorchOn = false;
@@ -33,17 +34,20 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   @override
   void initState() {
     super.initState();
-    _cameraController = MobileScannerController(
-      returnImage: true,
-      formats: const [BarcodeFormat.all],
-      autoStart: true,
-    );
+    if (!kIsWeb) {
+      _cameraController = MobileScannerController(
+        returnImage: true,
+        formats: const [BarcodeFormat.all],
+        autoStart: true,
+      );
+      _textRecognizer = TextRecognizer();
+    }
   }
 
   @override
   void dispose() {
-    _cameraController.dispose();
-    _textRecognizer.close();
+    _cameraController?.dispose();
+    _textRecognizer?.close();
     super.dispose();
   }
 
@@ -56,9 +60,13 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       context.go('/log');
       return;
     }
+    if (kIsWeb && (newMode == CaptureMode.barcode || newMode == CaptureMode.foodLabel)) {
+      confirmSnackbar(context, 'Camera features are not supported on web.');
+      return;
+    }
     if (_mode != newMode && (newMode == CaptureMode.barcode || newMode == CaptureMode.foodLabel)) {
-      _cameraController.stop().then((_) {
-        if (mounted) _cameraController.start();
+      _cameraController?.stop().then((_) {
+        if (mounted) _cameraController?.start();
       });
     }
     setState(() {
@@ -167,16 +175,17 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      _isTorchOn ? Icons.flash_on : Icons.flash_off,
-                      color: theme.colorScheme.surface,
+                  if (!kIsWeb)
+                    IconButton(
+                      icon: Icon(
+                        _isTorchOn ? Icons.flash_on : Icons.flash_off,
+                        color: theme.colorScheme.surface,
+                      ),
+                      onPressed: () {
+                        _cameraController?.toggleTorch();
+                        setState(() => _isTorchOn = !_isTorchOn);
+                      },
                     ),
-                    onPressed: () {
-                      _cameraController.toggleTorch();
-                      setState(() => _isTorchOn = !_isTorchOn);
-                    },
-                  ),
                 ],
               ),
             ),
@@ -185,51 +194,66 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  MobileScanner(
-                    controller: _cameraController,
-                    errorBuilder: (context, error, child) {
-                      String message = 'Camera error occurred.';
-                      switch (error.errorCode.name) {
-                        case 'permissionDenied':
-                          message = 'Camera permission denied.';
-                          break;
-                        case 'unsupported':
-                          message = 'Camera not supported on this device.';
-                          break;
-                        default:
-                          message = 'Camera in use or capture failed.';
-                          break;
-                      }
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.camera_alt, color: theme.colorScheme.error, size: 48),
-                            const SizedBox(height: 16),
-                            Text(
-                              message,
-                              style: TextStyle(color: theme.colorScheme.surface),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => _cameraController.start(),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    onDetect: (capture) {
-                      if (_mode == CaptureMode.barcode) {
-                        _handleBarcode(capture);
-                      } else if (_mode == CaptureMode.foodLabel) {
-                        if (_isProcessing && _latestCapture == null) {
-                          _latestCapture = capture;
+                  if (kIsWeb)
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.no_photography, color: theme.colorScheme.surface, size: 48),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Camera not available on Web.',
+                            style: TextStyle(color: theme.colorScheme.surface),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    MobileScanner(
+                      controller: _cameraController!,
+                      errorBuilder: (context, error, child) {
+                        String message = 'Camera error occurred.';
+                        switch (error.errorCode.name) {
+                          case 'permissionDenied':
+                            message = 'Camera permission denied.';
+                            break;
+                          case 'unsupported':
+                            message = 'Camera not supported on this device.';
+                            break;
+                          default:
+                            message = 'Camera in use or capture failed.';
+                            break;
                         }
-                      }
-                    },
-                  ),
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.camera_alt, color: theme.colorScheme.error, size: 48),
+                              const SizedBox(height: 16),
+                              Text(
+                                message,
+                                style: TextStyle(color: theme.colorScheme.surface),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () => _cameraController?.start(),
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      onDetect: (capture) {
+                        if (_mode == CaptureMode.barcode) {
+                          _handleBarcode(capture);
+                        } else if (_mode == CaptureMode.foodLabel) {
+                          if (_isProcessing && _latestCapture == null) {
+                            _latestCapture = capture;
+                          }
+                        }
+                      },
+                    ),
                   if (_mode == CaptureMode.barcode)
                     _buildBarcodeOverlay()
                   else if (_mode == CaptureMode.foodLabel)
@@ -315,7 +339,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       await file.writeAsBytes(imageBytes);
 
       final inputImage = InputImage.fromFilePath(file.path);
-      final recognizedText = await _textRecognizer.processImage(inputImage);
+      final recognizedText = await _textRecognizer?.processImage(inputImage);
+      
+      if (recognizedText == null) {
+        throw Exception('Text recognizer not initialized');
+      }
 
       final parser = NutritionLabelParser();
       final result = parser.parse(recognizedText.text);
