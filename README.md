@@ -1,54 +1,50 @@
 # FitPilot
 
-> **Eat it. Burn it.** — An honest calorie companion that never pretends to know what it cannot know.
+> **Eat it. Burn it.** — Your food's honest price tag, and your coach in the gym.
 
 [![CI](https://github.com/Anees040/FitPilot/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/Anees040/FitPilot/actions/workflows/flutter_ci.yml)
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter&logoColor=white&color=555)
 ![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-555)
 ![Tests](https://img.shields.io/badge/tests-137%20passing-success)
 
-FitPilot is an offline-first calorie tracking application built around a single principle: **honesty over false precision.** Where other apps display "Chicken Biryani — 485 kcal" as if it were a laboratory measurement, FitPilot shows an honest range (480–700 kcal) — and when you exceed your daily target, it converts the surplus into a concrete, personalised burn plan: *walk 25 minutes, or skip rope for 8.*
-
 ---
 
-## Table of Contents
+## The Problem
 
-- [Philosophy](#philosophy)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [Testing](#testing)
-- [Project Structure](#project-structure)
-- [Documentation](#documentation)
-- [Roadmap](#roadmap)
-- [Author](#author)
+FitPilot exists because of three real frustrations that existing fitness apps don't solve honestly:
 
----
+1. **"I want to enjoy fast food sometimes — without losing my progress."** You shouldn't need to track every meal of every day like a full-time job. But when you *do* indulge, you deserve a straight answer: what did that actually cost, and exactly which exercise — for how many minutes, at *your* body weight — clears the bill? Most apps give you guilt and a fake-precise number. FitPilot gives you an honest calorie range and a concrete burn plan.
 
-## Philosophy
+2. **"I'm standing in the gym and I don't know how to use this machine."** Every gym has machines people avoid because nobody taught them. Bad technique wastes months and causes injuries. FitPilot's goal: point your camera at a machine and learn what it trains, how to set it up, and the mistakes to avoid — then record a set and get rep-by-rep technique feedback, like a coach who never judges you.
 
-Three rules shape every feature in this application:
+3. **"I want a plan built for me — not a generic PDF."** Build muscle, lose fat, or maintain; calisthenics or weight training; beginner or advanced; 2 months or 6. Pick your answers and get a weekly plan you can actually follow.
 
-1. **Honest ranges, never fake precision.** Estimated foods always display a calorie *range*. A single exact number is shown only when the value is genuinely known — from a barcode lookup or a nutrition label scanned by the user.
-2. **A surplus is a task, not a failure.** Going over your target does not produce guilt messaging; it produces a burn plan sized to your body weight, with a grace deadline to complete it.
-3. **No data, no judgement.** Days you do not log are neutral — they neither extend nor break your streak. The app never fabricates a green day it did not witness.
+**FitPilot is built for episodic use, not daily surveillance.** Days you don't log are neutral — they never break your streak, never turn red, never guilt you. The streak means one thing: *every time you did show up, you handled it.*
 
-## Features
+## The Three Pillars
 
-### Food logging
+| Pillar | What it does | Status |
+| --- | --- | --- |
+| 🍔 **Eat it, burn it** | Log any food (search, barcode, nutrition label) → honest kcal range → surplus converted into a personalised burn plan with a grace deadline | ✅ Built |
+| 🏋️ **Gym coach** | Machine scanner (what is this, how do I use it) + AI form check with rep-by-rep technique feedback | ⏳ Milestone D |
+| 📅 **Plans that fit you** | Goal + training style + level + duration → customised weekly plan; full exercise library with technique guides | ⏳ Milestone C |
+
+## Features (current build)
+
+### Honest food logging
 - Searchable local food catalog with Urdu aliases, portion labels, and verified entries
 - Custom foods and quick manual entry with validation
 - **Barcode scanning** backed by the Open Food Facts database (v2 API), with kJ→kcal conversion and explicit provenance
 - **Nutrition-label OCR** (on-device ML Kit) with per-field confidence flagging and full user correction before anything is saved
+- Calorie *ranges* for estimated foods — a single exact number appears only when it is genuinely known (barcode or label)
 
-### Daily burn planning
+### Burn planning
 - Surplus converted into equivalent activity minutes using MET-based energy expenditure (kcal/min = MET × 3.5 × kg ÷ 200), personalised to the user's weight
-- Multiple activity options (walking always available — no equipment required)
-- Grace deadline (next day 11:59 AM) to clear a surplus and protect the streak
+- Multiple activity options — walking always available, no equipment required
+- Grace deadline (next day 11:59 AM) to clear a surplus and keep the day counted as a win
 
-### Progress & motivation
-- Streak engine with three-state day model: safe, over-unresolved, and **neutral no-log days**
+### Progress without guilt
+- Streak engine with a three-state day model: safe, over-unresolved, and **neutral no-log days**
 - 35-day calendar heat map, weekly intake/burn summaries, and weight trend tracking
 - Local notifications, including streak-protection reminders that name the deadline and the smallest available burn option
 
@@ -84,6 +80,7 @@ Key design decisions (full rationale in [`docs/DECISIONS.md`](docs/DECISIONS.md)
 | --- | --- |
 | Offline-first with sync queue | Target users cannot depend on constant connectivity; the app must be fully usable offline |
 | Calorie ranges as a first-class type (`KcalRange`) | Prevents false precision from ever entering the domain model |
+| Neutral no-log days in the streak engine | The app is designed for episodic use — skipping days is normal life, not failure |
 | Day status computed from range **midpoint** | Deterministic, explainable streak decisions |
 | All AI/photo features proxied server-side | API keys never ship inside the binary |
 | Architecture tests in CI | A test suite enforces the design system (e.g. no hard-coded colors outside theme files) |
@@ -188,13 +185,13 @@ This project maintains living documentation designed for both humans and AI codi
 
 ## Roadmap
 
-| Milestone | Scope | Status |
-| --- | --- | --- |
-| **A — Offline core** | Domain engines, local logging, burn plans, streaks | ✅ Complete |
-| **B — Connected** | Supabase auth & sync, barcode, label OCR, weight, notifications | ✅ Complete |
-| **B.5 — Fix & polish** | Device-verified UX pass, design system enforcement | 🔄 In progress |
-| **C — Intelligence** | Server-side AI proxy, photo food estimation, exercise library, weekly planner | ⏳ Planned |
-| **D — Advanced** | Machine scanner, AI form check, push notifications, admin dashboard | ⏳ Planned |
+| Milestone | Scope | Pillar | Status |
+| --- | --- | --- | --- |
+| **A — Offline core** | Domain engines, local logging, burn plans, streaks | 🍔 | ✅ Complete |
+| **B — Connected** | Supabase auth & sync, barcode, label OCR, weight, notifications | 🍔 | ✅ Complete |
+| **B.5 — Fix & polish** | Device-verified UX pass, design system enforcement | — | 🔄 In progress |
+| **C — Plans & library** | Exercise library with technique guides, weekly planner, program templates (goal × style × level × duration), AI photo food estimation via server-side proxy | 📅 | ⏳ Planned |
+| **D — Gym coach** | Machine scanner, AI form check with rep-by-rep feedback, push notifications, admin dashboard | 🏋️ | ⏳ Planned |
 
 ## Author
 
