@@ -51,17 +51,11 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
         ),
         const SizedBox(height: 12),
         if (widget.entries.isEmpty)
-          AppCard(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Log your weight to see your trend.',
-                  style: theme.textTheme.body,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+          EmptyState(
+            message: 'No weight entries yet. Log your weight to see your trend.',
+            buttonLabel: 'Log weight',
+            illustration: 'empty_chart',
+            onAction: () => _showAddWeightDialog(context, ref),
           )
         else
           AppCard(

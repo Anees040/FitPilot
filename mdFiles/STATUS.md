@@ -21,10 +21,13 @@
 - [x] B0+B4 — Barcode, Open Food Facts, and label OCR
 - [x] F1 — Correctness and dead features
 - [x] F2 — Foundation: launch, type, dark theme, adaptivity
+- [x] F3 — Final Screen Redesign & Interaction Prompt
+- [x] F4 — First impression: onboarding, illustration, empty states
 
 ## Last completed
 
-- F2 — Foundation: launch, type, dark theme, adaptivity
+- F4 — First impression: onboarding, illustration, empty states
+(Polish pass complete)
 
 ## Known issues / debt
 
@@ -32,4 +35,5 @@
 
 ## Notes for next session
 
-(empty)
+- Polish pass is complete.
+- Milestone C starts with adding the Supabase backend features, replacing mock data, and integrating the Node/Express AI proxy (Gemini) for food analysis.

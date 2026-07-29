@@ -54,8 +54,8 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
     );
 
     ref.read(todayProvider.notifier).addLog(log);
-    Navigator.of(context).pop();
-    confirmSnackbar(context, 'Added manual entry');
+    Navigator.pop(context);
+    confirmSnackbar(context, 'Meal logged');
   }
 
   @override

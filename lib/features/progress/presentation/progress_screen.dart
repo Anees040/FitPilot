@@ -8,11 +8,18 @@ import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/features/progress/presentation/weight_trend_section.dart';
 
-class ProgressScreen extends ConsumerWidget {
+class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProgressScreen> createState() => _ProgressScreenState();
+}
+
+class _ProgressScreenState extends ConsumerState<ProgressScreen> {
+  bool _hasShownMilestone = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final stateAsync = ref.watch(progressProvider);
 
@@ -38,6 +45,38 @@ class ProgressScreen extends ConsumerWidget {
   }
 
   Widget _buildBody(BuildContext context, ProgressState state) {
+    if (!_hasShownMilestone && state.streak.currentStreak > 0 && state.streak.currentStreak % 7 == 0) {
+      _hasShownMilestone = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.star, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text('Amazing! ${state.streak.currentStreak}-day streak!'),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 2500),
+            backgroundColor: Theme.of(context).colorScheme.onSurface,
+          ),
+        );
+      });
+    }
+
+    final hasHistory = state.last35Days.values.any((d) => d.state != DayState.noData);
+    
+    if (!hasHistory) {
+      return EmptyState(
+        message: 'No progress history yet. Log your meals to start building your streak and insights!',
+        buttonLabel: 'Log today',
+        illustration: 'empty_history',
+        onAction: () => context.go('/log'),
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [

@@ -16,22 +16,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   final List<_SlideData> _slides = [
     _SlideData(
-      title: 'Honest calorie ranges',
-      description:
-          'Stop guessing. We show you a realistic range for every meal, complete with confidence levels.',
-      illustration: Icons.restaurant,
+      headline: 'Honest calorie ranges',
+      support: '350–520 kcal — because nobody really knows it\'s exactly 437.',
+      illustration: 'range_slider.png',
     ),
     _SlideData(
-      title: 'Overeat? Burn it.',
-      description:
-          'Over your limit? We give you concrete burn plans tailored to your equipment.',
-      illustration: Icons.local_fire_department,
+      headline: 'Overeat? Burn it.',
+      support: 'Go over and FitPilot gives you real options: a 34 min walk or 13 min of jump rope.',
+      illustration: 'walker_rope.png',
     ),
     _SlideData(
-      title: 'Works offline. Free.',
-      description:
-          'Your data stays on your device. Burn off yesterday\'s surplus to keep your streak alive.',
-      illustration: Icons.verified,
+      headline: 'Works offline. Free.',
+      support: 'Log anywhere. Everything syncs when you\'re back online.',
+      illustration: 'phone_check.png',
     ),
   ];
 
@@ -41,16 +38,82 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     super.dispose();
   }
 
+  void _skip() {
+    context.go('/today'); // Skip directly to app
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
+    
+    // UI_SPEC: Top to bottom: logo 96 dp (radius 24) at ~12% height; "FitPilot" 32/w800; 
+    // "Eat it. Burn it." 15 textSecondary; flexible hero illustration area; 
+    // headline 28/w700 centered; support line 16 textSecondary, max 2 lines; 
+    // page dots (active = 24x6 accent pill); PrimaryButton "Get started"; 
+    // SecondaryButton "I already have an account"; TertiaryButton "Continue without an account".
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
+            // Top Section (Fixed)
+            Padding(
+              padding: const EdgeInsets.only(top: 32.0, left: 16, right: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 48), // spacer to balance skip button
+                  Column(
+                    children: [
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          image: const DecorationImage(
+                            image: AssetImage('assets/images/logo.png'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        // Fallback if logo not found
+                        child: Image.asset('assets/images/logo.png', errorBuilder: (_, __, ___) => Container(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Icon(Icons.fitness_center, size: 48, color: theme.colorScheme.primary),
+                        )),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'FitPilot',
+                        style: theme.textTheme.display,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Eat it. Burn it.',
+                        style: theme.textTheme.body.copyWith(color: theme.textTheme.caption.color),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: _skip,
+                    style: TextButton.styleFrom(
+                      foregroundColor: theme.textTheme.caption.color,
+                      textStyle: theme.textTheme.bodyStrong,
+                    ),
+                    child: const Text('Skip'),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Middle Section (Swipeable)
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -61,37 +124,43 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 itemBuilder: (context, index) {
                   final slide = _slides[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
+                        Expanded(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 200),
+                            child: Image.asset(
+                              'assets/illustrations/${slide.illustration}',
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, size: 100, color: ext.hairline),
+                            ),
                           ),
-                          child: Icon(slide.illustration, size: 80, color: theme.colorScheme.primary),
                         ),
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 32),
                         Text(
-                          slide.title,
-                          style: theme.textTheme.h1,
+                          slide.headline,
+                          style: theme.textTheme.display.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Text(
-                          slide.description,
-                          style: theme.textTheme.body,
+                          slide.support,
+                          style: theme.textTheme.body.copyWith(color: theme.textTheme.caption.color, fontSize: 16),
                           textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   );
                 },
               ),
             ),
+            
+            // Page Dots
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -100,7 +169,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   width: _currentIndex == index ? 24 : 8,
-                  height: 8,
+                  height: 6,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(4),
                     color: _currentIndex == index
@@ -110,24 +179,26 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 32),
+            
+            // Bottom Section (Fixed Buttons)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 children: [
                   PrimaryButton(
-                    label: 'Create your account',
+                    label: 'Get started',
                     onPressed: () => context.push('/signup'),
                   ),
-                  const SizedBox(height: 8),
-                  TertiaryButton(
-                    label: 'Log in',
+                  const SizedBox(height: 12),
+                  SecondaryButton(
+                    label: 'I already have an account',
                     onPressed: () => context.push('/signin'),
                   ),
-                  // Hidden guest access for testing, not in primary UI
-                  GestureDetector(
-                    onDoubleTap: () => context.go('/today'),
-                    child: const SizedBox(height: 16, width: 44),
+                  const SizedBox(height: 4),
+                  TertiaryButton(
+                    label: 'Continue without an account',
+                    onPressed: _skip,
                   ),
                 ],
               ),
@@ -141,13 +212,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 }
 
 class _SlideData {
-  final String title;
-  final String description;
-  final IconData illustration;
+  final String headline;
+  final String support;
+  final String illustration;
 
   _SlideData({
-    required this.title,
-    required this.description,
+    required this.headline,
+    required this.support,
     required this.illustration,
   });
 }

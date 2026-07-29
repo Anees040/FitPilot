@@ -75,7 +75,7 @@ class TodayScreen extends ConsumerWidget {
                   child: EmptyState(
                     message: 'No logs yet today. Tap the Capture button to add your first meal.',
                     buttonLabel: 'Add meal manually',
-                    illustration: 'empty_today',
+                    illustration: 'empty_plate',
                     onAction: () => context.go('/log'),
                   ),
                 )

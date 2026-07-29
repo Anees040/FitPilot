@@ -53,7 +53,18 @@ No other colors or styles exist. Hard bans: gradients, glows, glassmorphism, blu
 - **Four Mandatory States:** Every screen must implement Empty, Loading (skeletons), Error (friendly/retry/offline-aware), and Success states.
 - **Copy Tone:** Encouraging shopkeeper, not drill sergeant. Never guilt users ("Burn it when you're ready", not "You failed").
 
-## 5. Non-Negotiable Design Constraints Block
+## 5. Illustrations
+- **Style:** Minimalist, thin dark outline (#1A1A1A or equivalent on-surface) line-art on transparent backgrounds.
+- **Accent:** A single accent stroke or small element in `#D9531E` (orange). No solid fills except for small dots or the accent path.
+- **Adaptability:** Must be legible on dark surfaces. If SVG-derived PNGs are used, stroke colors can be inverted programmatically or provided via a theme-aware switch if necessary.
+- **Usage:** One illustration per screen, max. Never competes with data. Replaces emptiness (Empty States).
+
+## 6. Motion & Micro-interactions
+- **Duration:** All animations must complete in under 400ms.
+- **Accessibility:** Must fully respect the system's `reduce-motion` setting. If reduced motion is on, skip animations or use simple cross-fades.
+- **Interactions:** Use brief, calm confirmations (e.g. snackbars under 1.5 seconds) for routine actions like logging food. Use satisfying, short confirmations for rewards (e.g. marking a burn done).
+
+## 7. Non-Negotiable Design Constraints Block
 ```
 [DESIGN CONSTRAINTS — NON-NEGOTIABLE]
 Inter font via google_fonts. Background #FAFAF8, surfaces #FFFFFF, text #1A1A1A,
@@ -63,5 +74,5 @@ purple, NO glassmorphism, NO confetti. Flat surfaces separated by 1px #E8E6E1
 hairlines. 8pt spacing grid. 12px/16px corner radius. 44px minimum touch targets. One
 primary action per screen. Big-number typography for kcal ranges and minutes. Calorie
 values ALWAYS as ranges with a confidence bar, never one number. Include empty,
-loading, error, and offline states.
+loading, error, and offline states. Minimalist line-art illustrations only. Motion under 400ms.
 ```

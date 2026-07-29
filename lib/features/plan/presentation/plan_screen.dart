@@ -41,8 +41,8 @@ class PlanScreen extends ConsumerWidget {
       return EmptyState(
         message: 'No burn plan needed today. You have a cheat tolerance if you go a bit over.',
         buttonLabel: 'Looking good!',
-        illustration: 'no_surplus',
-        onAction: () {},
+        illustration: 'empty_plan',
+        onAction: () => context.go('/today'),
       );
     }
 
@@ -50,8 +50,8 @@ class PlanScreen extends ConsumerWidget {
       return EmptyState(
         message: 'Your goal is to build, so keep eating to hit your target!',
         buttonLabel: 'Keep it up!',
-        illustration: 'build_deficit',
-        onAction: () {},
+        illustration: 'empty_plan',
+        onAction: () => context.go('/today'),
       );
     }
 

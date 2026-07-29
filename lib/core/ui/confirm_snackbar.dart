@@ -13,7 +13,7 @@ void confirmSnackbar(BuildContext context, String message, {VoidCallback? onUndo
       ),
       backgroundColor: theme.colorScheme.onSurface,
       behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(milliseconds: 1500),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),

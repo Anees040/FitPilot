@@ -18,7 +18,7 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final PageController _pageController = PageController();
-  int _step = 0; // 0 for About you, 1 for Allowance & gear
+  int _step = 0; // 0: Basics, 1: Activity, 2: Goal
 
   // Step 1
   final _weightCtrl = TextEditingController();
@@ -27,8 +27,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   Gender? _gender;
 
   // Step 2
-  double _allowance = 300;
+  ActivityLevel _activityLevel = ActivityLevel.light;
   final Set<String> _equipment = {};
+
+  // Step 3
+  Goal _goal = Goal.maintain;
+  double _allowance = 300;
 
   bool _isLoading = false;
   String? _error;
@@ -43,29 +47,46 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   void _nextStep() {
-    final weight = double.tryParse(_weightCtrl.text);
-    final height = int.tryParse(_heightCtrl.text);
-    final age = int.tryParse(_ageCtrl.text);
+    if (_step == 0) {
+      final weight = double.tryParse(_weightCtrl.text);
+      final height = int.tryParse(_heightCtrl.text);
+      final age = int.tryParse(_ageCtrl.text);
 
-    if (weight == null || weight < 25 || weight > 300) {
-      setState(() => _error = 'Weight must be 25-300 kg');
-      return;
+      if (weight == null || weight < 25 || weight > 300) {
+        setState(() => _error = 'Weight must be 25-300 kg');
+        return;
+      }
+      if (height == null || height < 100 || height > 250) {
+        setState(() => _error = 'Height must be 100-250 cm');
+        return;
+      }
+      if (age == null || age < 13 || age > 100) {
+        setState(() => _error = 'Age must be 13-100');
+        return;
+      }
     }
-    if (height == null || height < 100 || height > 250) {
-      setState(() => _error = 'Height must be 100-250 cm');
-      return;
-    }
-    if (age == null || age < 13 || age > 100) {
-      setState(() => _error = 'Age must be 13-100');
-      return;
-    }
-
+    
     setState(() => _error = null);
-    _pageController.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-    setState(() => _step = 1);
+    
+    if (_step < 2) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _step++);
+    } else {
+      _submit();
+    }
+  }
+
+  void _prevStep() {
+    if (_step > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _step--);
+    }
   }
 
   Future<void> _submit() async {
@@ -77,6 +98,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         heightCm: int.parse(_heightCtrl.text),
         age: int.parse(_ageCtrl.text),
         gender: _gender ?? Gender.unspecified,
+        activityLevel: _activityLevel,
+        goal: _goal,
         allowanceKcal: _allowance.toInt(),
         equipment: _equipment.toList(),
         updatedAt: DateTime.now(),
@@ -87,6 +110,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         heightCm: profile.heightCm,
         age: profile.age,
         gender: profile.gender,
+        activityLevel: profile.activityLevel,
+        goal: profile.goal,
         allowanceKcal: profile.allowanceKcal,
         equipment: profile.equipment,
       );
@@ -101,6 +126,28 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     }
   }
 
+  int get _computedTarget {
+    final weight = double.tryParse(_weightCtrl.text) ?? 70.0;
+    final height = int.tryParse(_heightCtrl.text) ?? 170;
+    final age = int.tryParse(_ageCtrl.text) ?? 30;
+    
+    try {
+      final profile = Profile(
+        weightKg: weight,
+        heightCm: height,
+        age: age,
+        gender: _gender ?? Gender.unspecified,
+        activityLevel: _activityLevel,
+        goal: _goal,
+        allowanceKcal: _allowance.toInt(),
+        updatedAt: DateTime.now(),
+      );
+      return profile.effectiveDailyTarget;
+    } catch (_) {
+      return 2000;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -108,16 +155,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: _step == 1
+        leading: _step > 0
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  _pageController.previousPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                  setState(() => _step = 0);
-                },
+                onPressed: _prevStep,
               )
             : null,
       ),
@@ -128,27 +169,18 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
-                children: [
-                  Expanded(
+                children: List.generate(3, (index) {
+                  return Expanded(
                     child: Container(
+                      margin: EdgeInsets.only(right: index < 2 ? 8 : 0),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
+                        color: index <= _step ? theme.colorScheme.primary : ext.hairline,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: _step == 1 ? theme.colorScheme.primary : ext.hairline,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                ],
+                  );
+                }),
               ),
             ),
             const SizedBox(height: 24),
@@ -159,6 +191,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 children: [
                   _buildStep1(context, theme, ext),
                   _buildStep2(context, theme, ext),
+                  _buildStep3(context, theme, ext),
                 ],
               ),
             ),
@@ -174,10 +207,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('About you', style: theme.textTheme.h1),
+          Text('Body basics', style: theme.textTheme.h1),
           const SizedBox(height: 8),
           Text(
-            'Let\'s calibrate your targets.',
+            'Let\'s calibrate your starting point.',
             style: theme.textTheme.body,
           ),
           const SizedBox(height: 32),
@@ -189,6 +222,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     label: 'WEIGHT (KG)',
                     controller: _weightCtrl,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    onChanged: (_) => setState(() {}),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -197,6 +231,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     label: 'HEIGHT (CM)',
                     controller: _heightCtrl,
                     keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}),
                   ),
                 ),
               ],
@@ -208,6 +243,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               label: 'AGE',
               controller: _ageCtrl,
               keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
             ),
           ),
           const SizedBox(height: 16),
@@ -257,33 +293,30 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Allowance & gear', style: theme.textTheme.h1),
+          Text('Activity & Gear', style: theme.textTheme.h1),
+          const SizedBox(height: 8),
+          Text(
+            'Tell us how you move.',
+            style: theme.textTheme.body,
+          ),
           const SizedBox(height: 32),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('DAILY CHEAT ALLOWANCE', style: theme.textTheme.overline),
+                Text('ACTIVITY LEVEL', style: theme.textTheme.overline),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('0', style: theme.textTheme.caption),
-                    Text('${_allowance.toInt()} kcal', style: theme.textTheme.h2.copyWith(color: theme.colorScheme.primary)),
-                    Text('1000', style: theme.textTheme.caption),
-                  ],
-                ),
-                Slider(
-                  value: _allowance,
-                  min: 0,
-                  max: 1000,
-                  divisions: 20,
-                  activeColor: theme.colorScheme.primary,
-                  onChanged: (val) => setState(() => _allowance = val),
-                ),
-                Text(
-                  'Extra calories you\'re allowed before triggering a burn plan.',
-                  style: theme.textTheme.caption,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: ActivityLevel.values.map((level) {
+                    final label = level.name[0].toUpperCase() + level.name.substring(1);
+                    return SelectChip(
+                      label: label,
+                      isSelected: _activityLevel == level,
+                      onSelected: () => setState(() => _activityLevel = level),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
@@ -318,20 +351,114 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               ],
             ),
           ),
-          if (_error != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              _error!,
-              style: theme.textTheme.caption.copyWith(color: ext.error),
-              textAlign: TextAlign.center,
+          const SizedBox(height: 32),
+          PrimaryButton(
+            label: 'Next',
+            onPressed: _nextStep,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep3(BuildContext context, ThemeData theme, AppColors ext) {
+    final target = _computedTarget;
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Your Target', style: theme.textTheme.h1),
+          const SizedBox(height: 8),
+          Text(
+            'We computed your daily baseline.',
+            style: theme.textTheme.body,
+          ),
+          const SizedBox(height: 32),
+          
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: ext.accentSoft,
+              borderRadius: BorderRadius.circular(16),
             ),
-          ],
+            child: Column(
+              children: [
+                Text('DAILY TARGET', style: theme.textTheme.overline.copyWith(color: theme.colorScheme.primary)),
+                const SizedBox(height: 8),
+                Text('$target kcal', style: theme.textTheme.display.copyWith(color: theme.colorScheme.primary)),
+                const SizedBox(height: 16),
+                Text(
+                  'Based on your body metrics and activity level, this is how much you should eat to reach your goal.',
+                  style: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('YOUR GOAL', style: theme.textTheme.overline),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: Goal.values.map((goal) {
+                    final label = goal.name[0].toUpperCase() + goal.name.substring(1);
+                    return SelectChip(
+                      label: label,
+                      isSelected: _goal == goal,
+                      onSelected: () => setState(() => _goal = goal),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('DAILY CHEAT ALLOWANCE', style: theme.textTheme.overline),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('0', style: theme.textTheme.caption),
+                    Text('${_allowance.toInt()} kcal', style: theme.textTheme.h2.copyWith(color: theme.colorScheme.primary)),
+                    Text('1000', style: theme.textTheme.caption),
+                  ],
+                ),
+                Slider(
+                  value: _allowance,
+                  min: 0,
+                  max: 1000,
+                  divisions: 20,
+                  activeColor: theme.colorScheme.primary,
+                  onChanged: (val) => setState(() => _allowance = val),
+                ),
+                Text(
+                  'Extra calories you\'re allowed before triggering a burn plan.',
+                  style: theme.textTheme.caption,
+                ),
+              ],
+            ),
+          ),
+          
           const SizedBox(height: 32),
           PrimaryButton(
             label: 'Start tracking',
-            onPressed: _submit,
+            onPressed: _nextStep, // which submits on step 3
             isLoading: _isLoading,
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );

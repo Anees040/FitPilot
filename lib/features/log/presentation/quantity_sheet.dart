@@ -84,8 +84,8 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
                   loggedAt: DateTime.now(),
                 );
                 ref.read(todayProvider.notifier).addLog(log);
-                Navigator.of(context).pop();
-                confirmSnackbar(context, 'Added to today');
+                Navigator.pop(context);
+                confirmSnackbar(context, 'Meal logged');
               },
             ),
           ],
