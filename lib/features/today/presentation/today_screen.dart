@@ -12,6 +12,7 @@ import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:intl/intl.dart';
 
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
@@ -185,7 +186,7 @@ class _HeroSection extends StatelessWidget {
               Expanded(
                 child: KcalRangeText(
                   range: status.net,
-                  style: theme.textTheme.display.copyWith(color: statusColor),
+                  style: theme.textTheme.display,
                 ),
               ),
               if (status.state != DayState.over) ...[
@@ -279,7 +280,7 @@ class _LogListItem extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${log.quantity}x • ${log.loggedAt.hour}:${log.loggedAt.minute.toString().padLeft(2, '0')}',
+                      '${log.quantity.toInt() == log.quantity ? log.quantity.toInt() : log.quantity} × portion • ${DateFormat.jm().format(log.loggedAt)}',
                       style: theme.textTheme.caption,
                     ),
                   ],
