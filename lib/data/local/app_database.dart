@@ -13,7 +13,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -25,7 +25,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     return openDatabase(
       inMemoryDatabasePath,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -51,6 +51,7 @@ class AppDatabase {
       CREATE TABLE food_logs (
         id TEXT PRIMARY KEY,
         food_id TEXT,
+        food_name TEXT,
         custom_name TEXT,
         quantity REAL NOT NULL,
         kcal_min INTEGER NOT NULL,
@@ -207,6 +208,16 @@ class AppDatabase {
       await db.execute(
         "ALTER TABLE profile ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'system'",
       );
+    }
+    if (oldVersion < 7) {
+      await db.execute("ALTER TABLE food_logs ADD COLUMN food_name TEXT");
+      await db.execute('''
+        UPDATE food_logs
+        SET food_name = (
+          SELECT name FROM food_catalog WHERE food_catalog.id = food_logs.food_id
+        )
+        WHERE food_name IS NULL AND food_id IS NOT NULL
+      ''');
     }
   }
 

@@ -44,6 +44,7 @@ void main() {
           CREATE TABLE food_logs (
             id TEXT PRIMARY KEY,
             food_id TEXT,
+            food_name TEXT,
             custom_name TEXT,
             quantity REAL NOT NULL,
             kcal_min INTEGER NOT NULL,

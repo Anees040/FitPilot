@@ -9,6 +9,7 @@ enum LogSource { search, manual, aiPhoto, labelScan }
 class FoodLog extends Equatable {
   final String id;
   final String? foodId;
+  final String? foodName;
   final String? customName;
   final num quantity;
   final KcalRange kcal;
@@ -19,6 +20,7 @@ class FoodLog extends Equatable {
   FoodLog({
     required this.id,
     this.foodId,
+    this.foodName,
     this.customName,
     required this.quantity,
     required this.kcal,
@@ -26,10 +28,10 @@ class FoodLog extends Equatable {
     required this.loggedAt,
     this.deletedAt,
   }) {
-    if (foodId == null && customName == null) {
+    if (foodId == null && customName == null && foodName == null) {
       throw ArgumentError(
         'A food log must identify its food: '
-        'provide either foodId or customName (or both)',
+        'provide foodId, foodName, or customName',
       );
     }
     if (quantity < 1 || quantity > 20) {
@@ -37,13 +39,14 @@ class FoodLog extends Equatable {
     }
   }
 
-  /// Returns the display name — customName when present, otherwise null.
-  String? get displayName => customName;
+  /// Returns the display name — customName if present, otherwise foodName.
+  String? get displayName => customName ?? foodName;
 
   @override
   List<Object?> get props => [
     id,
     foodId,
+    foodName,
     customName,
     quantity,
     kcal,
@@ -59,6 +62,7 @@ class FoodLog extends Equatable {
   FoodLog copyWith({
     String? id,
     String? foodId,
+    String? foodName,
     String? customName,
     num? quantity,
     KcalRange? kcal,
@@ -69,6 +73,7 @@ class FoodLog extends Equatable {
     return FoodLog(
       id: id ?? this.id,
       foodId: foodId ?? this.foodId,
+      foodName: foodName ?? this.foodName,
       customName: customName ?? this.customName,
       quantity: quantity ?? this.quantity,
       kcal: kcal ?? this.kcal,
