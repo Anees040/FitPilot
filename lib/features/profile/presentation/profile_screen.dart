@@ -11,6 +11,7 @@ import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/domain/engines/target_calculator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
@@ -151,7 +152,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 24),
 
-          _buildSectionTitle('LIFESTYLE & GOALS', theme),
+          _buildSectionTitle('LIFESTYLE', theme),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,32 +197,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 24),
 
-          _buildSectionTitle('AVAILABLE EQUIPMENT', theme),
-          AppCard(
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: ['Dumbbells', 'Barbell', 'Kettlebell', 'Pull-up bar', 'Jump rope'].map((eq) {
-                final isSelected = _equipment.contains(eq);
-                return SelectChip(
-                  label: eq,
-                  isSelected: isSelected,
-                  onSelected: () {
-                    setState(() {
-                      if (isSelected) {
-                        _equipment.remove(eq);
-                      } else {
-                        _equipment.add(eq);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          _buildSectionTitle('SETTINGS', theme),
+          _buildSectionTitle('PREFERENCES', theme),
           AppCard(
             child: Column(
               children: [
@@ -249,6 +225,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       }
                     },
                   ),
+                ),
+                Divider(color: theme.dividerColor, height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.fitness_center, color: theme.colorScheme.primary),
+                  title: Text('Manage Equipment', style: theme.textTheme.bodyStrong),
+                  trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
+                  onTap: _showEquipmentSheet,
                 ),
                 Divider(color: theme.dividerColor, height: 1),
                 ListTile(
@@ -477,6 +461,59 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final val = int.tryParse(v);
     if (val == null || val < 1000 || val > 5000) return '1000–5000 kcal';
     return null;
+  }
+
+  void _showEquipmentSheet() {
+    final theme = Theme.of(context);
+    Set<String> tempEquipment = Set.from(_equipment);
+
+    AppBottomSheet.show(
+      context,
+      child: StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Manage Equipment', style: theme.textTheme.h2, textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: ['Dumbbells', 'Barbell', 'Kettlebell', 'Pull-up bar', 'Jump rope'].map((eq) {
+                    final isSelected = tempEquipment.contains(eq);
+                    return SelectChip(
+                      label: eq,
+                      isSelected: isSelected,
+                      onSelected: () {
+                        setSheetState(() {
+                          if (isSelected) {
+                            tempEquipment.remove(eq);
+                          } else {
+                            tempEquipment.add(eq);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 32),
+                PrimaryButton(
+                  label: 'Apply',
+                  onPressed: () {
+                    setState(() => _equipment = tempEquipment);
+                    Navigator.of(context).pop();
+                    _save();
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _save() async {
