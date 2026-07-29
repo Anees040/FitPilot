@@ -147,7 +147,7 @@ class StreakEngine {
         ? referenceDate.subtract(const Duration(days: 1))
         : referenceDate;
 
-    while (true) {
+    for (int i = 0; i < 365; i++) {
       final status = history[_dateOnly(day)];
       if (status == null) break;
 
@@ -156,7 +156,7 @@ class StreakEngine {
       } else if (status.state == DayState.noData) {
         // noData days neither break nor extend the streak
         // keep counting through them
-        continue;
+        // the loop update step will decrement day
       } else if (status.state == DayState.over) {
         // Over but has enough burn = cleared → counts.
         final kcalStillToBurn = (status.net.midpoint - status.allowanceKcal)

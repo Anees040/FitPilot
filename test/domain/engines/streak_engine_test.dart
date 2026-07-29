@@ -150,5 +150,37 @@ void main() {
       expect(state.phase, StreakPhase.neutral); // Today has no logs
       expect(state.currentStreak, 0); // Yesterday was broken, so streak breaks
     });
+
+    test('History containing noData days terminates and skips them without breaking streak', () {
+      final now = DateTime(2026, 7, 28, 10, 0);
+      final history = {
+        DateTime(2026, 7, 28): makeStatus(DayState.under), // 1
+        DateTime(2026, 7, 27): makeStatus(DayState.noData), // ignored
+        DateTime(2026, 7, 26): makeStatus(DayState.under), // 2
+        DateTime(2026, 7, 25): makeStatus(DayState.noData), // ignored
+        DateTime(2026, 7, 24): makeStatus(DayState.near),  // 3
+      };
+
+      final state = engine.evaluate(dayHistory: history, now: now);
+
+      expect(state.phase, StreakPhase.safe);
+      expect(state.currentStreak, 3);
+    });
+
+    test('365-iteration safety bound prevents infinite loop on long histories', () {
+      final now = DateTime(2026, 7, 28, 10, 0);
+      final history = <DateTime, DayStatus>{};
+      
+      // Add 400 consecutive 'under' days
+      for (int i = 0; i < 400; i++) {
+        history[now.subtract(Duration(days: i))] = makeStatus(DayState.under);
+      }
+
+      // The engine should cap the streak calculation at 365 days due to the safety bound
+      final state = engine.evaluate(dayHistory: history, now: now);
+
+      expect(state.phase, StreakPhase.safe);
+      expect(state.currentStreak, 365);
+    });
   });
 }
