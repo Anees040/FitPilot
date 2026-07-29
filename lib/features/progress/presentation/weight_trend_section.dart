@@ -5,6 +5,7 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/progress_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/domain/entities/weight_entry.dart';
+import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/buttons.dart';

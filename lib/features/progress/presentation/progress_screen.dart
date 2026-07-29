@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/progress_provider.dart';
 import 'package:fitpilot/domain/entities/streak_state.dart';
@@ -53,7 +54,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.star, color: Colors.orange),
+                Icon(Icons.star, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 8),
                 Text('Amazing! ${state.streak.currentStreak}-day streak!'),
               ],

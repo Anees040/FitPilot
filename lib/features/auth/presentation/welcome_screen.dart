@@ -79,7 +79,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                         ),
                         // Fallback if logo not found
-                        child: Image.asset('assets/images/logo.png', errorBuilder: (_, __, ___) => Container(
+                        child: Image.asset('assets/images/logo.png', errorBuilder: (context, error, stackTrace) => Container(
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(24),
@@ -134,7 +134,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             child: Image.asset(
                               'assets/illustrations/${slide.illustration}',
                               fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => Icon(Icons.image_not_supported, size: 100, color: ext.hairline),
+                              errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: 100, color: ext.hairline),
                             ),
                           ),
                         ),
