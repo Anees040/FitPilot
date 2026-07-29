@@ -18,6 +18,7 @@ class OtpVerifyScreen extends ConsumerStatefulWidget {
 class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   final _codeCtrl = TextEditingController();
   bool _isLoading = false;
+  String? _errorText;
   int _resendCooldown = 60;
   Timer? _timer;
 
@@ -70,14 +71,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       if (mounted) {
         String msg = 'An error occurred';
         if (e is AuthFailure) msg = e.message;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppTheme.error,
-          ),
-        );
+        setState(() => _errorText = msg);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -129,11 +123,13 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 maxLength: 6,
                 decoration: InputDecoration(
                   labelText: 'Code',
+                  errorText: _errorText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 onChanged: (val) {
+                  if (_errorText != null) setState(() => _errorText = null);
                   if (val.length == 6 && !_isLoading) _submit();
                 },
               ),

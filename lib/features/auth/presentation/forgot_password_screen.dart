@@ -17,6 +17,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailCtrl = TextEditingController();
   bool _isLoading = false;
   bool _sent = false;
+  String? _errorText;
 
   @override
   void dispose() {
@@ -39,14 +40,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       if (mounted) {
         String msg = 'An error occurred';
         if (e is AuthFailure) msg = e.message;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppTheme.error,
-          ),
-        );
+        setState(() => _errorText = msg);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -130,10 +124,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: 'Email',
+                  errorText: _errorText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
+                onChanged: (_) {
+                  if (_errorText != null) setState(() => _errorText = null);
+                },
               ),
               const SizedBox(height: 24),
 

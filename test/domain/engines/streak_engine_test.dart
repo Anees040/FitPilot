@@ -15,7 +15,7 @@ void main() {
         net: KcalRange.exact(net),
         remainingKcal: allowance - net,
         state: state,
-        allowanceKcal: allowance,
+        targetKcal: 2000, allowanceKcal: allowance,
       );
     }
 
@@ -77,7 +77,7 @@ void main() {
         net: KcalRange.exact(300),
         remainingKcal: 0,
         state: DayState.over,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
 
       final history = {DateTime(2026, 7, 27): clearedStatus};
@@ -114,7 +114,7 @@ void main() {
         net: KcalRange.exact(300),
         remainingKcal: 0,
         state: DayState.over,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
       final history = {
         DateTime(2026, 7, 27): clearedStatus,

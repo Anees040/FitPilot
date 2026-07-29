@@ -67,8 +67,8 @@ class StreakEngine {
       }
     }
 
-    // NEUTRAL: no logs today.
-    if (todayStatus == null) {
+    // NEUTRAL: no logs today (or no data).
+    if (todayStatus == null || todayStatus.state == DayState.noData) {
       final streak = _countStreak(history, today, lookFromYesterday: true);
       return StreakState(
         phase: StreakPhase.neutral,
@@ -153,6 +153,10 @@ class StreakEngine {
 
       if (status.state == DayState.under || status.state == DayState.near) {
         count++;
+      } else if (status.state == DayState.noData) {
+        // noData days neither break nor extend the streak
+        // keep counting through them
+        continue;
       } else if (status.state == DayState.over) {
         // Over but has enough burn = cleared → counts.
         final kcalStillToBurn = (status.net.midpoint - status.allowanceKcal)

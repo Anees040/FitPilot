@@ -132,8 +132,8 @@ class ProgressScreen extends ConsumerWidget {
                 status.state == DayState.near) {
               color = AppTheme.success;
             } else {
-              color = AppTheme
-                  .hairline; // neutral visually distinct and never punitive
+              // noData or anything else is neutral grey
+              color = AppTheme.hairline;
             }
 
             return Container(
@@ -166,8 +166,6 @@ class ProgressScreen extends ConsumerWidget {
           _summaryRow('Total Intake', state.weeklyIntake.format()),
           const SizedBox(height: 8),
           _summaryRow('Total Burned', '${state.weeklyBurned} kcal'),
-          const SizedBox(height: 8),
-          _summaryRow('Planner Adherence', '0%'), // Placeholder for Milestone C
         ],
       ),
     );
@@ -204,14 +202,16 @@ class ProgressScreen extends ConsumerWidget {
               '${status.total.format()} logged • ${status.burnedKcal} kcal burned',
               style: AppTheme.caption.copyWith(color: AppTheme.secondaryText),
             ),
-            trailing: Icon(
-              status.state == DayState.over
-                  ? Icons.warning
-                  : Icons.check_circle,
-              color: status.state == DayState.over
-                  ? AppTheme.error
-                  : AppTheme.success,
-            ),
+            trailing: status.state == DayState.noData
+                ? null
+                : Icon(
+                    status.state == DayState.over
+                        ? Icons.warning
+                        : Icons.check_circle,
+                    color: status.state == DayState.over
+                        ? AppTheme.error
+                        : AppTheme.success,
+                  ),
           );
         }),
       ],

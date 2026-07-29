@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/food_log.dart';
 import '../../domain/entities/kcal_range.dart';
@@ -11,6 +12,7 @@ class LogRepository {
 
   /// Add a new food log.
   Future<void> add(FoodLog log) async {
+    _validateLog(log);
     final now = DateTime.now().toIso8601String();
     await db.insert('food_logs', {
       'id': log.id,
@@ -29,6 +31,7 @@ class LogRepository {
 
   /// Update an existing food log.
   Future<void> update(FoodLog log) async {
+    _validateLog(log);
     final now = DateTime.now().toIso8601String();
     await db.update(
       'food_logs',
@@ -80,7 +83,7 @@ class LogRepository {
       whereArgs: [dayStart, dayEnd],
       orderBy: 'logged_at ASC',
     );
-    return rows.map(_rowToFoodLog).toList();
+    return rows.map(_rowToFoodLog).whereType<FoodLog>().toList();
   }
 
   /// Returns logs grouped by day for a date range, excluding soft-deleted.
@@ -107,6 +110,7 @@ class LogRepository {
     final map = <DateTime, List<FoodLog>>{};
     for (final row in rows) {
       final log = _rowToFoodLog(row);
+      if (log == null) continue;
       final dayKey = DateTime(
         log.loggedAt.year,
         log.loggedAt.month,
@@ -117,19 +121,36 @@ class LogRepository {
     return map;
   }
 
-  FoodLog _rowToFoodLog(Map<String, dynamic> row) {
-    return FoodLog(
-      id: row['id'] as String,
-      foodId: row['food_id'] as String?,
-      customName: row['custom_name'] as String?,
-      quantity: (row['quantity'] as num),
-      kcal: KcalRange(row['kcal_min'] as int, row['kcal_max'] as int),
-      source: LogSource.values.byName(row['source'] as String),
-      loggedAt: DateTime.parse(row['logged_at'] as String),
-      deletedAt: row['deleted_at'] != null
-          ? DateTime.parse(row['deleted_at'] as String)
-          : null,
-    );
+  FoodLog? _rowToFoodLog(Map<String, dynamic> row) {
+    try {
+      return FoodLog(
+        id: row['id'] as String,
+        foodId: row['food_id'] as String?,
+        customName: row['custom_name'] as String?,
+        quantity: (row['quantity'] as num),
+        kcal: KcalRange(row['kcal_min'] as int, row['kcal_max'] as int),
+        source: LogSource.values.byName(row['source'] as String),
+        loggedAt: DateTime.parse(row['logged_at'] as String),
+        deletedAt: row['deleted_at'] != null
+            ? DateTime.parse(row['deleted_at'] as String)
+            : null,
+      );
+    } catch (e) {
+      assert(() {
+        debugPrint('Skipping corrupt row ${row['id']}: $e');
+        return true;
+      }());
+      return null;
+    }
+  }
+
+  void _validateLog(FoodLog log) {
+    if (log.kcal.min > log.kcal.max) throw ArgumentError('min > max');
+    if (log.kcal.min < 0) throw ArgumentError('min < 0');
+    if (log.quantity <= 0) throw ArgumentError('quantity <= 0');
+    if (log.foodId == null && (log.customName == null || log.customName!.trim().isEmpty)) {
+      throw ArgumentError('Custom name required if no foodId');
+    }
   }
 
   Future<void> _enqueue(String table, String rowId, String op) async {

@@ -18,12 +18,11 @@
 - [x] B1 — Supabase init + env secrets
 - [x] B2 — Auth UI + Guest data merge
 - [x] B3 — Background sync service
-- [x] B0+B4 — Barcode, Open Food Facts, and label OCR
+- [x] B0+B4 — Barcode, Open Food Facts, and label OCR- [x] F1 — Correctness and dead features
 
 ## Last completed
 
-- B0+B4 — Barcode, Open Food Facts, and label OCR
-- Bug fixes: Resolved barcode sheet LateInitializationError, quantity sheet RenderFlex overflow, and Dismissible assertion error.
+- F1 — Correctness and dead features
 
 ## Known issues / debt
 

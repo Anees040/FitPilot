@@ -130,9 +130,36 @@ class TodayScreen extends ConsumerWidget {
           child: CircularProgressIndicator(color: AppTheme.accent),
         ),
         error: (error, stack) => Center(
-          child: Text(
-            'Error: $error',
-            style: const TextStyle(color: AppTheme.error),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: AppTheme.error, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load today\'s logs.',
+                style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
+                  color: AppTheme.error,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Text(
+                  error.toString(),
+                  style: AppTheme.body,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(todayProvider),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.accent,
+                  foregroundColor: AppTheme.surface,
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
           ),
         ),
       ),
@@ -164,6 +191,9 @@ class _HeroSection extends StatelessWidget {
       case DayState.over:
         statusColor = AppTheme.error;
         break;
+      case DayState.noData:
+        statusColor = AppTheme.secondaryText;
+        break;
     }
 
     // A simple progress bar ratio
@@ -190,8 +220,17 @@ class _HeroSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Limit: ${status.allowanceKcal} kcal',
-            style: AppTheme.lightTheme.textTheme.bodyMedium,
+            'Target: ${status.targetKcal} kcal',
+            style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '(+ ${status.allowanceKcal - status.targetKcal} kcal tolerance)',
+            style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.secondaryText,
+            ),
           ),
           const SizedBox(height: 24),
           ClipRRect(

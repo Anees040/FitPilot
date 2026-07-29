@@ -134,7 +134,7 @@ class MockTodayNotifier extends AsyncNotifier<TodayState>
         net: KcalRange.exact(0),
         remainingKcal: 300,
         state: DayState.under,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       ),
     );
   }

@@ -150,6 +150,15 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(_productName, style: AppTheme.lightTheme.textTheme.titleLarge),
+          const SizedBox(height: 4),
+          Text(
+            widget.offResult is OffFound && (widget.offResult as OffFound).isLocal
+                ? 'Saved on this device'
+                : 'from Open Food Facts',
+            style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.accent,
+            ),
+          ),
           const SizedBox(height: 8),
           if (widget.offResult is OffFoundMissingEnergy)
             const Text(

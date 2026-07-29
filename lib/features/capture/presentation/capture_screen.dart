@@ -53,6 +53,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       context.go('/log');
       return;
     }
+    if (_mode != newMode && (newMode == CaptureMode.barcode || newMode == CaptureMode.foodLabel)) {
+      _cameraController.stop().then((_) {
+        if (mounted) _cameraController.start();
+      });
+    }
     setState(() {
       _mode = newMode;
       _isProcessing = false;
@@ -202,6 +207,39 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                 children: [
                   MobileScanner(
                     controller: _cameraController,
+                    errorBuilder: (context, error, child) {
+                      String message = 'Camera error occurred.';
+                      switch (error.errorCode.name) {
+                        case 'permissionDenied':
+                          message = 'Camera permission denied.';
+                          break;
+                        case 'unsupported':
+                          message = 'Camera not supported on this device.';
+                          break;
+                        default:
+                          message = 'Camera in use or capture failed.';
+                          break;
+                      }
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.camera_alt, color: AppTheme.error, size: 48),
+                            const SizedBox(height: 16),
+                            Text(
+                              message,
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => _cameraController.start(),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                     onDetect: (capture) {
                       if (_mode == CaptureMode.barcode) {
                         _handleBarcode(capture);

@@ -38,6 +38,7 @@ class CaptureNotifier extends Notifier<void> {
         kcalPer100g:
             match['kcal_min'] as int, // simplified, assuming min == max in OFF
         netWeightGrams: (match['grams'] as num?)?.toDouble(),
+        isLocal: true,
       );
     }
 

@@ -383,12 +383,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     final finalTarget = overrideKcal ?? computedTarget;
-    final total = finalTarget + tolerance;
 
     String explanation;
     if (overrideKcal != null) {
       explanation =
-          'You have set a manual target of $overrideKcal kcal, plus a $tolerance kcal cheat tolerance.';
+          'You have set a manual target of $overrideKcal kcal. You also have a $tolerance kcal cheat tolerance for when you exceed your target.';
     } else {
       final goalStr = _goal == Goal.lose
           ? 'lose weight'
@@ -396,7 +395,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ? 'build muscle'
           : 'maintain';
       explanation =
-          'Your body burns about ${tdee.round()} kcal a day at your activity level. Your goal is to $goalStr, so your target is $computedTarget kcal, plus a $tolerance kcal cheat tolerance.';
+          'Your body burns about ${tdee.round()} kcal a day at your activity level. Your goal is to $goalStr, so your target is $computedTarget kcal. You also have a $tolerance kcal cheat tolerance for when you exceed your target.';
     }
 
     return Container(
@@ -409,7 +408,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Daily Limit: $total kcal', style: AppTheme.title),
+          Text('Daily Target: $finalTarget kcal', style: AppTheme.title),
           const SizedBox(height: 8),
           Text(explanation, style: AppTheme.body),
         ],

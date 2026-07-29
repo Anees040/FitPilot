@@ -15,3 +15,4 @@ Format: `YYYY-MM-DD — decision — why`
 - 2026-07-27 — Barcode-before-OCR ordering: The default Capture screen mode is Barcode, requiring users to explicitly switch to OCR, steering them toward the higher-confidence API lookup path.
 - 2026-07-27 — 5% Kcal range spread: When logging from barcode/OCR, an exact value is computed but logged as a range ±5% to reflect declaration tolerance.
 - 2026-07-27 — Barcode caching: Open Food Facts results are cached into `food_catalog` with `is_verified = 0`, and user-defined portions for weightless OFF products are saved to a new `saved_products` table to work fully offline.
+- 2026-07-29 — Neutral days (noData): Days with no logs and no burn plan completions are now assigned `DayState.noData` to pause streaks cleanly rather than breaking them.

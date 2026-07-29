@@ -52,11 +52,13 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
       logs: todayLogs,
       burnedKcal: todayBurns,
       allowanceKcal: profile.effectiveDailyLimit,
+      targetKcal: profile.effectiveDailyTarget,
     );
     final yesterdayStatus = calculator.dayStatus(
       logs: yesterdayLogs,
       burnedKcal: yesterdayBurns,
       allowanceKcal: profile.effectiveDailyLimit,
+      targetKcal: profile.effectiveDailyTarget,
     );
 
     final history = {today: todayStatus, yesterday: yesterdayStatus};

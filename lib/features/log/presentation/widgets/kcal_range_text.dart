@@ -13,7 +13,7 @@ class KcalRangeText extends StatelessWidget {
     super.key,
     required this.range,
     this.style,
-    this.suffix = ' kcal',
+    this.suffix = '',
   });
 
   @override

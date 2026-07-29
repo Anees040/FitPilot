@@ -13,13 +13,13 @@ void main() {
       final status = calc.dayStatus(
         logs: [],
         burnedKcal: 0,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
 
       expect(status.total, KcalRange(0, 0));
       expect(status.net, KcalRange(0, 0));
       expect(status.remainingKcal, 300);
-      expect(status.state, DayState.under);
+      expect(status.state, DayState.noData);
     });
 
     test('ignores soft-deleted logs', () {
@@ -46,7 +46,7 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 0,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
 
       expect(status.total, KcalRange(100, 200));
@@ -67,7 +67,7 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 250,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
 
       expect(status.total, KcalRange(200, 300));
@@ -92,7 +92,7 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 0,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
 
       // Midpoint 200. Allowance * 0.8 = 240. Under.
@@ -114,7 +114,7 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 0,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
 
       // Midpoint 250. Allowance * 0.8 = 240. Near.
@@ -136,7 +136,7 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 0,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
 
       // Midpoint 350 > 300. Over.
@@ -158,7 +158,7 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 0,
-        allowanceKcal: 300,
+        targetKcal: 2000, allowanceKcal: 300,
       );
 
       // Midpoint 450. Remaining = 300 - 450 = -150.

@@ -17,6 +17,7 @@ class AppDatabase {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+    await _repairLogs(_db!);
     return _db!;
   }
 
@@ -201,5 +202,14 @@ class AppDatabase {
         )
       ''');
     }
+  }
+
+  static Future<void> _repairLogs(Database db) async {
+    // Delete logs with impossible states to prevent breaking UI
+    await db.delete(
+      'food_logs',
+      where:
+          'kcal_min > kcal_max OR kcal_min < 0 OR quantity <= 0 OR (food_id IS NULL AND (custom_name IS NULL OR trim(custom_name) = ""))',
+    );
   }
 }

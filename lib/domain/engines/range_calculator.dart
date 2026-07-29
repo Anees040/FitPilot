@@ -16,6 +16,7 @@ class RangeCalculator {
     required List<FoodLog> logs,
     required int burnedKcal,
     required int allowanceKcal,
+    required int targetKcal,
   }) {
     final activeLogs = logs.where((l) => l.deletedAt == null);
     final total = KcalRange.sum(activeLogs.map((l) => l.kcal));
@@ -23,7 +24,9 @@ class RangeCalculator {
     final remainingKcal = allowanceKcal - net.midpoint;
 
     final DayState state;
-    if (net.midpoint > allowanceKcal) {
+    if (activeLogs.isEmpty && burnedKcal == 0) {
+      state = DayState.noData;
+    } else if (net.midpoint > allowanceKcal) {
       state = DayState.over;
     } else if (net.midpoint > allowanceKcal * 0.8) {
       state = DayState.near;
@@ -38,6 +41,7 @@ class RangeCalculator {
       remainingKcal: remainingKcal,
       state: state,
       allowanceKcal: allowanceKcal,
+      targetKcal: targetKcal,
     );
   }
 }

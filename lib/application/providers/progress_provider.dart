@@ -16,7 +16,6 @@ class ProgressState {
   final StreakState streak;
   final KcalRange weeklyIntake;
   final int weeklyBurned;
-  final double adherencePercent;
   final List<WeightEntry> weightEntries;
 
   const ProgressState({
@@ -24,7 +23,6 @@ class ProgressState {
     required this.streak,
     required this.weeklyIntake,
     required this.weeklyBurned,
-    required this.adherencePercent,
     required this.weightEntries,
   });
 }
@@ -69,6 +67,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
         logs: logs,
         burnedKcal: burns,
         allowanceKcal: profile.effectiveDailyLimit,
+        targetKcal: profile.effectiveDailyTarget,
       );
       history[date] = status;
     }
@@ -91,7 +90,6 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       streak: streak,
       weeklyIntake: weeklyIntake,
       weeklyBurned: weeklyBurned,
-      adherencePercent: 0, // Adherence is 0 until planner exists in Milestone C
       weightEntries: weightEntries,
     );
   }

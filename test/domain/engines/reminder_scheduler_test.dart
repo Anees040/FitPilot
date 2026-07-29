@@ -22,7 +22,7 @@ void main() {
     net: KcalRange(0, 0),
     remainingKcal: 2000,
     state: DayState.under,
-    allowanceKcal: 2000,
+    targetKcal: 2000, allowanceKcal: 2000,
   );
 
   test('Scheduler returns empty if globally muted', () {

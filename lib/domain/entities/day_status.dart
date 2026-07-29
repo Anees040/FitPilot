@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'kcal_range.dart';
 
 /// The state of a user's day relative to their calorie allowance.
-enum DayState { under, near, over }
+enum DayState { under, near, over, noData }
 
 /// Status of a single day — computed, never stored.
 class DayStatus extends Equatable {
@@ -25,6 +25,9 @@ class DayStatus extends Equatable {
   /// The allowance used for this calculation.
   final int allowanceKcal;
 
+  /// The target without tolerance.
+  final int targetKcal;
+
   const DayStatus({
     required this.total,
     required this.burnedKcal,
@@ -32,6 +35,7 @@ class DayStatus extends Equatable {
     required this.remainingKcal,
     required this.state,
     required this.allowanceKcal,
+    required this.targetKcal,
   });
 
   @override
@@ -42,6 +46,7 @@ class DayStatus extends Equatable {
     remainingKcal,
     state,
     allowanceKcal,
+    targetKcal,
   ];
 
   @override

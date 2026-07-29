@@ -17,6 +17,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _isLoading = false;
+  String? _errorText;
 
   @override
   void dispose() {
@@ -51,14 +52,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       if (mounted) {
         String msg = 'An error occurred';
         if (e is AuthFailure) msg = e.message;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppTheme.error,
-          ),
-        );
+        setState(() => _errorText = msg);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -96,6 +90,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
+                onChanged: (_) {
+                  if (_errorText != null) setState(() => _errorText = null);
+                },
               ),
               const SizedBox(height: 16),
 
@@ -104,10 +101,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Password',
+                  errorText: _errorText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
+                onChanged: (_) {
+                  if (_errorText != null) setState(() => _errorText = null);
+                },
               ),
 
               Align(
@@ -149,6 +150,23 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Don\'t have an account?', style: AppTheme.body),
+                  TextButton(
+                    onPressed: () => context.pushReplacement('/signup'),
+                    child: Text(
+                      'Create account',
+                      style: AppTheme.body.copyWith(
+                        color: AppTheme.accent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const Spacer(),
             ],

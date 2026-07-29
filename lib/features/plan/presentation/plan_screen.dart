@@ -51,13 +51,13 @@ class PlanScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'You are within your daily limit.',
+                'You are within your daily target.',
                 style: AppTheme.title,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                'No burn plan needed today.',
+                'No burn plan needed today. You have a cheat tolerance if you go a bit over.',
                 style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
                 textAlign: TextAlign.center,
               ),

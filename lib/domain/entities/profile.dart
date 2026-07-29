@@ -62,21 +62,20 @@ class Profile extends Equatable {
     }
   }
 
-  int get effectiveDailyLimit {
-    int target = targetKcalOverride ?? 0;
-    if (targetKcalOverride == null) {
-      const calc = TargetCalculator();
-      final bmr = calc.bmr(
-        weightKg: weightKg,
-        heightCm: heightCm.toDouble(),
-        age: age,
-        gender: gender,
-      );
-      final tdee = calc.tdee(bmr, activityLevel);
-      target = calc.dailyTarget(tdeeValue: tdee, goal: goal, gender: gender);
-    }
-    return target + allowanceKcal;
+  int get effectiveDailyTarget {
+    if (targetKcalOverride != null) return targetKcalOverride!;
+    const calc = TargetCalculator();
+    final bmr = calc.bmr(
+      weightKg: weightKg,
+      heightCm: heightCm.toDouble(),
+      age: age,
+      gender: gender,
+    );
+    final tdee = calc.tdee(bmr, activityLevel);
+    return calc.dailyTarget(tdeeValue: tdee, goal: goal, gender: gender);
   }
+
+  int get effectiveDailyLimit => effectiveDailyTarget + allowanceKcal;
 
   Profile copyWith({
     double? weightKg,

@@ -61,14 +61,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       if (mounted) {
         String msg = 'An error occurred';
         if (e is AuthFailure) msg = e.message;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppTheme.error,
-          ),
-        );
+        setState(() => _passError = msg);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
