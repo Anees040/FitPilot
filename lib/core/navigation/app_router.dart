@@ -7,6 +7,7 @@ import 'package:fitpilot/features/plan/presentation/plan_screen.dart';
 import 'package:fitpilot/features/progress/presentation/progress_screen.dart';
 import 'package:fitpilot/features/profile/presentation/profile_screen.dart';
 
+import 'package:fitpilot/features/splash/presentation/splash_screen.dart';
 import 'package:fitpilot/features/auth/presentation/welcome_screen.dart';
 import 'package:fitpilot/features/auth/presentation/sign_up_screen.dart';
 import 'package:fitpilot/features/auth/presentation/sign_in_screen.dart';
@@ -14,7 +15,6 @@ import 'package:fitpilot/features/auth/presentation/otp_verify_screen.dart';
 import 'package:fitpilot/features/auth/presentation/forgot_password_screen.dart';
 import 'package:fitpilot/features/profile/presentation/profile_setup_screen.dart';
 import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
-import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -28,25 +28,15 @@ final shellNavigatorProfileKey = GlobalKey<NavigatorState>(
   debugLabel: 'profile',
 );
 
-bool? _isFirstLaunch;
-
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: '/today',
-  redirect: (context, state) async {
-    if (_isFirstLaunch == null) {
-      final db = await AppDatabase.instance();
-      final rows = await db.query('profile');
-      _isFirstLaunch = rows.isEmpty;
-    }
-
-    if (_isFirstLaunch! && state.uri.path == '/today') {
-      _isFirstLaunch = false;
-      return '/welcome';
-    }
-    return null;
-  },
+  initialLocation: '/splash',
   routes: [
+    GoRoute(
+      path: '/splash',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const SplashScreen(),
+    ),
     GoRoute(
       path: '/welcome',
       parentNavigatorKey: rootNavigatorKey,

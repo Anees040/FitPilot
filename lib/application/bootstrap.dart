@@ -5,6 +5,7 @@ import 'package:fitpilot/data/local/seed_importer.dart';
 import 'package:fitpilot/core/config/env.dart';
 // ignore: depend_on_referenced_packages
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import 'dart:async';
 
@@ -13,9 +14,7 @@ class FitPilotBootstrap {
   /// Initializes required dependencies synchronously and launches async tasks in background.
   static void initialize() {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'FitPilot is 100% offline using SQLite, which does not support Flutter Web. Please run on an Android emulator or iOS simulator.',
-      );
+      databaseFactory = databaseFactoryFfiWeb;
     } else if (defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux ||
         defaultTargetPlatform == TargetPlatform.macOS) {
@@ -35,11 +34,9 @@ class FitPilotBootstrap {
         return Supabase.instance;
       });
     }
-
-    unawaited(_importSeedData());
   }
 
-  static Future<void> _importSeedData() async {
+  static Future<void> importSeedData() async {
     try {
       final db = await AppDatabase.instance();
       final importer = SeedImporter(db);
