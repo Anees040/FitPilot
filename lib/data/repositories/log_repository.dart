@@ -17,6 +17,7 @@ class LogRepository {
     await db.insert('food_logs', {
       'id': log.id,
       'food_id': log.foodId,
+      'food_name': log.foodName,
       'custom_name': log.customName,
       'quantity': log.quantity,
       'kcal_min': log.kcal.min,
@@ -37,6 +38,7 @@ class LogRepository {
       'food_logs',
       {
         'food_id': log.foodId,
+        'food_name': log.foodName,
         'custom_name': log.customName,
         'quantity': log.quantity,
         'kcal_min': log.kcal.min,
@@ -126,9 +128,13 @@ class LogRepository {
       return FoodLog(
         id: row['id'] as String,
         foodId: row['food_id'] as String?,
+        foodName: row['food_name'] as String?,
         customName: row['custom_name'] as String?,
         quantity: (row['quantity'] as num),
-        kcal: KcalRange(row['kcal_min'] as int, row['kcal_max'] as int),
+        kcal: KcalRange(
+          (row['kcal_min'] as num?)?.round() ?? 0,
+          (row['kcal_max'] as num?)?.round() ?? 0,
+        ),
         source: LogSource.values.byName(row['source'] as String),
         loggedAt: DateTime.parse(row['logged_at'] as String),
         deletedAt: row['deleted_at'] != null

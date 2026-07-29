@@ -53,16 +53,16 @@ class ProfileRepository {
     );
 
     return Profile(
-      weightKg: (map['weight_kg'] as num).toDouble(),
-      heightCm: (map['height_cm'] as num).toInt(),
-      age: (map['age'] as num).toInt(),
+      weightKg: (map['weight_kg'] as num?)?.toDouble() ?? 70.0,
+      heightCm: (map['height_cm'] as num?)?.round() ?? 170,
+      age: (map['age'] as num?)?.round() ?? 30,
       gender: Gender.values.byName(map['gender'] as String? ?? 'unspecified'),
       goal: Goal.values.byName(map['goal'] as String? ?? 'maintain'),
       activityLevel: ActivityLevel.values.byName(
         map['activity_level'] as String? ?? 'light',
       ),
-      allowanceKcal: map['allowance_kcal'] as int? ?? 300,
-      targetOverride: map['target_override'] as int?,
+      allowanceKcal: (map['allowance_kcal'] as num?)?.round() ?? 300,
+      targetOverride: (map['target_override'] as num?)?.round(),
       equipment: equipmentList.map((e) => e.toString()).toList(),
       themeMode: themeMode,
       updatedAt: DateTime.parse(map['updated_at'] as String),

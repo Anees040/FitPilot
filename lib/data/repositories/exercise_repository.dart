@@ -36,7 +36,7 @@ class ExerciseRepository {
       name: row['name'] as String,
       category: ExerciseCategory.values.byName(row['category'] as String),
       equipment: _decodeStringList(row['equipment'] as String),
-      difficulty: row['difficulty'] as int,
+      difficulty: (row['difficulty'] as num?)?.round() ?? 1,
       muscles: _decodeStringList(row['muscles'] as String),
       steps: _decodeStringList(row['steps'] as String),
       mistakes: _decodeStringList(row['mistakes'] as String),

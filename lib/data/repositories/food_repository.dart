@@ -30,7 +30,7 @@ class FoodRepository {
       ''',
       [q, q, query.toLowerCase(), '${query.toLowerCase()}%', limit],
     );
-    return rows.map(_rowToFoodItem).toList();
+    return rows.map(_rowToFoodItem).whereType<FoodItem>().toList();
   }
 
   /// Find a food by its id.
@@ -70,16 +70,28 @@ class FoodRepository {
     return id;
   }
 
-  FoodItem _rowToFoodItem(Map<String, dynamic> row) {
-    return FoodItem(
-      id: row['id'] as String,
-      name: row['name'] as String,
-      nameUr: row['name_ur'] as String?,
-      portionLabel: row['portion_label'] as String,
-      grams: row['grams'] as int?,
-      kcalPerPortion: KcalRange(row['kcal_min'] as int, row['kcal_max'] as int),
-      isVerified: (row['is_verified'] as int) == 1,
-    );
+  FoodItem? _rowToFoodItem(Map<String, dynamic> row) {
+    try {
+      return FoodItem(
+        id: row['id'] as String,
+        name: row['name'] as String,
+        nameUr: row['name_ur'] as String?,
+        portionLabel: row['portion_label'] as String,
+        grams: (row['grams'] as num?)?.round(),
+        kcalPerPortion: KcalRange(
+          (row['kcal_min'] as num?)?.round() ?? 0,
+          (row['kcal_max'] as num?)?.round() ?? 0,
+        ),
+        isVerified: ((row['is_verified'] as num?)?.round() ?? 0) == 1,
+      );
+    } catch (e) {
+      assert(() {
+        // ignore: avoid_print
+        print('Skipping corrupt food row ${row['id']}: $e');
+        return true;
+      }());
+      return null;
+    }
   }
 
   Future<void> _enqueue(

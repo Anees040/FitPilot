@@ -50,7 +50,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       return WeightEntry(
         id: r['id'] as String,
         date: DateTime.parse(r['for_date'] as String),
-        weightKg: (r['weight_kg'] as num).toDouble(),
+        weightKg: (r['weight_kg'] as num?)?.toDouble() ?? 0.0,
         updatedAt: DateTime.parse(r['updated_at'] as String),
       );
     }).toList();
