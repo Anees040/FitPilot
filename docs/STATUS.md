@@ -23,11 +23,12 @@
 - [x] F2 — Foundation: launch, type, dark theme, adaptivity
 - [x] F3 — Final Screen Redesign & Interaction Prompt
 - [x] F4 — First impression: onboarding, illustration, empty states
+- [x] F5 — Correctness + UX drop
 
 ## Last completed
 
-- F4 — First impression: onboarding, illustration, empty states
-(Polish pass complete)
+- F5 — Correctness + UX drop
+(Included Streak ANR fix, numeric casting fixes, Web Support, OTP UI boxes, and Profile redesign)
 
 ## Known issues / debt
 
