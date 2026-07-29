@@ -59,12 +59,12 @@ Entirely offline: SQLite + bundled seed data. No auth, no network.
 1. **Definition of Done (DoD) per Task:**
    - `flutter analyze` → 0 issues.
    - `flutter test` → all green.
-   - Update `mdFiles/STATUS.md`.
-   - Append one line to `mdFiles/DECISIONS.md` ONLY if a real design decision was made.
+   - Update `docs/STATUS.md`.
+   - Append one line to `docs/DECISIONS.md` ONLY if a real design decision was made.
 
 2. **Milestone Rules:**
    - A milestone is DONE only when its demo test passes on Pixel 6 emulator + 320 px width check.
-   - Never start milestone N+1 tasks while `mdFiles/STATUS.md` shows open milestone N tasks.
+   - Never start milestone N+1 tasks while `docs/STATUS.md` shows open milestone N tasks.
    - Free-tier budget is a feature: quota values and limits live in server config.
 
 ## v2 Backlog (Post-Beta)

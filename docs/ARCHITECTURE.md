@@ -29,7 +29,7 @@ main.dart
 test/          # mirrors lib/ structure; domain has 100% coverage
 assets/        # seed/foods.json, seed/exercises.json, icon/
 server/        # Node.js + Express proxy (src/, routes/, middleware/, services/)
-mdFiles/       # project documentation
+docs/       # project documentation
 ```
 
 ## 3. System Overview

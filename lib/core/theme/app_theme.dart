@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Light Theme Colors
@@ -102,42 +101,28 @@ class AppTheme {
         onError: Colors.white,
       ),
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.inter(
-          fontSize: 32,
+        displayLarge: TextStyle(fontFamily: 'Inter', fontSize: 32,
           fontWeight: FontWeight.w800,
-          color: text,
-        ),
-        headlineLarge: GoogleFonts.inter(
-          fontSize: 24,
+          color: text,),
+        headlineLarge: TextStyle(fontFamily: 'Inter', fontSize: 24,
           fontWeight: FontWeight.w700,
-          color: text,
-        ),
-        headlineMedium: GoogleFonts.inter(
-          fontSize: 18,
+          color: text,),
+        headlineMedium: TextStyle(fontFamily: 'Inter', fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: text,
-        ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 15,
+          color: text,),
+        bodyLarge: TextStyle(fontFamily: 'Inter', fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: text,
-        ),
-        bodyMedium: GoogleFonts.inter(
-          fontSize: 15,
+          color: text,),
+        bodyMedium: TextStyle(fontFamily: 'Inter', fontSize: 15,
           fontWeight: FontWeight.w400,
-          color: text,
-        ),
-        bodySmall: GoogleFonts.inter(
-          fontSize: 13,
+          color: text,),
+        bodySmall: TextStyle(fontFamily: 'Inter', fontSize: 13,
           fontWeight: FontWeight.w400,
-          color: textSecondary,
-        ),
-        labelSmall: GoogleFonts.inter(
-          fontSize: 11,
+          color: textSecondary,),
+        labelSmall: TextStyle(fontFamily: 'Inter', fontSize: 11,
           fontWeight: FontWeight.w600,
           color: textSecondary,
-          letterSpacing: 1.2,
-        ),
+          letterSpacing: 1.2,),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: bg,
