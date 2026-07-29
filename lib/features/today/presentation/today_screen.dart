@@ -255,7 +255,7 @@ class _LogListItem extends ConsumerWidget {
 
           final dummyFood = FoodItem(
             id: log.foodId ?? '',
-            name: log.customName ?? 'Unknown',
+            name: log.displayName ?? 'Unknown',
             portionLabel: 'Portion',
             kcalPerPortion: log.kcal.times(1 / log.quantity.toDouble()),
             isVerified: false,
