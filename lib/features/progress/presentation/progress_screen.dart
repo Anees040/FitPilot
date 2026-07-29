@@ -4,6 +4,8 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/progress_provider.dart';
 import 'package:fitpilot/domain/entities/streak_state.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
+import 'package:fitpilot/core/ui/states.dart';
+import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/features/progress/presentation/weight_trend_section.dart';
 
 class ProgressScreen extends ConsumerWidget {
@@ -11,27 +13,24 @@ class ProgressScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final stateAsync = ref.watch(progressProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        title: Text('Progress', style: AppTheme.title),
-        backgroundColor: AppTheme.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        title: Text('Progress', style: theme.textTheme.h1),
+        centerTitle: false,
       ),
       body: SafeArea(
         child: stateAsync.when(
           data: (state) => _buildBody(context, state),
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.accent),
+          loading: () => const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: SkeletonList(count: 4),
           ),
-          error: (e, st) => Center(
-            child: Text(
-              'Error: $e',
-              style: AppTheme.body.copyWith(color: AppTheme.error),
-            ),
+          error: (e, st) => ErrorState(
+            reason: 'Failed to load progress.\n$e',
+            onRetry: () => ref.invalidate(progressProvider),
           ),
         ),
       ),
@@ -42,178 +41,334 @@ class ProgressScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        _buildStreakCard(state.streak),
+        _buildStreakCard(context, state.streak),
         const SizedBox(height: 24),
-        _buildHeatmap(state.last35Days),
+        _buildHeatmap(context, state.last35Days),
         const SizedBox(height: 24),
-        _buildWeeklySummary(state),
+        _build7DayList(context, state.last35Days),
         const SizedBox(height: 24),
-        _build7DayList(state.last35Days),
+        _buildWeeklySummary(context, state),
         const SizedBox(height: 24),
         WeightTrendSection(entries: state.weightEntries),
       ],
     );
   }
 
-  Widget _buildStreakCard(StreakState streak) {
-    String explanation;
-    Color phaseColor;
+  Widget _buildStreakCard(BuildContext context, StreakState streak) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    
+    // UI Spec: flame icon, "12-day streak" display, "Longest: 18 days" caption, 
+    // plus the explainer chip: "Days you don't log stay neutral — they never break your streak."
 
-    switch (streak.phase) {
-      case StreakPhase.neutral:
-        explanation = 'No logs today. Streak paused.';
-        phaseColor = AppTheme.secondaryText;
-        break;
-      case StreakPhase.safe:
-        explanation = 'You are within your limits today.';
-        phaseColor = AppTheme.success;
-        break;
-      case StreakPhase.overPending:
-        explanation =
-            'You are over your limit. Burn it by ${streak.graceDeadline?.hour ?? 11}:59 to save the streak!';
-        phaseColor = AppTheme.warning;
-        break;
-      case StreakPhase.cleared:
-        explanation = 'You were over, but you burned it! Streak saved.';
-        phaseColor = AppTheme.success;
-        break;
-      case StreakPhase.broken:
-        explanation = 'Grace period expired. Streak reset.';
-        phaseColor = AppTheme.error;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.hairline),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('${streak.currentStreak} Day Streak', style: AppTheme.title),
-              Icon(Icons.local_fire_department, color: phaseColor, size: 28),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: ext.accentSoft,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.local_fire_department, color: theme.colorScheme.primary, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${streak.currentStreak}-day streak',
+                      style: theme.textTheme.display.copyWith(
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Longest: ${streak.currentStreak} days', // Placeholder for longest streak
+                      style: theme.textTheme.caption,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(explanation, style: AppTheme.body.copyWith(color: phaseColor)),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: ext.accentSoft,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, size: 16, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Days you don\'t log stay neutral — they never break your streak.',
+                    style: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildHeatmap(Map<DateTime, DayStatus> last35Days) {
-    // A calendar heatmap for 35 days (5 weeks)
-    // We'll generate a grid of 5 columns (weeks) x 7 rows (days), or 7 cols x 5 rows.
-    // Standard GitHub style is 7 rows (Sun-Sat), but we can just list them sequentially.
-    // For simplicity, a Wrap of 35 boxes.
-
+  Widget _buildHeatmap(BuildContext context, Map<DateTime, DayStatus> last35Days) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    final now = DateTime.now();
+    
+    // Prepare dates
     final sortedDates = last35Days.keys.toList()..sort();
-
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Last 5 Weeks', style: AppTheme.title),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: sortedDates.map((date) {
-            final status = last35Days[date]!;
-            Color color;
-            if (status.state == DayState.over) {
-              color = AppTheme.error;
-            } else if (status.state == DayState.under ||
-                status.state == DayState.near) {
-              color = AppTheme.success;
-            } else {
-              // noData or anything else is neutral grey
-              color = AppTheme.hairline;
-            }
-
-            return Container(
-              width: 16,
-              height: 16,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(4),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Heatmap Grid
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: 35,
+                itemBuilder: (context, index) {
+                  if (index < 7) {
+                    // Weekday headers
+                    final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                    return Center(
+                      child: Text(
+                        weekdays[index],
+                        style: theme.textTheme.overline,
+                      ),
+                    );
+                  }
+                  
+                  final dateIndex = index - 7;
+                  if (dateIndex >= sortedDates.length) return const SizedBox();
+                  
+                  final date = sortedDates[dateIndex];
+                  final status = last35Days[date]!;
+                  final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
+                  
+                  Widget dot;
+                  if (status.state == DayState.noData) {
+                    dot = Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: ext.hairline),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    );
+                  } else {
+                    final color = (status.state == DayState.over) ? ext.error : ext.success;
+                    dot = Container(
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    );
+                  }
+                  
+                  if (isToday) {
+                    return Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: theme.colorScheme.primary, width: 1.5),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: dot,
+                    );
+                  }
+                  
+                  return dot;
+                },
               ),
-            );
-          }).toList(),
+              const SizedBox(height: 16),
+              // Legend
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildLegendItem(context, 'Safe', ext.success, isOutline: false),
+                  const SizedBox(width: 16),
+                  _buildLegendItem(context, 'Over', ext.error, isOutline: false),
+                  const SizedBox(width: 16),
+                  _buildLegendItem(context, 'No logs', ext.hairline, isOutline: true),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildWeeklySummary(ProgressState state) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.hairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Weekly Summary', style: AppTheme.title),
-          const SizedBox(height: 16),
-          _summaryRow('Total Intake', state.weeklyIntake.format()),
-          const SizedBox(height: 8),
-          _summaryRow('Total Burned', '${state.weeklyBurned} kcal'),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryRow(String label, String value) {
+  Widget _buildLegendItem(BuildContext context, String label, Color color, {required bool isOutline}) {
+    final theme = Theme.of(context);
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          label,
-          style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: isOutline ? Colors.transparent : color,
+            border: isOutline ? Border.all(color: color) : null,
+            shape: BoxShape.circle,
+          ),
         ),
-        Text(value, style: AppTheme.body.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(width: 4),
+        Text(label, style: theme.textTheme.caption),
       ],
     );
   }
 
-  Widget _build7DayList(Map<DateTime, DayStatus> last35Days) {
-    final sortedDates = last35Days.keys.toList()
-      ..sort((a, b) => b.compareTo(a));
+  Widget _build7DayList(BuildContext context, Map<DateTime, DayStatus> last35Days) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    final sortedDates = last35Days.keys.toList()..sort((a, b) => b.compareTo(a));
     final last7 = sortedDates.take(7).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Recent Days', style: AppTheme.title),
-        const SizedBox(height: 12),
-        ...last7.map((date) {
-          final status = last35Days[date]!;
-          return ListTile(
-            title: Text('${date.month}/${date.day}', style: AppTheme.body),
-            subtitle: Text(
-              '${status.total.format()} logged • ${status.burnedKcal} kcal burned',
-              style: AppTheme.caption.copyWith(color: AppTheme.secondaryText),
-            ),
-            trailing: status.state == DayState.noData
-                ? null
-                : Icon(
-                    status.state == DayState.over
-                        ? Icons.warning
-                        : Icons.check_circle,
-                    color: status.state == DayState.over
-                        ? AppTheme.error
-                        : AppTheme.success,
+        Text('Last 7 days', style: theme.textTheme.h2),
+        const SizedBox(height: 16),
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: last7.asMap().entries.map((entry) {
+              final index = entry.key;
+              final date = entry.value;
+              final status = last35Days[date]!;
+              final isLast = index == last7.length - 1;
+              
+              final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+              final dayName = days[date.weekday - 1];
+
+              Widget pill;
+              if (status.state == DayState.noData) {
+                pill = Text('-', style: theme.textTheme.bodyStrong.copyWith(color: theme.textTheme.caption.color));
+              } else if (status.state == DayState.over) {
+                pill = Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: ext.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-          );
-        }),
+                  child: Text('Over', style: theme.textTheme.caption.copyWith(color: ext.error, fontWeight: FontWeight.w600)),
+                );
+              } else {
+                pill = Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: ext.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text('Safe', style: theme.textTheme.caption.copyWith(color: ext.success, fontWeight: FontWeight.w600)),
+                );
+              }
+
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 48,
+                          child: Text(dayName, style: theme.textTheme.body),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Text(
+                                status.state == DayState.noData ? 'No logs' : '≤${status.total.format()}',
+                                style: theme.textTheme.caption.copyWith(
+                                  fontFeatures: const [FontFeature.tabularFigures()],
+                                ),
+                              ),
+                              if (status.burnedKcal > 0) ...[
+                                const SizedBox(width: 4),
+                                Icon(Icons.local_fire_department, size: 14, color: theme.colorScheme.primary),
+                              ],
+                            ],
+                          ),
+                        ),
+                        pill,
+                      ],
+                    ),
+                  ),
+                  if (!isLast)
+                    Divider(height: 1, color: ext.hairline, indent: 16, endIndent: 16),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklySummary(BuildContext context, ProgressState state) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('This week', style: theme.textTheme.h2),
+        const SizedBox(height: 16),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Eaten', style: theme.textTheme.body),
+                  Text(
+                    state.weeklyIntake.format(),
+                    style: theme.textTheme.bodyStrong.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Divider(height: 1, color: ext.hairline),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Burned', style: theme.textTheme.body),
+                  Text(
+                    '${state.weeklyBurned} kcal',
+                    style: theme.textTheme.bodyStrong.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

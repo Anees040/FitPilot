@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/features/today/presentation/today_screen.dart';
 import 'package:fitpilot/features/log/presentation/log_screen.dart';
 import 'package:fitpilot/features/plan/presentation/plan_screen.dart';
@@ -12,8 +12,10 @@ import 'package:fitpilot/features/auth/presentation/sign_up_screen.dart';
 import 'package:fitpilot/features/auth/presentation/sign_in_screen.dart';
 import 'package:fitpilot/features/auth/presentation/otp_verify_screen.dart';
 import 'package:fitpilot/features/auth/presentation/forgot_password_screen.dart';
+import 'package:fitpilot/features/profile/presentation/profile_setup_screen.dart';
 import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
 import 'package:fitpilot/data/local/app_database.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final shellNavigatorTodayKey = GlobalKey<NavigatorState>(debugLabel: 'today');
@@ -72,13 +74,26 @@ final appRouter = GoRouter(
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
     GoRoute(
+      path: '/profile-setup',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const ProfileSetupScreen(),
+    ),
+    GoRoute(
       path: '/capture',
       parentNavigatorKey: rootNavigatorKey, // Overlay above bottom nav
       builder: (context, state) => const CaptureScreen(),
     ),
-    StatefulShellRoute.indexedStack(
+    StatefulShellRoute(
       builder: (context, state, navigationShell) {
-        return ScaffoldWithNavBar(navigationShell: navigationShell);
+        return MaxWidthCenter(
+          child: ScaffoldWithNavBar(navigationShell: navigationShell),
+        );
+      },
+      navigatorContainerBuilder: (context, navigationShell, children) {
+        return _AnimatedBranchContainer(
+          currentIndex: navigationShell.currentIndex,
+          children: children,
+        );
       },
       branches: [
         StatefulShellBranch(
@@ -137,6 +152,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   void _goBranch(int index) {
+    if (index != navigationShell.currentIndex) {
+      HapticFeedback.lightImpact();
+    }
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
@@ -145,52 +163,164 @@ class ScaffoldWithNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: ColoredBox(
-        color: AppTheme.surface,
-        child: SafeArea(
-          child: Container(
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: ext.hairline, width: 1.0),
+          ),
+        ),
+        child: NavigationBarTheme(
+          data: NavigationBarThemeData(
             height: 80,
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: AppTheme.hairline, width: 1.0),
+            elevation: 0,
+            backgroundColor: theme.colorScheme.surface,
+            indicatorColor: ext.accentSoft,
+            indicatorShape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              final color = states.contains(WidgetState.selected)
+                  ? theme.colorScheme.primary
+                  : theme.textTheme.caption.color;
+              return theme.textTheme.caption.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: color,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              );
+            }),
+            iconTheme: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return IconThemeData(color: theme.colorScheme.primary, size: 24);
+              }
+              return IconThemeData(color: theme.textTheme.caption.color, size: 24);
+            }),
+          ),
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: _goBranch,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.local_fire_department_outlined),
+                selectedIcon: _AnimatedIconWrapper(child: Icon(Icons.local_fire_department)),
+                label: 'Today',
               ),
-            ),
-            child: BottomNavigationBar(
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              type: BottomNavigationBarType.fixed,
-              currentIndex: navigationShell.currentIndex,
-              selectedItemColor: AppTheme.accent,
-              unselectedItemColor: AppTheme.secondaryText,
-              onTap: _goBranch,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.today),
-                  label: 'Today',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.list_alt),
-                  label: 'Log',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.track_changes),
-                  label: 'Plan',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.trending_up),
-                  label: 'Progress',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
-              ],
-            ),
+              NavigationDestination(
+                icon: Icon(Icons.search),
+                selectedIcon: _AnimatedIconWrapper(child: Icon(Icons.search)),
+                label: 'Log',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calendar_today_outlined),
+                selectedIcon: _AnimatedIconWrapper(child: Icon(Icons.calendar_today)),
+                label: 'Plan',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.bar_chart),
+                selectedIcon: _AnimatedIconWrapper(child: Icon(Icons.bar_chart)),
+                label: 'Progress',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: _AnimatedIconWrapper(child: Icon(Icons.person)),
+                label: 'Profile',
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedIconWrapper extends StatefulWidget {
+  final Widget child;
+  const _AnimatedIconWrapper({required this.child});
+
+  @override
+  State<_AnimatedIconWrapper> createState() => _AnimatedIconWrapperState();
+}
+
+class _AnimatedIconWrapperState extends State<_AnimatedIconWrapper> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.15).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.15, end: 1.0).chain(CurveTween(curve: Curves.easeInCubic)), weight: 50),
+    ]).animate(_controller);
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: widget.child,
+    );
+  }
+}
+
+class MaxWidthCenter extends StatelessWidget {
+  final Widget child;
+  const MaxWidthCenter({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _AnimatedBranchContainer extends StatelessWidget {
+  const _AnimatedBranchContainer({
+    required this.currentIndex,
+    required this.children,
+  });
+  final int currentIndex;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: List.generate(children.length, (index) {
+        final navigator = children[index];
+        return AnimatedOpacity(
+          opacity: index == currentIndex ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          child: IgnorePointer(
+            ignoring: index != currentIndex,
+            child: TickerMode(
+              enabled: index == currentIndex,
+              child: navigator,
+            ),
+          ),
+        );
+      }),
     );
   }
 }

@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:go_router/go_router.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/data/ocr/nutrition_label_parser.dart';
 import 'package:fitpilot/application/providers/capture_provider.dart';
+import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 import 'widgets/barcode_quantity_sheet.dart';
 import 'widgets/ocr_review_sheet.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
 
 enum CaptureMode { scanFood, barcode, foodLabel, library }
 
@@ -65,46 +68,32 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   }
 
   void _showScanFoodLockedDialog() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
+    final theme = Theme.of(context);
+    AppBottomSheet.show(
+      context,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.auto_awesome, color: AppTheme.accent, size: 48),
+            Icon(Icons.auto_awesome, color: theme.colorScheme.primary, size: 48),
             const SizedBox(height: 16),
             Text(
               'AI Photo Logging',
-              style: AppTheme.lightTheme.textTheme.titleLarge,
+              style: theme.textTheme.h2,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'AI photo logging arrives with the next release! For now, please use Barcode, Food Label, or Library to log your meals.',
-              style: AppTheme.lightTheme.textTheme.bodyMedium,
+              style: theme.textTheme.body,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
+            const SizedBox(height: 32),
+            PrimaryButton(
+              label: 'Got it',
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Got it',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
             ),
           ],
         ),
@@ -120,7 +109,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
     setState(() => _isProcessing = true);
 
-    // Process barcode lookup
     final result = await ref
         .read(captureProvider.notifier)
         .lookupBarcode(barcode);
@@ -128,7 +116,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     if (!mounted) return;
 
     if (result == null) {
-      // Not found or error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Product not found or network error.'),
@@ -141,7 +128,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
           ),
         ),
       );
-      // Wait a bit before allowing another scan
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -149,17 +135,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       return;
     }
 
-    // Found, show quantity sheet
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      isDismissible: false,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) =>
-          BarcodeQuantitySheet(barcode: barcode, offResult: result),
+    await AppBottomSheet.show(
+      context,
+      child: BarcodeQuantitySheet(barcode: barcode, offResult: result),
     );
 
     if (mounted) {
@@ -169,8 +147,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.onSurface, // camera background
       body: SafeArea(
         child: Column(
           children: [
@@ -183,14 +163,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: theme.colorScheme.surface),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const Spacer(),
                   IconButton(
                     icon: Icon(
                       _isTorchOn ? Icons.flash_on : Icons.flash_off,
-                      color: Colors.white,
+                      color: theme.colorScheme.surface,
                     ),
                     onPressed: () {
                       _cameraController.toggleTorch();
@@ -224,11 +204,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.camera_alt, color: AppTheme.error, size: 48),
+                            Icon(Icons.camera_alt, color: theme.colorScheme.error, size: 48),
                             const SizedBox(height: 16),
                             Text(
                               message,
-                              style: const TextStyle(color: Colors.white),
+                              style: TextStyle(color: theme.colorScheme.surface),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 16),
@@ -244,7 +224,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                       if (_mode == CaptureMode.barcode) {
                         _handleBarcode(capture);
                       } else if (_mode == CaptureMode.foodLabel) {
-                        // Store the latest image if we're trying to capture
                         if (_isProcessing && _latestCapture == null) {
                           _latestCapture = capture;
                         }
@@ -256,15 +235,15 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                   else if (_mode == CaptureMode.foodLabel)
                     _buildOcrOverlay(),
                   if (_isProcessing)
-                    const Center(
-                      child: CircularProgressIndicator(color: AppTheme.accent),
+                    Center(
+                      child: CircularProgressIndicator(color: theme.colorScheme.primary),
                     ),
                 ],
               ),
             ),
             // Mode Switcher
             Container(
-              color: Colors.black,
+              color: theme.colorScheme.onSurface,
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -274,8 +253,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                       padding: const EdgeInsets.only(bottom: 24.0),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
+                          backgroundColor: theme.colorScheme.surface,
+                          foregroundColor: theme.colorScheme.onSurface,
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(24),
                         ),
@@ -286,7 +265,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                   Container(
                     height: 56,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: theme.colorScheme.surface.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(28),
                     ),
                     child: Row(
@@ -313,10 +292,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   Future<void> _processOcrCapture() async {
     setState(() {
       _isProcessing = true;
-      _latestCapture = null; // Clear old
+      _latestCapture = null;
     });
 
-    // Wait up to 1 second for a frame to arrive in onDetect
     for (int i = 0; i < 20; i++) {
       await Future.delayed(const Duration(milliseconds: 50));
       if (_latestCapture != null && _latestCapture!.image != null) break;
@@ -326,9 +304,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     if (imageBytes == null) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to capture image')),
-        );
+        confirmSnackbar(context, 'Failed to capture image');
       }
       return;
     }
@@ -346,30 +322,24 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
       if (mounted) {
         setState(() => _isProcessing = false);
-        await showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          isDismissible: false,
-          backgroundColor: AppTheme.surface,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          builder: (context) => OcrReviewSheet(result: result),
+        await AppBottomSheet.show(
+          context,
+          child: OcrReviewSheet(result: result),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Error analyzing label')));
+        confirmSnackbar(context, 'Error analyzing label');
       }
     }
   }
 
   Widget _buildModeTab(String text, CaptureMode mode, IconData icon) {
+    final theme = Theme.of(context);
     final isSelected = _mode == mode;
-    final color = isSelected ? AppTheme.accent : Colors.white54;
+    final color = isSelected ? theme.colorScheme.primary : theme.colorScheme.surface.withValues(alpha: 0.54);
+    
     return Expanded(
       child: GestureDetector(
         onTap: () => _onModeChanged(mode),
@@ -388,9 +358,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                   style: TextStyle(
                     color: color,
                     fontSize: 10,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
@@ -409,7 +377,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         width: 250,
         height: 150,
         decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.accent, width: 2),
+          border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
           borderRadius: BorderRadius.circular(12),
         ),
       ),
@@ -417,22 +385,23 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   }
 
   Widget _buildOcrOverlay() {
+    final theme = Theme.of(context);
     return Center(
       child: Container(
         width: 300,
         height: 400,
         decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.accent, width: 2),
+          border: Border.all(color: theme.colorScheme.primary, width: 2),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Container(
-            color: Colors.black54,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
             padding: const EdgeInsets.all(8),
-            child: const Text(
+            child: Text(
               'Align nutrition panel within frame',
-              style: TextStyle(color: Colors.white, fontSize: 12),
+              style: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
             ),
           ),
         ),

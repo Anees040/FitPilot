@@ -6,6 +6,9 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/app_text_field.dart';
+import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 
 class OtpVerifyScreen extends ConsumerStatefulWidget {
   final String email;
@@ -51,7 +54,10 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     final code = _codeCtrl.text.trim();
     if (code.length != 6) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
 
     try {
       await ref
@@ -83,13 +89,9 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
     try {
       _startCooldown();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verification code resent.'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppTheme.success,
-        ),
-      );
+      if (mounted) {
+        confirmSnackbar(context, 'Verification code resent.');
+      }
     } catch (e) {
       // ignore
     }
@@ -97,37 +99,30 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        backgroundColor: AppTheme.surface,
-        title: Text('Verify Email', style: AppTheme.title),
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        title: Text('Verify Email', style: theme.textTheme.h2),
+        centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'We sent a 6-digit code to ${widget.email}.',
-                style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
+                style: theme.textTheme.body,
               ),
               const SizedBox(height: 32),
 
-              TextField(
+              AppTextField(
+                label: 'CODE',
                 controller: _codeCtrl,
                 keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: InputDecoration(
-                  labelText: 'Code',
-                  errorText: _errorText,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
+                errorText: _errorText,
                 onChanged: (val) {
                   if (_errorText != null) setState(() => _errorText = null);
                   if (val.length == 6 && !_isLoading) _submit();
@@ -135,50 +130,21 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
               ),
               const SizedBox(height: 16),
 
-              ElevatedButton(
-                onPressed: _isLoading || _codeCtrl.text.length != 6
-                    ? null
-                    : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accent,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        'Verify',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+              PrimaryButton(
+                label: 'Verify',
+                onPressed: _codeCtrl.text.length == 6 ? _submit : null,
+                isLoading: _isLoading,
               ),
               const SizedBox(height: 16),
 
-              TextButton(
+              TertiaryButton(
+                label: _resendCooldown > 0
+                    ? 'Resend in ${_resendCooldown}s'
+                    : 'Resend code',
                 onPressed: _resendCooldown == 0 ? _resend : null,
-                child: Text(
-                  _resendCooldown > 0
-                      ? 'Resend in ${_resendCooldown}s'
-                      : 'Resend code',
-                  style: AppTheme.body.copyWith(
-                    color: _resendCooldown > 0
-                        ? AppTheme.secondaryText
-                        : AppTheme.accent,
-                  ),
-                ),
+                color: _resendCooldown > 0
+                    ? theme.textTheme.caption.color
+                    : theme.colorScheme.primary,
               ),
             ],
           ),

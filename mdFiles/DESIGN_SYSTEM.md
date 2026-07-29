@@ -20,11 +20,11 @@ No other colors or styles exist. Hard bans: gradients, glows, glassmorphism, blu
 ### Typography (Inter via google_fonts)
 | Style | Size / Weight | Use |
 | --- | --- | --- |
-| `display` | 40 / 700 | big numbers (kcal range on Today) |
-| `title` | 22 / 700 | screen titles |
-| `body` | 17 / 400 | default text |
-| `secondary` | 15 / 400 | list subtitles |
-| `caption` | 13 / 500 | labels, chips |
+| `display` | 32 / 700 | big numbers (kcal range on Today) |
+| `title` | 20 / 700 | screen titles |
+| `body` | 16 / 400 | default text |
+| `secondary` | 14 / 400 | list subtitles |
+| `caption` | 12 / 500 | labels, chips |
 
 ## 2. Layout & Component Guidelines
 

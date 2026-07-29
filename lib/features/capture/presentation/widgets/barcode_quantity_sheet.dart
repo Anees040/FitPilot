@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
 import 'package:fitpilot/application/providers/capture_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/app_text_field.dart';
 
 class BarcodeQuantitySheet extends ConsumerStatefulWidget {
   final String barcode;
@@ -21,11 +23,9 @@ class BarcodeQuantitySheet extends ConsumerStatefulWidget {
 }
 
 class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
-  String _selectedPreset =
-      'whole_pack'; // 'whole_pack', 'half_pack', 'one_serving', 'custom'
+  String _selectedPreset = 'whole_pack'; // 'whole_pack', 'half_pack', 'custom'
   final _customController = TextEditingController();
 
-  // These will be populated from cache or OffResult
   double? _netWeightGrams;
   late int _kcalPer100g;
   late String _productName;
@@ -57,7 +57,6 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
   }
 
   Future<void> _loadSavedQuantity() async {
-    // If netWeight is present, use it.
     if (_netWeightGrams != null) {
       setState(() {
         _selectedPreset = 'whole_pack';
@@ -65,7 +64,6 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
       return;
     }
 
-    // Otherwise, check saved_products
     final savedQ = await ref
         .read(captureProvider.notifier)
         .getSavedQuantity(widget.barcode);
@@ -75,8 +73,6 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
         _selectedPreset = 'whole_pack';
       });
     } else {
-      // We don't know the net weight. We can't pre-select whole pack with a real value.
-      // Ask user.
       setState(() {
         _selectedPreset = 'custom';
       });
@@ -96,7 +92,6 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
   }
 
   Future<void> _logItem() async {
-    // Save the quantity if custom and we didn't have net weight
     if (_selectedPreset == 'custom' && _netWeightGrams == null) {
       final customGrams = double.tryParse(_customController.text);
       if (customGrams != null && customGrams > 0) {
@@ -108,10 +103,9 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
 
     final kcal = _computedKcal;
     if (kcal <= 0 && widget.offResult is! OffFoundMissingEnergy) {
-      return; // invalid
+      return; 
     }
 
-    // Determine final grams
     double finalGrams = 0;
     if (_selectedPreset == 'whole_pack') {
       finalGrams = _netWeightGrams ?? 0;
@@ -126,8 +120,7 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
         .logScannedItem(
           barcode: widget.barcode,
           name: _productName,
-          kcal:
-              kcal, // exact computed point value, captureProvider will spread it
+          kcal: kcal, 
           grams: finalGrams,
         );
 
@@ -138,116 +131,104 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: 24.0,
         right: 24.0,
-        top: 24.0,
+        top: 8.0,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(_productName, style: AppTheme.lightTheme.textTheme.titleLarge),
+          Text(_productName, style: theme.textTheme.h2),
           const SizedBox(height: 4),
           Text(
             widget.offResult is OffFound && (widget.offResult as OffFound).isLocal
                 ? 'Saved on this device'
                 : 'from Open Food Facts',
-            style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.accent,
-            ),
+            style: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary),
           ),
           const SizedBox(height: 8),
           if (widget.offResult is OffFoundMissingEnergy)
-            const Text(
+            Text(
               'Energy data missing from Open Food Facts.',
-              style: TextStyle(color: AppTheme.error),
+              style: theme.textTheme.caption.copyWith(color: ext.error),
             )
           else
             Text(
               '$_kcalPer100g kcal per 100g',
-              style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.secondaryText,
-              ),
+              style: theme.textTheme.caption,
             ),
           const SizedBox(height: 24),
 
           if (_netWeightGrams != null) ...[
             ListTile(
-              title: Text('Whole pack (${_netWeightGrams}g)'),
+              contentPadding: EdgeInsets.zero,
+              title: Text('Whole pack (${_netWeightGrams}g)', style: theme.textTheme.bodyStrong),
               trailing: Icon(
                 _selectedPreset == 'whole_pack' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: _selectedPreset == 'whole_pack' ? AppTheme.accent : AppTheme.secondaryText,
+                color: _selectedPreset == 'whole_pack' ? theme.colorScheme.primary : theme.textTheme.caption.color,
               ),
               onTap: () => setState(() => _selectedPreset = 'whole_pack'),
             ),
             ListTile(
-              title: Text('Half pack (${_netWeightGrams! / 2}g)'),
+              contentPadding: EdgeInsets.zero,
+              title: Text('Half pack (${_netWeightGrams! / 2}g)', style: theme.textTheme.bodyStrong),
               trailing: Icon(
                 _selectedPreset == 'half_pack' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: _selectedPreset == 'half_pack' ? AppTheme.accent : AppTheme.secondaryText,
+                color: _selectedPreset == 'half_pack' ? theme.colorScheme.primary : theme.textTheme.caption.color,
               ),
               onTap: () => setState(() => _selectedPreset = 'half_pack'),
             ),
           ],
 
           ListTile(
-            title: const Text('Custom grams / ml'),
+            contentPadding: EdgeInsets.zero,
+            title: Text('Custom grams / ml', style: theme.textTheme.bodyStrong),
             trailing: Icon(
               _selectedPreset == 'custom' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-              color: _selectedPreset == 'custom' ? AppTheme.accent : AppTheme.secondaryText,
+              color: _selectedPreset == 'custom' ? theme.colorScheme.primary : theme.textTheme.caption.color,
             ),
             onTap: () => setState(() => _selectedPreset = 'custom'),
           ),
 
           if (_selectedPreset == 'custom')
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TextField(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: AppTextField(
+                label: 'GRAMS / ML',
                 controller: _customController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  hintText: 'e.g. 250',
-                  suffixText: 'g / ml',
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: AppTheme.accent),
-                  ),
-                ),
                 onChanged: (_) => setState(() {}),
               ),
             ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Text(
-            'Estimated Calories: ~$_computedKcal kcal',
-            style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.accent,
-            ),
+            '~$_computedKcal kcal',
+            style: theme.textTheme.display.copyWith(color: theme.colorScheme.primary),
             textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: SecondaryButton(
+                  label: 'Cancel',
                   onPressed: () => context.pop(),
-                  child: const Text('Cancel'),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accent,
-                    foregroundColor: Colors.white,
-                  ),
+                child: PrimaryButton(
+                  label: 'Log',
                   onPressed: _computedKcal > 0 ? _logItem : null,
-                  child: const Text('Log'),
                 ),
               ),
             ],

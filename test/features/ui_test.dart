@@ -10,6 +10,7 @@ import 'package:fitpilot/application/providers/food_search_provider.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/domain/entities/food_item.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
 
 void main() {
   group('Widget Tests', () {
@@ -55,23 +56,28 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: Scaffold(body: ManualEntrySheet())),
+        ProviderScope(
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const Scaffold(
+              body: SingleChildScrollView(child: ManualEntrySheet()),
+            ),
+          ),
         ),
       );
 
       // Enter name
-      await tester.enterText(find.byType(TextField).first, 'Test Food');
+      await tester.enterText(find.byType(TextFormField).first, 'Test Food');
 
       // Enter 0
-      await tester.enterText(find.byType(TextField).last, '0');
+      await tester.enterText(find.byType(TextFormField).last, '0');
       await tester.tap(find.text('Add'));
       await tester.pump();
 
       expect(find.text('Calories must be between 1 and 5000'), findsOneWidget);
 
       // Enter 5001
-      await tester.enterText(find.byType(TextField).last, '5001');
+      await tester.enterText(find.byType(TextFormField).last, '5001');
       await tester.tap(find.text('Add'));
       await tester.pump();
 
@@ -80,7 +86,7 @@ void main() {
   });
 
   group('Layout Tests (320x640)', () {
-    testWidgets('LogScreen and TodayScreen have no overflow', (tester) async {
+    testWidgets('LogScreen has no overflow', (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1.0;
 
@@ -96,18 +102,41 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: LogScreen()),
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const LogScreen(),
+          ),
         ),
       );
 
       await tester.pumpAndSettle(); // Wait for any animations
       expect(tester.takeException(), isNull); // Ensures no overflow exception
 
+      // Reset view
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    });
+
+    testWidgets('TodayScreen has no overflow', (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1.0;
+
+      // Mock providers
+      final container = ProviderContainer(
+        overrides: [
+          todayProvider.overrideWith(() => MockTodayNotifier()),
+          foodSearchProvider.overrideWith(() => MockFoodSearchNotifier()),
+        ],
+      );
+
       // Render TodayScreen
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: TodayScreen()),
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const TodayScreen(),
+          ),
         ),
       );
 

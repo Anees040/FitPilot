@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 
 class QuantityStepper extends StatelessWidget {
   final int value;
@@ -28,7 +27,7 @@ class QuantityStepper extends StatelessWidget {
           child: Text(
             value.toString(),
             textAlign: TextAlign.center,
-            style: AppTheme.lightTheme.textTheme.titleLarge,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
         _StepperButton(
@@ -57,16 +56,16 @@ class _StepperButton extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border.all(
             color: onPressed != null
-                ? AppTheme.accent
-                : AppTheme.secondaryText.withValues(alpha: 0.5),
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).textTheme.bodySmall!.color!.withValues(alpha: 0.5),
           ),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
           icon,
           color: onPressed != null
-              ? AppTheme.accent
-              : AppTheme.secondaryText.withValues(alpha: 0.5),
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).textTheme.bodySmall!.color!.withValues(alpha: 0.5),
         ),
       ),
     );

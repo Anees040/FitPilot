@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/data/ocr/nutrition_label_parser.dart';
 import 'package:fitpilot/application/providers/capture_provider.dart';
+import 'package:fitpilot/core/ui/app_text_field.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
 
 class OcrReviewSheet extends ConsumerStatefulWidget {
   final NutritionLabelResult result;
@@ -63,45 +65,40 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
     required TextEditingController controller,
     required double? confidence,
   }) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
     final isLowConfidence = confidence != null && confidence < 0.8;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Expanded(
+              child: AppTextField(
+                label: label.toUpperCase(),
+                controller: controller,
+                keyboardType: TextInputType.number,
+                // AppTextField doesn't have fillColor exposed directly for warnings,
+                // but we can add a warning message below if needed.
+              ),
+            ),
             if (isLowConfidence)
-              const Padding(
-                padding: EdgeInsets.only(left: 8.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
                 child: Icon(
                   Icons.warning_amber_rounded,
-                  size: 16,
-                  color: AppTheme.warning,
+                  size: 24,
+                  color: ext.warning,
                 ),
               ),
           ],
         ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: AppTheme.accent),
-            ),
-            filled: isLowConfidence,
-            fillColor: isLowConfidence
-                ? AppTheme.warning.withValues(alpha: 0.1)
-                : null,
-          ),
-        ),
         if (isLowConfidence)
-          const Padding(
-            padding: EdgeInsets.only(top: 4.0),
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0),
             child: Text(
               'Please verify this value',
-              style: TextStyle(color: AppTheme.warning, fontSize: 12),
+              style: theme.textTheme.caption.copyWith(color: ext.warning),
             ),
           ),
       ],
@@ -110,20 +107,22 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: 24.0,
         right: 24.0,
-        top: 24.0,
+        top: 8.0,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Verify Nutrition Label',
-            style: AppTheme.lightTheme.textTheme.titleLarge,
+            'Verify Label',
+            style: theme.textTheme.h2,
           ),
           const SizedBox(height: 24),
           _buildField(
@@ -132,11 +131,22 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
             confidence: widget.result.kcal?.confidence,
           ),
           const SizedBox(height: 16),
-          Text('Basis', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text('BASIS', style: theme.textTheme.overline),
           const SizedBox(height: 8),
           DropdownButtonFormField<NutritionBasis>(
             initialValue: _basis,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: theme.colorScheme.surface,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: theme.colorScheme.primary),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: theme.dividerColor),
+              ),
+            ),
             items: const [
               DropdownMenuItem(
                 value: NutritionBasis.per100g,
@@ -165,24 +175,20 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
             controller: _servingController,
             confidence: widget.result.servingSizeGrams?.confidence,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: SecondaryButton(
+                  label: 'Cancel',
                   onPressed: () => context.pop(),
-                  child: const Text('Cancel'),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accent,
-                    foregroundColor: Colors.white,
-                  ),
+                child: PrimaryButton(
+                  label: 'Log',
                   onPressed: _logItem,
-                  child: const Text('Confirm & Log'),
                 ),
               ),
             ],

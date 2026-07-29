@@ -10,6 +10,9 @@ enum Gender { male, female, unspecified }
 /// User's activity level for TDEE calculation.
 enum ActivityLevel { sedentary, light, moderate, active }
 
+/// User's theme preference.
+enum ThemeModePref { system, light, dark }
+
 /// User profile — single-row entity.
 class Profile extends Equatable {
   final double weightKg;
@@ -20,8 +23,9 @@ class Profile extends Equatable {
   final Goal goal;
   final ActivityLevel activityLevel;
   final int allowanceKcal;
-  final int? targetKcalOverride;
+  final int? targetOverride;
   final List<String> equipment;
+  final ThemeModePref themeMode;
   final DateTime updatedAt;
 
   static const int defaultAllowanceKcal = 300;
@@ -35,8 +39,9 @@ class Profile extends Equatable {
     this.goal = Goal.maintain,
     this.activityLevel = ActivityLevel.light,
     this.allowanceKcal = defaultAllowanceKcal,
-    this.targetKcalOverride,
+    this.targetOverride,
     this.equipment = const [],
+    this.themeMode = ThemeModePref.system,
     required this.updatedAt,
   }) {
     if (weightKg < 25 || weightKg > 300) {
@@ -54,16 +59,16 @@ class Profile extends Equatable {
     if (allowanceKcal < 0 || allowanceKcal > 2000) {
       throw ArgumentError('allowanceKcal must be 0–2000, got $allowanceKcal');
     }
-    if (targetKcalOverride != null &&
-        (targetKcalOverride! < 1000 || targetKcalOverride! > 5000)) {
+    if (targetOverride != null &&
+        (targetOverride! < 1000 || targetOverride! > 5000)) {
       throw ArgumentError(
-        'targetKcalOverride must be 1000–5000, got $targetKcalOverride',
+        'targetOverride must be 1000–5000, got $targetOverride',
       );
     }
   }
 
   int get effectiveDailyTarget {
-    if (targetKcalOverride != null) return targetKcalOverride!;
+    if (targetOverride != null) return targetOverride!;
     const calc = TargetCalculator();
     final bmr = calc.bmr(
       weightKg: weightKg,
@@ -86,9 +91,11 @@ class Profile extends Equatable {
     Goal? goal,
     ActivityLevel? activityLevel,
     int? allowanceKcal,
-    int? targetKcalOverride,
+    int? targetOverride,
     List<String>? equipment,
+    ThemeModePref? themeMode,
     DateTime? updatedAt,
+    bool clearOverride = false,
   }) {
     return Profile(
       weightKg: weightKg ?? this.weightKg,
@@ -99,8 +106,9 @@ class Profile extends Equatable {
       goal: goal ?? this.goal,
       activityLevel: activityLevel ?? this.activityLevel,
       allowanceKcal: allowanceKcal ?? this.allowanceKcal,
-      targetKcalOverride: targetKcalOverride ?? this.targetKcalOverride,
+      targetOverride: clearOverride ? null : (targetOverride ?? this.targetOverride),
       equipment: equipment ?? this.equipment,
+      themeMode: themeMode ?? this.themeMode,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -115,8 +123,9 @@ class Profile extends Equatable {
     goal,
     activityLevel,
     allowanceKcal,
-    targetKcalOverride,
+    targetOverride,
     equipment,
+    themeMode,
     updatedAt,
   ];
 

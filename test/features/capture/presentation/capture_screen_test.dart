@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
 
 void main() {
   testWidgets('CaptureScreen mode switching and locked Scan Food', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: CaptureScreen())),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const CaptureScreen(),
+        ),
+      ),
     );
 
     // Initial mode is Barcode
@@ -47,7 +53,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
 
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: CaptureScreen())),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const CaptureScreen(),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);

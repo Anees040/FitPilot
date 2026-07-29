@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/app_text_field.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 
 class ManualEntrySheet extends ConsumerStatefulWidget {
   const ManualEntrySheet({super.key});
@@ -53,24 +55,19 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
 
     ref.read(todayProvider.notifier).addLog(log);
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Added manual entry'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    confirmSnackbar(context, 'Added manual entry');
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determine bottom padding for keyboard
+    final theme = Theme.of(context);
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
       padding: EdgeInsets.only(
         left: 24.0,
         right: 24.0,
-        top: 24.0,
+        top: 8.0,
         bottom: 24.0 + bottomPadding,
       ),
       child: Column(
@@ -79,80 +76,27 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
         children: [
           Text(
             'Add Manually',
-            style: AppTheme.lightTheme.textTheme.titleLarge,
+            style: theme.textTheme.h2,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          TextField(
+          AppTextField(
+            label: 'FOOD NAME',
             controller: _nameController,
-            decoration: InputDecoration(
-              labelText: 'Food Name',
-              filled: true,
-              fillColor: AppTheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppTheme.hairline),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppTheme.hairline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppTheme.accent),
-              ),
-            ),
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
-          TextField(
+          AppTextField(
+            label: 'CALORIES (KCAL)',
             controller: _kcalController,
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: 'Calories (kcal)',
-              filled: true,
-              fillColor: AppTheme.surface,
-              errorText: _errorText,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppTheme.hairline),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppTheme.hairline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppTheme.accent),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppTheme.error),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppTheme.error),
-              ),
-            ),
-            textInputAction: TextInputAction.done,
+            errorText: _errorText,
             onSubmitted: (_) => _validateAndSubmit(),
           ),
           const SizedBox(height: 32),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(52),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
+          PrimaryButton(
+            label: 'Add',
             onPressed: _validateAndSubmit,
-            child: const Text(
-              'Add',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-            ),
           ),
         ],
       ),

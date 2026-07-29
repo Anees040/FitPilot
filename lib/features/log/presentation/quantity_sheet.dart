@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/domain/entities/food_item.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 import 'widgets/quantity_stepper.dart';
 import 'widgets/kcal_range_text.dart';
 
@@ -22,24 +24,25 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final multipliedRange = widget.food.kcalPerPortion.times(_quantity);
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               widget.food.name,
-              style: AppTheme.lightTheme.textTheme.titleLarge,
+              style: theme.textTheme.h2,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               widget.food.portionLabel,
-              style: AppTheme.lightTheme.textTheme.bodyMedium,
+              style: theme.textTheme.caption,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -61,9 +64,7 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
                       fit: BoxFit.scaleDown,
                       child: KcalRangeText(
                         range: multipliedRange,
-                        style: AppTheme.lightTheme.textTheme.displayLarge?.copyWith(
-                          fontSize: 32,
-                        ),
+                        style: theme.textTheme.display.copyWith(fontSize: 32),
                       ),
                     ),
                   ),
@@ -71,15 +72,8 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
               ],
             ),
             const SizedBox(height: 32),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accent,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(52),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
+            PrimaryButton(
+              label: 'Add to today',
               onPressed: () {
                 final log = FoodLog(
                   id: const Uuid().v4(),
@@ -91,17 +85,8 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
                 );
                 ref.read(todayProvider.notifier).addLog(log);
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Added to today'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                confirmSnackbar(context, 'Added to today');
               },
-              child: const Text(
-                'Add to today',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-              ),
             ),
           ],
         ),

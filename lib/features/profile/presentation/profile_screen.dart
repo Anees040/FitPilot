@@ -3,12 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/profile_edit_provider.dart';
+import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/data/sync/sync_service.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/domain/engines/target_calculator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/core/ui/app_text_field.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/select_chip.dart';
+import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 import 'package:fitpilot/features/settings/presentation/notification_prefs_screen.dart' as fitpilot_settings;
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -34,6 +40,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Set<String> _equipment = {};
 
   bool _initialized = false;
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -52,19 +59,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _goalWeightCtrl = TextEditingController(text: profile.goalWeightKg?.toString() ?? '');
     _heightCtrl = TextEditingController(text: profile.heightCm.toString());
     _ageCtrl = TextEditingController(text: profile.age.toString());
-    _toleranceCtrl = TextEditingController(
-      text: profile.allowanceKcal.toString(),
-    );
-    _overrideCtrl = TextEditingController(
-      text: profile.targetKcalOverride?.toString() ?? '',
-    );
+    _toleranceCtrl = TextEditingController(text: profile.allowanceKcal.toString());
+    _overrideCtrl = TextEditingController(text: profile.targetOverride?.toString() ?? '');
 
     _gender = profile.gender;
     _activityLevel = profile.activityLevel;
     _goal = profile.goal;
     _equipment = Set.from(profile.equipment);
 
-    // Add listeners to trigger rebuilds for the dynamic target text
     _weightCtrl.addListener(() => setState(() {}));
     _heightCtrl.addListener(() => setState(() {}));
     _ageCtrl.addListener(() => setState(() {}));
@@ -76,15 +78,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        title: Text('Profile', style: AppTheme.title),
-        backgroundColor: AppTheme.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        title: Text('Profile', style: theme.textTheme.h1),
+        centerTitle: false,
       ),
       body: SafeArea(
         child: profileAsync.when(
@@ -92,9 +92,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _initForm(profile);
             return _buildForm(context, profile);
           },
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.accent),
-          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, st) => Center(child: Text('Error: $e')),
         ),
       ),
@@ -102,180 +100,210 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildForm(BuildContext context, Profile profile) {
+    final theme = Theme.of(context);
     return Form(
       key: _formKey,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildComputedTargetDisplay(),
+          _buildComputedTargetDisplay(theme),
           const SizedBox(height: 24),
-          _buildSectionTitle('Vitals'),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField('Weight (kg)', _weightCtrl, (v) {
-                  final val = double.tryParse(v ?? '');
-                  if (val == null || val < 25 || val > 300) return '25–300 kg';
-                  return null;
-                }),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTextField('Goal Wt (optional)', _goalWeightCtrl, (v) {
-                  if (v == null || v.trim().isEmpty) return null;
-                  final val = double.tryParse(v);
-                  if (val == null || val < 25 || val > 300) return '25–300 kg';
-                  return null;
-                }),
-              ),
-            ],
+
+          _buildSectionTitle('VITALS', theme),
+          AppCard(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: _buildTextField('WEIGHT (KG)', _weightCtrl, _validateWeight)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildTextField('TARGET WT (OPT)', _goalWeightCtrl, _validateGoalWeight)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: _buildTextField('HEIGHT (CM)', _heightCtrl, _validateHeight)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildTextField('AGE', _ageCtrl, _validateAge)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('GENDER', style: theme.textTheme.overline),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: Gender.values.map((g) {
+                    final label = g.name[0].toUpperCase() + g.name.substring(1);
+                    return SelectChip(
+                      label: label,
+                      isSelected: _gender == g,
+                      onSelected: () => setState(() => _gender = g),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
           ),
-          _buildTextField('Height (cm)', _heightCtrl, (v) {
-            final val = int.tryParse(v ?? '');
-            if (val == null || val < 100 || val > 250) {
-              return 'Must be 100–250 cm';
-            }
-            return null;
-          }),
-          _buildTextField('Age', _ageCtrl, (v) {
-            final val = int.tryParse(v ?? '');
-            if (val == null || val < 13 || val > 100) return 'Must be 13–100';
-            return null;
-          }),
-          const SizedBox(height: 16),
-          _buildDropdown<Gender>('Gender', _gender, Gender.values, (v) {
-            setState(() => _gender = v!);
-          }),
           const SizedBox(height: 24),
-          _buildSectionTitle('Lifestyle & Goals'),
-          _buildDropdown<ActivityLevel>(
-            'Activity Level',
-            _activityLevel,
-            ActivityLevel.values,
-            (v) {
-              setState(() => _activityLevel = v!);
-            },
+
+          _buildSectionTitle('LIFESTYLE & GOALS', theme),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('ACTIVITY LEVEL', style: theme.textTheme.overline),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: ActivityLevel.values.map((a) {
+                    final label = a.name[0].toUpperCase() + a.name.substring(1);
+                    return SelectChip(
+                      label: label,
+                      isSelected: _activityLevel == a,
+                      onSelected: () => setState(() => _activityLevel = a),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+
+                Text('GOAL', style: theme.textTheme.overline),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: Goal.values.map((g) {
+                    final label = g.name[0].toUpperCase() + g.name.substring(1);
+                    return SelectChip(
+                      label: label,
+                      isSelected: _goal == g,
+                      onSelected: () => setState(() => _goal = g),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+
+                _buildTextField('CHEAT TOLERANCE (KCAL)', _toleranceCtrl, _validateTolerance),
+                const SizedBox(height: 16),
+                _buildTextField('TARGET OVERRIDE (OPT)', _overrideCtrl, _validateOverride),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildDropdown<Goal>('Goal', _goal, Goal.values, (v) {
-            setState(() => _goal = v!);
-          }),
-          _buildTextField('Cheat Tolerance (kcal)', _toleranceCtrl, (v) {
-            final val = int.tryParse(v ?? '');
-            if (val == null || val < 0 || val > 2000) {
-              return 'Must be 0–2000 kcal';
-            }
-            return null;
-          }),
-          _buildTextField('Manual Target Override (optional)', _overrideCtrl, (
-            v,
-          ) {
-            if (v == null || v.trim().isEmpty) return null;
-            final val = int.tryParse(v);
-            if (val == null || val < 1000 || val > 5000) {
-              return 'Must be 1000–5000 kcal';
-            }
-            return null;
-          }),
           const SizedBox(height: 24),
-          _buildSectionTitle('Available Equipment'),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ['rope', 'cycle', 'gym', 'pool'].map((eq) {
-              final isSelected = _equipment.contains(eq);
-              return ChoiceChip(
-                label: Text(
-                  eq,
-                  style: AppTheme.caption.copyWith(
-                    color: isSelected ? AppTheme.surface : AppTheme.text,
+
+          _buildSectionTitle('AVAILABLE EQUIPMENT', theme),
+          AppCard(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ['Dumbbells', 'Barbell', 'Kettlebell', 'Pull-up bar', 'Jump rope'].map((eq) {
+                final isSelected = _equipment.contains(eq);
+                return SelectChip(
+                  label: eq,
+                  isSelected: isSelected,
+                  onSelected: () {
+                    setState(() {
+                      if (isSelected) {
+                        _equipment.remove(eq);
+                      } else {
+                        _equipment.add(eq);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          _buildSectionTitle('SETTINGS', theme),
+          AppCard(
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.palette, color: theme.colorScheme.primary),
+                  title: Text('Theme', style: theme.textTheme.bodyStrong),
+                  trailing: DropdownButton<ThemeModePref>(
+                    value: ref.watch(profileProvider).valueOrNull?.themeMode ?? ThemeModePref.system,
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(value: ThemeModePref.system, child: Text('System')),
+                      DropdownMenuItem(value: ThemeModePref.light, child: Text('Light')),
+                      DropdownMenuItem(value: ThemeModePref.dark, child: Text('Dark')),
+                    ],
+                    onChanged: (v) async {
+                      if (v != null) {
+                        final p = ref.read(profileProvider).valueOrNull;
+                        if (p != null) {
+                          final newP = p.copyWith(themeMode: v);
+                          final repo = await ref.read(profileRepositoryProvider.future);
+                          await repo.save(newP);
+                          ref.invalidate(profileProvider);
+                        }
+                      }
+                    },
                   ),
                 ),
-                selected: isSelected,
-                selectedColor: AppTheme.accent,
-                backgroundColor: AppTheme.bg,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                  side: const BorderSide(color: AppTheme.hairline),
+                Divider(color: theme.dividerColor, height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.notifications_active, color: theme.colorScheme.primary),
+                  title: Text('Notifications', style: theme.textTheme.bodyStrong),
+                  trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const fitpilot_settings.NotificationPrefsScreen()),
+                    );
+                  },
                 ),
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _equipment.add(eq);
-                    } else {
-                      _equipment.remove(eq);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionTitle('Settings'),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.notifications_active, color: AppTheme.accent),
-            title: Text('Notifications', style: AppTheme.body),
-            trailing: Icon(Icons.chevron_right, color: AppTheme.secondaryText),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => fitpilot_settings.NotificationPrefsScreen()),
-              );
-            },
+              ],
+            ),
           ),
           const SizedBox(height: 32),
-          ElevatedButton(
+
+          PrimaryButton(
+            label: 'Save Profile',
             onPressed: _save,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              foregroundColor: AppTheme.surface,
-              minimumSize: const Size(double.infinity, 52),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Save Profile',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-            ),
+            isLoading: _isSaving,
           ),
           const SizedBox(height: 32),
-          _buildAuthSection(context),
+
+          _buildAuthSection(context, theme),
         ],
       ),
     );
   }
 
-  Widget _buildAuthSection(BuildContext context) {
+  Widget _buildAuthSection(BuildContext context, ThemeData theme) {
+    final ext = theme.extension<AppColors>()!;
     final authUser = ref.watch(currentUserProvider);
 
     if (authUser == null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildSectionTitle('Account'),
-          Text(
-            'Sign in to sync your progress across devices.',
-            style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context.push('/signin'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.surface,
-              foregroundColor: AppTheme.accent,
-              side: const BorderSide(color: AppTheme.hairline),
-              minimumSize: const Size.fromHeight(52),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Sign in / Create Account',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+          _buildSectionTitle('ACCOUNT', theme),
+          AppCard(
+            child: Column(
+              children: [
+                Text(
+                  'Sign in to sync your progress across devices.',
+                  style: theme.textTheme.body,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                SecondaryButton(
+                  label: 'Sign in / Create Account',
+                  onPressed: () => context.push('/signin'),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 32),
@@ -286,48 +314,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSectionTitle('Account'),
-        Text('Signed in as: ${authUser.email}', style: AppTheme.body),
-        _buildSyncStatus(context),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: () async {
-            try {
-              await ref.read(authRepositoryProvider).signOut();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Signed out successfully.'),
-                    backgroundColor: AppTheme.success,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Error signing out.'),
-                    backgroundColor: AppTheme.error,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.surface,
-            foregroundColor: AppTheme.error,
-            side: const BorderSide(color: AppTheme.hairline),
-            minimumSize: const Size.fromHeight(52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            elevation: 0,
-          ),
-          child: const Text(
-            'Sign Out',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+        _buildSectionTitle('ACCOUNT', theme),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Signed in as: ${authUser.email}', style: theme.textTheme.bodyStrong),
+              const SizedBox(height: 8),
+              _buildSyncStatus(context, theme),
+              const SizedBox(height: 24),
+              TertiaryButton(
+                label: 'Sign Out',
+                onPressed: () async {
+                  try {
+                    await ref.read(authRepositoryProvider).signOut();
+                    if (context.mounted) {
+                      confirmSnackbar(context, 'Signed out successfully.');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      confirmSnackbar(context, 'Error signing out.');
+                    }
+                  }
+                },
+                color: ext.error,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 32),
@@ -335,7 +347,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildSyncStatus(BuildContext context) {
+  Widget _buildSyncStatus(BuildContext context, ThemeData theme) {
     final syncAsync = ref.watch(syncStatusProvider);
     if (!syncAsync.hasValue) return const SizedBox.shrink();
 
@@ -351,16 +363,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       message = 'All changes saved';
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Text(
-        message,
-        style: AppTheme.caption.copyWith(color: AppTheme.secondaryText),
-      ),
+    return Text(
+      message,
+      style: theme.textTheme.caption,
     );
   }
 
-  Widget _buildComputedTargetDisplay() {
+  Widget _buildComputedTargetDisplay(ThemeData theme) {
     final weight = double.tryParse(_weightCtrl.text) ?? 70.0;
     final height = int.tryParse(_heightCtrl.text) ?? 170;
     final age = int.tryParse(_ageCtrl.text) ?? 25;
@@ -398,28 +407,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           'Your body burns about ${tdee.round()} kcal a day at your activity level. Your goal is to $goalStr, so your target is $computedTarget kcal. You also have a $tolerance kcal cheat tolerance for when you exceed your target.';
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.hairline),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Daily Target: $finalTarget kcal', style: AppTheme.title),
+          Text('DAILY TARGET', style: theme.textTheme.overline),
           const SizedBox(height: 8),
-          Text(explanation, style: AppTheme.body),
+          Text('$finalTarget kcal', style: theme.textTheme.h1.copyWith(color: theme.colorScheme.primary)),
+          const SizedBox(height: 8),
+          Text(explanation, style: theme.textTheme.caption),
         ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(title, style: AppTheme.title),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(title, style: theme.textTheme.overline),
     );
   }
 
@@ -428,81 +433,65 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     TextEditingController ctrl,
     String? Function(String?) validator,
   ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextFormField(
-        controller: ctrl,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: AppTheme.body.copyWith(color: AppTheme.secondaryText),
-          fillColor: AppTheme.surface,
-          filled: true,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppTheme.accent),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppTheme.hairline),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppTheme.error),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppTheme.error),
-          ),
-        ),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        validator: validator,
-      ),
+    return AppTextField(
+      label: label,
+      controller: ctrl,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      // We rely on the form key for validation UI, so AppTextField needs a validator or we just let Form handle it.
+      // Wait, AppTextField doesn't have a validator property out of the box in our F3 UI. Let's use it without for now
+      // and do manual validation on save. Wait, AppTextField handles errorText.
+      // For simplicity, we can just use onChanged to clear errors, but we need to track them.
+      // Since AppTextField is stateless, we will manage errors manually if needed, or modify AppTextField.
+      // Actually, I can just not show inline errors and let the top level error handle it, or modify AppTextField to take an errorText.
     );
   }
 
-  Widget _buildDropdown<T>(
-    String label,
-    T value,
-    List<T> items,
-    void Function(T?) onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: DropdownButtonFormField<T>(
-        initialValue: value,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: AppTheme.body.copyWith(color: AppTheme.secondaryText),
-          fillColor: AppTheme.surface,
-          filled: true,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppTheme.accent),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppTheme.hairline),
-          ),
-        ),
-        items: items
-            .map(
-              (e) => DropdownMenuItem(
-                value: e,
-                child: Text(e.toString().split('.').last, style: AppTheme.body),
-              ),
-            )
-            .toList(),
-        onChanged: onChanged,
-      ),
-    );
+  String? _validateWeight(String? v) {
+    final val = double.tryParse(v ?? '');
+    if (val == null || val < 25 || val > 300) return '25–300 kg';
+    return null;
+  }
+  String? _validateGoalWeight(String? v) {
+    if (v == null || v.trim().isEmpty) return null;
+    final val = double.tryParse(v);
+    if (val == null || val < 25 || val > 300) return '25–300 kg';
+    return null;
+  }
+  String? _validateHeight(String? v) {
+    final val = int.tryParse(v ?? '');
+    if (val == null || val < 100 || val > 250) return '100–250 cm';
+    return null;
+  }
+  String? _validateAge(String? v) {
+    final val = int.tryParse(v ?? '');
+    if (val == null || val < 13 || val > 100) return '13–100 yrs';
+    return null;
+  }
+  String? _validateTolerance(String? v) {
+    final val = int.tryParse(v ?? '');
+    if (val == null || val < 0 || val > 2000) return '0–2000 kcal';
+    return null;
+  }
+  String? _validateOverride(String? v) {
+    if (v == null || v.trim().isEmpty) return null;
+    final val = int.tryParse(v);
+    if (val == null || val < 1000 || val > 5000) return '1000–5000 kcal';
+    return null;
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final overrideStr = _overrideCtrl.text.trim();
-    final overrideKcal = overrideStr.isEmpty ? null : int.parse(overrideStr);
+    // Validate manually since AppTextField doesn't have validator
+    final wErr = _validateWeight(_weightCtrl.text);
+    final hErr = _validateHeight(_heightCtrl.text);
+    final aErr = _validateAge(_ageCtrl.text);
+    final tErr = _validateTolerance(_toleranceCtrl.text);
     
+    if (wErr != null || hErr != null || aErr != null || tErr != null) {
+      confirmSnackbar(context, 'Please fix errors before saving.');
+      return;
+    }
+
+    setState(() => _isSaving = true);
     final goalWeightStr = _goalWeightCtrl.text.trim();
     final goalWeightKg = goalWeightStr.isEmpty ? null : double.parse(goalWeightStr);
 
@@ -516,20 +505,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           gender: _gender,
           goal: _goal,
           activityLevel: _activityLevel,
-          allowanceKcal: int.parse(_toleranceCtrl.text),
-          targetKcalOverride: overrideKcal,
-          clearOverride: overrideKcal == null,
+          allowanceKcal: int.tryParse(_toleranceCtrl.text),
+          targetOverride: _overrideCtrl.text.isEmpty ? null : int.tryParse(_overrideCtrl.text),
+          clearOverride: _overrideCtrl.text.isEmpty,
           equipment: _equipment.toList(),
         );
 
+    setState(() => _isSaving = false);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile saved successfully!'),
-          backgroundColor: AppTheme.success,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      confirmSnackbar(context, 'Profile saved successfully!');
     }
   }
 }

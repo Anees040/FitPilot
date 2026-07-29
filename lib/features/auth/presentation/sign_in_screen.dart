@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/app_text_field.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -29,7 +31,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Future<void> _submit() async {
     if (_emailCtrl.text.isEmpty || _passCtrl.text.isEmpty) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
 
     try {
       await ref
@@ -61,51 +66,86 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
     return Scaffold(
-      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        backgroundColor: AppTheme.surface,
-        title: Text('Sign In', style: AppTheme.title),
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        title: Text('Welcome back', style: theme.textTheme.h2),
+        centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Welcome back to FitPilot.',
-                style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
+              // Segmented Control
+              Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: ext.hairline,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        margin: const EdgeInsets.all(2),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Log in',
+                          style: theme.textTheme.bodyStrong,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => context.pushReplacement('/signup'),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Sign up',
+                            style: theme.textTheme.bodyStrong.copyWith(color: theme.textTheme.caption.color),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 32),
 
-              TextField(
+              AppTextField(
+                label: 'EMAIL',
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
                 onChanged: (_) {
                   if (_errorText != null) setState(() => _errorText = null);
                 },
               ),
               const SizedBox(height: 16),
 
-              TextField(
+              AppTextField(
+                label: 'PASSWORD',
                 controller: _passCtrl,
                 obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  errorText: _errorText,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
+                errorText: _errorText,
                 onChanged: (_) {
                   if (_errorText != null) setState(() => _errorText = null);
                 },
@@ -113,62 +153,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
+                child: TertiaryButton(
+                  label: 'Forgot password?',
                   onPressed: () => context.push('/forgot-password'),
-                  child: Text(
-                    'Forgot password?',
-                    style: AppTheme.body.copyWith(color: AppTheme.accent),
-                  ),
+                  color: theme.colorScheme.primary,
                 ),
               ),
               const SizedBox(height: 16),
 
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accent,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        'Sign in',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+              PrimaryButton(
+                label: 'Log in',
+                onPressed: _submit,
+                isLoading: _isLoading,
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Don\'t have an account?', style: AppTheme.body),
-                  TextButton(
-                    onPressed: () => context.pushReplacement('/signup'),
-                    child: Text(
-                      'Create account',
-                      style: AppTheme.body.copyWith(
-                        color: AppTheme.accent,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
             ],
           ),
         ),

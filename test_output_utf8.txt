@@ -1,0 +1,202 @@
+﻿00:00 +0: loading D:/fitpilot/test/application/providers/provider_test.dart
+00:00 +0: D:/fitpilot/test/application/providers/provider_test.dart: (setUpAll)
+00:00 +0: D:/fitpilot/test/architecture/theme_usage_test.dart: No raw color literals or AppTheme statics outside of theme files
+00:00 +0 -1: D:/fitpilot/test/application/providers/provider_test.dart: seed import run twice produces the same row count
+00:00 +0 -1: D:/fitpilot/test/architecture/theme_usage_test.dart: No raw color literals or AppTheme statics outside of theme files [E]
+  Found 20 hard-coded color usages. All UI files must use Theme.of(context).
+  package:matcher                               fail
+  test\architecture\theme_usage_test.dart 39:7  main.<fn>
+  
+lib\core\ui\buttons.dart:32: Found raw color: foregroundColor: Colors.white,
+
+lib\core\ui\buttons.dart:36: Found raw color: textStyle: theme.textTheme.bodyStrong.copyWith(color: Colors.white),
+
+lib\core\ui\buttons.dart:40: Found raw color: return Colors.black.withValues(alpha: 0.08);
+
+lib\core\ui\buttons.dart:51: Found raw color: valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+
+lib\core\ui\select_chip.dart:42: Found raw color: color: isSelected ? Colors.white : theme.textTheme.caption.color,
+
+lib\core\ui\states.dart:35: Found raw color: ? Image.asset('assets/illustrations/$illustration.png', errorBuilder: (context, error, stackTrace) => const Icon(Icons.inbox, size: 80, color: Colors.grey))
+
+lib\core\ui\states.dart:36: Found raw color: : const Icon(Icons.inbox, size: 80, color: Colors.grey),
+
+lib\features\auth\presentation\sign_in_screen.dart:99: Found raw color: color: Colors.black.withValues(alpha: 0.05),
+
+lib\features\auth\presentation\sign_up_screen.dart:129: Found raw color: color: Colors.black.withValues(alpha: 0.05),
+
+lib\features\capture\presentation\capture_screen.dart:153: Found raw color: backgroundColor: Colors.black, // camera background
+
+lib\features\capture\presentation\capture_screen.dart:166: Found raw color: icon: const Icon(Icons.close, color: Colors.white),
+
+lib\features\capture\presentation\capture_screen.dart:173: Found raw color: color: Colors.white,
+
+lib\features\capture\presentation\capture_screen.dart:211: Found raw color: style: const TextStyle(color: Colors.white),
+
+lib\features\capture\presentation\capture_screen.dart:246: Found raw color: color: Colors.black,
+
+lib\features\capture\presentation\capture_screen.dart:268: Found raw color: color: Colors.white.withValues(alpha: 0.1),
+
+lib\features\capture\presentation\capture_screen.dart:341: Found raw color: final color = isSelected ? theme.colorScheme.primary : Colors.white.withValues(alpha: 0.54);
+
+lib\features\capture\presentation\capture_screen.dart:399: Found raw color: color: Colors.black.withValues(alpha: 0.54),
+
+lib\features\capture\presentation\capture_screen.dart:403: Found raw color: style: TextStyle(color: Colors.white, fontSize: 12),
+
+lib\features\today\presentation\today_screen.dart:168: Found raw color: style: theme.textTheme.overline.copyWith(color: Colors.white),
+
+lib\features\today\presentation\today_screen.dart:236: Found raw color: child: const Icon(Icons.delete, color: Colors.white),
+00:00 +1 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers search by name
+00:00 +2 -1: D:/fitpilot/test/data/local/app_database_migration_test.dart: V1 to V2 migration preserves existing profile and sets safe defaults
+00:01 +3 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers search by Roman-Urdu alias
+00:01 +4 -1: D:/fitpilot/test/data/ocr/nutrition_label_parser_test.dart: NutritionLabelParser parses simple english label
+00:01 +5 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +6 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +7 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +8 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +9 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +10 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +11 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +12 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +13 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +14 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +15 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +16 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers empty query returns recents
+00:01 +17 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers add log then total is correct summed range, delete recalculates
+00:01 +18 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers quantity multiplies the range correctly
+00:01 +19 -1: D:/fitpilot/test/application/providers/provider_test.dart: Providers manual entry stores a degenerate range
+00:01 +20 -1: D:/fitpilot/test/data/remote/open_food_facts_client_test.dart: HttpOpenFoodFactsClient found with complete nutrition data
+00:01 +21 -1: D:/fitpilot/test/data/remote/open_food_facts_client_test.dart: HttpOpenFoodFactsClient found with complete nutrition data
+OpenFoodFacts lookup: 12345
+00:01 +22 -1: D:/fitpilot/test/data/remote/open_food_facts_client_test.dart: HttpOpenFoodFactsClient found but missing energy data
+OpenFoodFacts lookup: 12345
+00:01 +23 -1: D:/fitpilot/test/data/remote/open_food_facts_client_test.dart: HttpOpenFoodFactsClient found energy in kJ only, converts to kcal
+OpenFoodFacts lookup: 12345
+00:01 +24 -1: D:/fitpilot/test/data/remote/open_food_facts_client_test.dart: HttpOpenFoodFactsClient not found
+OpenFoodFacts lookup: 12345
+00:01 +25 -1: D:/fitpilot/test/data/remote/open_food_facts_client_test.dart: HttpOpenFoodFactsClient network unavailable
+OpenFoodFacts lookup: 12345
+00:01 +26 -1: D:/fitpilot/test/data/remote/open_food_facts_client_test.dart: HttpOpenFoodFactsClient malformed response
+OpenFoodFacts lookup: 12345
+00:01 +27 -1: D:/fitpilot/test/data/remote/open_food_facts_client_test.dart: FakeOpenFoodFactsClient returns overrides correctly
+00:02 +28 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: (setUpAll)
+00:02 +28 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +29 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +30 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +31 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +32 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +33 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +34 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +35 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +36 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +37 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +38 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: queue processing in batches of 50
+00:03 +39 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: failure increments attempts and backoff quarantine
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+Sync push batch failed for food_logs: Exception: Fake network error
+00:03 +40 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: failure increments attempts and backoff quarantine
+00:03 +41 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: failure increments attempts and backoff quarantine
+00:03 +42 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: failure increments attempts and backoff quarantine
+00:03 +43 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: failure increments attempts and backoff quarantine
+00:03 +44 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: pull phase last-write-wins
+00:03 +45 -1: D:/fitpilot/test/data/sync/sync_service_test.dart: (tearDownAll)
+00:03 +45 -1: D:/fitpilot/test/domain/engines/range_calculator_test.dart: RangeCalculator empty logs returns zero total and net, state under
+00:03 +46 -1: D:/fitpilot/test/domain/engines/range_calculator_test.dart: RangeCalculator ignores soft-deleted logs
+00:03 +47 -1: D:/fitpilot/test/domain/engines/range_calculator_test.dart: RangeCalculator net correctly subtracts burnedKcal clamping at 0
+00:03 +48 -1: D:/fitpilot/test/domain/engines/range_calculator_test.dart: RangeCalculator state is under when net midpoint <= allowance * 0.8
+00:03 +49 -1: D:/fitpilot/test/domain/engines/range_calculator_test.dart: RangeCalculator state is near when allowance * 0.8 < net midpoint <= allowance
+00:03 +50 -1: D:/fitpilot/test/domain/engines/range_calculator_test.dart: RangeCalculator state is over when net midpoint > allowance
+00:03 +51 -1: D:/fitpilot/test/domain/engines/range_calculator_test.dart: RangeCalculator remainingKcal is negative when over allowance
+00:04 +52 -1: D:/fitpilot/test/domain/engines/reminder_scheduler_test.dart: Scheduler returns empty if globally muted
+00:04 +53 -1: D:/fitpilot/test/domain/engines/reminder_scheduler_test.dart: Meal reminders are scheduled for today if time is in future
+00:04 +54 -1: D:/fitpilot/test/domain/engines/reminder_scheduler_test.dart: Streak risk alert is scheduled 8 hours before grace deadline
+00:04 +55 -1: D:/fitpilot/test/domain/engines/streak_engine_test.dart: StreakEngine NEUTRAL when no logs today, streak counts from yesterday
+00:04 +56 -1: D:/fitpilot/test/domain/engines/streak_engine_test.dart: StreakEngine SAFE when today is under/near, streak counts from today
+00:04 +57 -1: D:/fitpilot/test/domain/engines/streak_engine_test.dart: StreakEngine OVER_PENDING when over today and inside grace window
+00:04 +58 -1: D:/fitpilot/test/domain/engines/streak_engine_test.dart: StreakEngine CLEARED when over today but burned enough
+00:04 +59 -1: D:/fitpilot/test/domain/engines/streak_engine_test.dart: StreakEngine BROKEN when grace expired and still over
+00:04 +60 -1: D:/fitpilot/test/domain/engines/streak_engine_test.dart: StreakEngine CLEARED when grace expired but enough burned
+00:04 +61 -1: D:/fitpilot/test/domain/engines/streak_engine_test.dart: StreakEngine Streak broken yesterday means streak is 0 today
+00:05 +62 -1: D:/fitpilot/test/domain/engines/target_calculator_test.dart: TargetCalculator bmr: female, 25 years, 60kg, 165cm
+00:05 +63 -1: D:/fitpilot/test/domain/engines/target_calculator_test.dart: TargetCalculator bmr: male, 30 years, 80kg, 180cm
+00:05 +64 -1: D:/fitpilot/test/domain/engines/target_calculator_test.dart: TargetCalculator bmr: unspecified gender, 40 years, 70kg, 170cm
+00:05 +65 -1: D:/fitpilot/test/domain/engines/target_calculator_test.dart: TargetCalculator tdee applies all four activity factors correctly
+00:05 +66 -1: D:/fitpilot/test/domain/engines/target_calculator_test.dart: TargetCalculator dailyTarget applies goal adjustments correctly
+00:05 +67 -1: D:/fitpilot/test/domain/engines/target_calculator_test.dart: TargetCalculator dailyTarget applies female and unspecified floor clamp (1200)
+00:05 +68 -1: D:/fitpilot/test/domain/engines/target_calculator_test.dart: TargetCalculator dailyTarget applies male floor clamp (1500)
+00:05 +69 -1: D:/fitpilot/test/domain/engines/target_calculator_test.dart: TargetCalculator dailyTarget rounds correctly
+00:05 +70 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodItem validation empty id throws
+00:06 +71 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodItem validation empty name throws
+00:06 +72 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodItem validation empty portionLabel throws
+00:06 +73 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodItem validation grams <= 0 throws
+00:06 +74 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodItem validation grams null is valid
+00:06 +75 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodLog validation both foodId and customName null throws
+00:06 +76 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodLog validation quantity 0.9 throws
+00:06 +77 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodLog validation quantity 20.1 throws
+00:06 +78 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodLog validation quantity 1 passes
+00:06 +79 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodLog validation quantity 20 passes
+00:06 +80 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodLog validation foodId alone is valid
+00:06 +81 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodLog validation displayName returns customName when present
+00:06 +82 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: FoodLog validation displayName returns null when customName absent
+00:06 +83 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation weightKg 24.9 throws
+00:06 +84 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation weightKg 25.0 passes
+00:06 +85 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation weightKg 300 passes
+00:06 +86 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation weightKg 300.1 throws
+00:06 +87 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation heightCm 99 throws
+00:06 +88 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation heightCm 100 passes
+00:06 +89 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation heightCm 250 passes
+00:06 +90 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation age 12 throws
+00:06 +91 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation age 13 passes
+00:06 +92 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation age 100 passes
+00:06 +93 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation allowanceKcal -1 throws
+00:06 +94 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation allowanceKcal 0 passes
+00:06 +95 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation allowanceKcal 2000 passes
+00:06 +96 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation allowanceKcal 2001 throws
+00:06 +97 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation defaultAllowanceKcal is 300
+00:06 +98 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Profile validation copyWith preserves unchanged fields
+00:06 +99 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Exercise validation difficulty 0 throws
+00:06 +100 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Exercise validation difficulty 4 throws
+00:06 +101 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Exercise validation difficulty 1–3 passes
+00:06 +102 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Exercise validation met <= 0 throws
+00:06 +103 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Exercise validation empty id throws
+00:06 +104 -1: D:/fitpilot/test/domain/entities/entity_validation_test.dart: Exercise validation empty name throws
+00:06 +105 -1: D:/fitpilot/test/domain/entities/kcal_range_format_test.dart: KcalRange Format format() appends kcal and is not duplicated in KcalRangeText
+00:06 +106 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange constructor invariants min > max throws ArgumentError
+00:06 +107 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange constructor invariants negative min throws ArgumentError
+00:06 +108 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange constructor invariants valid range does not throw
+00:06 +109 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange constructor invariants zero-zero is valid
+00:06 +110 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange constructor invariants min == max is valid
+00:06 +111 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange exact constructor creates range where min == max
+00:06 +112 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange plus adds both ends
+00:06 +113 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange times scales by integer
+00:06 +114 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange times scales by fractional qty and rounds
+00:06 +115 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange times qty <= 0 throws ArgumentError
+00:06 +116 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange minus subtracts from both ends
+00:06 +117 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange minus clamps at 0, never goes negative
+00:06 +118 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange minus both ends clamp at 0
+00:06 +119 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange midpoint simple midpoint
+00:06 +120 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange midpoint rounds to nearest int
+00:06 +121 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange midpoint exact range midpoint
+00:06 +122 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange format range format uses EN DASH
+00:06 +123 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange format exact format shows single number
+00:06 +124 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange sum empty iterable returns KcalRange(0, 0)
+00:06 +125 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange sum sums multiple ranges
+00:06 +126 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange equality two identical ranges are equal
+00:06 +127 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange equality different ranges are not equal
+00:06 +128 -1: D:/fitpilot/test/domain/entities/kcal_range_test.dart: KcalRange toString is readable
+00:07 +129 -1: D:/fitpilot/test/features/capture/presentation/capture_screen_test.dart: CaptureScreen mode switching and locked Scan Food
+00:07 +130 -1: D:/fitpilot/test/features/capture/presentation/capture_screen_test.dart: CaptureScreen mode switching and locked Scan Food
+00:08 +131 -1: D:/fitpilot/test/features/ui_test.dart: Widget Tests quantity stepper respects 1 and 20 bounds
+00:08 +132 -1: D:/fitpilot/test/features/ui_test.dart: Widget Tests quantity stepper respects 1 and 20 bounds
+00:08 +133 -1: D:/fitpilot/test/features/ui_test.dart: Widget Tests manual entry rejects 0 and 5001 with visible error text
+00:09 +134 -1: D:/fitpilot/test/features/ui_test.dart: Layout Tests (320x640) LogScreen has no overflow
+00:09 +135 -1: D:/fitpilot/test/features/ui_test.dart: Layout Tests (320x640) TodayScreen has no overflow
+00:09 +136 -1: Some tests failed.

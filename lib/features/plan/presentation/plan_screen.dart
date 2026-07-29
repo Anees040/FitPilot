@@ -3,33 +3,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
 import 'package:fitpilot/domain/entities/burn_option.dart';
+import 'package:fitpilot/core/ui/states.dart';
+import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final stateAsync = ref.watch(burnPlanProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        title: Text('Burn Plan', style: AppTheme.title),
-        backgroundColor: AppTheme.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        title: Text('Burn Plan', style: theme.textTheme.h1),
+        centerTitle: false,
       ),
       body: SafeArea(
         child: stateAsync.when(
           data: (state) => _buildBody(context, ref, state),
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.accent),
+          loading: () => const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: SkeletonList(count: 3),
           ),
-          error: (e, st) => Center(
-            child: Text(
-              'Error: $e',
-              style: AppTheme.body.copyWith(color: AppTheme.error),
-            ),
+          error: (e, st) => ErrorState(
+            reason: 'Failed to load plan.\n$e',
+            onRetry: () => ref.invalidate(burnPlanProvider),
           ),
         ),
       ),
@@ -38,81 +38,62 @@ class PlanScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, WidgetRef ref, BurnPlanState state) {
     if (state.frame == BurnPlanFrame.noSurplus) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.check_circle_outline,
-                size: 64,
-                color: AppTheme.success,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'You are within your daily target.',
-                style: AppTheme.title,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'No burn plan needed today. You have a cheat tolerance if you go a bit over.',
-                style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        message: 'No burn plan needed today. You have a cheat tolerance if you go a bit over.',
+        buttonLabel: 'Looking good!',
+        illustration: 'no_surplus',
+        onAction: () {},
       );
     }
 
     if (state.frame == BurnPlanFrame.buildDeficit) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.restaurant, size: 64, color: AppTheme.accent),
-              const SizedBox(height: 16),
-              Text(
-                'You still need to eat ${state.kcalToBurnOrEat} kcal.',
-                style: AppTheme.title,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your goal is to build, so keep eating to hit your target!',
-                style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        message: 'Your goal is to build, so keep eating to hit your target!',
+        buttonLabel: 'Keep it up!',
+        illustration: 'build_deficit',
+        onAction: () {},
       );
     }
 
     // Surplus Today or Yesterday
     final isYesterday = state.frame == BurnPlanFrame.surplusYesterday;
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
 
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        Text(
-          isYesterday
-              ? 'You were ${state.kcalToBurnOrEat} kcal over yesterday.'
-              : 'You are ${state.kcalToBurnOrEat} kcal over today.',
-          style: AppTheme.title,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          isYesterday
-              ? 'Burn it now to save your streak.'
-              : 'Pick an activity to clear your surplus.',
-          style: AppTheme.body.copyWith(color: AppTheme.warning),
+        AppCard(
+          color: ext.warning.withValues(alpha: 0.1),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: ext.warning, size: 32),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isYesterday
+                          ? 'You were ${state.kcalToBurnOrEat} kcal over yesterday.'
+                          : 'You are ${state.kcalToBurnOrEat} kcal over today.',
+                      style: theme.textTheme.bodyStrong.copyWith(color: ext.warning),
+                    ),
+                    Text(
+                      isYesterday
+                          ? 'Burn it now to save your streak.'
+                          : 'Pick an activity to clear your surplus.',
+                      style: theme.textTheme.caption.copyWith(color: ext.warning),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 24),
+        Text('AVAILABLE ACTIVITIES', style: theme.textTheme.overline),
+        const SizedBox(height: 12),
         ...state.options.map(
           (option) => _buildOptionCard(context, ref, option),
         ),
@@ -125,67 +106,57 @@ class PlanScreen extends ConsumerWidget {
     WidgetRef ref,
     BurnOption option,
   ) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
     final isWalking = option.activity == 'Walking (brisk)';
     final subtitle = isWalking && option.steps != null
         ? '${option.minutes} min • ~${option.steps} steps'
         : '${option.minutes} min';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.hairline),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  option.activity,
-                  style: AppTheme.body.copyWith(fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: AppCard(
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    option.activity,
+                    style: theme.textTheme.bodyStrong,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.caption,
+                  ),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                ref.read(burnPlanProvider.notifier).markDone(option);
+                confirmSnackbar(context, 'Marked ${option.activity} as done!');
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: ext.hairline),
+                  color: Colors.transparent,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: AppTheme.caption.copyWith(
-                    color: AppTheme.secondaryText,
+                child: Text(
+                  'Done',
+                  style: theme.textTheme.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.textTheme.bodyStrong.color,
                   ),
                 ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => _markDone(context, ref, option),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              foregroundColor: AppTheme.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
               ),
-              elevation: 0,
             ),
-            child: const Text('Mark done'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _markDone(BuildContext context, WidgetRef ref, BurnOption option) {
-    ref.read(burnPlanProvider.notifier).markDone(option);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Marked ${option.activity} as done!'),
-        backgroundColor: AppTheme.success,
-        duration: const Duration(seconds: 4),
-        // Undo is requested in prompt, but we'd need a delete operation in repository
-        // "shows a confirmation with undo"
-        // For now we'll just show the message as the domain logic for undoing burn completions isn't fully specced
+          ],
+        ),
       ),
     );
   }

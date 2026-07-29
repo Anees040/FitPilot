@@ -21,7 +21,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
     Goal? goal,
     ActivityLevel? activityLevel,
     int? allowanceKcal,
-    int? targetKcalOverride,
+    int? targetOverride,
     bool clearOverride = false,
     List<String>? equipment,
   }) async {
@@ -37,9 +37,9 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       goal: goal,
       activityLevel: activityLevel,
       allowanceKcal: allowanceKcal,
-      targetKcalOverride: clearOverride
+      targetOverride: clearOverride
           ? null
-          : (targetKcalOverride ?? currentProfile.targetKcalOverride),
+          : (targetOverride ?? currentProfile.targetOverride),
       equipment: equipment,
       updatedAt: DateTime.now(),
     );

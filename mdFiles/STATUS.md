@@ -18,11 +18,13 @@
 - [x] B1 — Supabase init + env secrets
 - [x] B2 — Auth UI + Guest data merge
 - [x] B3 — Background sync service
-- [x] B0+B4 — Barcode, Open Food Facts, and label OCR- [x] F1 — Correctness and dead features
+- [x] B0+B4 — Barcode, Open Food Facts, and label OCR
+- [x] F1 — Correctness and dead features
+- [x] F2 — Foundation: launch, type, dark theme, adaptivity
 
 ## Last completed
 
-- F1 — Correctness and dead features
+- F2 — Foundation: launch, type, dark theme, adaptivity
 
 ## Known issues / debt
 

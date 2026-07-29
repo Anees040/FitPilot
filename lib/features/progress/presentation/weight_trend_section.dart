@@ -5,6 +5,10 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/progress_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/domain/entities/weight_entry.dart';
+import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:intl/intl.dart';
 
 class WeightTrendSection extends ConsumerStatefulWidget {
@@ -21,13 +25,14 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
     final profileAsync = ref.watch(profileProvider);
     final goalWeightKg = profileAsync.valueOrNull?.goalWeightKg;
 
     final now = DateTime.now();
     final cutoff = _days == 365 ? now.subtract(const Duration(days: 3650)) : now.subtract(Duration(days: _days));
     final filtered = widget.entries.where((e) => e.date.isAfter(cutoff)).toList();
-    // Sort oldest to newest
     filtered.sort((a, b) => a.date.compareTo(b.date));
 
     return Column(
@@ -36,58 +41,55 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Weight Trend', style: AppTheme.title),
-            TextButton(
+            Text('WEIGHT TREND', style: theme.textTheme.overline),
+            TertiaryButton(
+              label: '+ Add',
               onPressed: () => _showAddWeightDialog(context, ref),
-              child: const Text(
-                '+ Add Weight',
-                style: TextStyle(color: AppTheme.accent),
-              ),
+              color: theme.colorScheme.primary,
             ),
           ],
         ),
         const SizedBox(height: 12),
         if (widget.entries.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.hairline),
-            ),
+          AppCard(
             child: Center(
-              child: Text(
-                'Log your weight to see your trend.',
-                style: AppTheme.body,
-                textAlign: TextAlign.center,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Log your weight to see your trend.',
+                  style: theme.textTheme.body,
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           )
         else
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.hairline),
-            ),
+          AppCard(
             child: Column(
               children: [
-                _buildFilterChips(),
+                _buildFilterChips(theme, ext),
                 const SizedBox(height: 16),
-                _buildSummaryText(filtered),
-                const SizedBox(height: 16),
-                SizedBox(height: 200, child: _buildChart(filtered, goalWeightKg)),
-                const SizedBox(height: 16),
-                _buildEntryList(filtered.reversed.toList()),
+                _buildSummaryText(theme, filtered),
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: 200,
+                  child: _buildChart(theme, ext, filtered, goalWeightKg),
+                ),
               ],
             ),
           ),
+        if (widget.entries.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: _buildEntryList(theme, filtered.reversed.toList()),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildFilterChips() {
+  Widget _buildFilterChips(ThemeData theme, AppColors ext) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [30, 90, 365].map((days) {
@@ -98,17 +100,20 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
           child: ChoiceChip(
             label: Text(
               label,
-              style: AppTheme.caption.copyWith(
-                color: isSelected ? AppTheme.surface : AppTheme.text,
+              style: theme.textTheme.bodyStrong.copyWith(
+                color: isSelected ? theme.colorScheme.onPrimary : theme.textTheme.caption.color,
               ),
             ),
             selected: isSelected,
-            selectedColor: AppTheme.accent,
-            backgroundColor: AppTheme.surface,
+            selectedColor: theme.colorScheme.primary,
+            backgroundColor: Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(999),
-              side: const BorderSide(color: AppTheme.hairline),
+              side: BorderSide(
+                color: isSelected ? theme.colorScheme.primary : ext.hairline,
+              ),
             ),
+            showCheckmark: false,
             onSelected: (selected) {
               if (selected) setState(() => _days = days);
             },
@@ -118,11 +123,11 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     );
   }
 
-  Widget _buildSummaryText(List<WeightEntry> filtered) {
+  Widget _buildSummaryText(ThemeData theme, List<WeightEntry> filtered) {
     if (filtered.length < 2) {
       return Text(
         'Not enough data in this period',
-        style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
+        style: theme.textTheme.caption,
       );
     }
     final first = filtered.first.weightKg;
@@ -131,36 +136,33 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     final label = _days == 365 ? 'overall' : 'in $_days days';
 
     if (diff == 0) {
-      return Text('No change $label', style: AppTheme.body);
+      return Text('No change $label', style: theme.textTheme.bodyStrong);
     } else if (diff < 0) {
-      return Text('Down ${diff.abs().toStringAsFixed(1)} kg $label', style: AppTheme.body);
+      return Text('Down ${diff.abs().toStringAsFixed(1)} kg $label', style: theme.textTheme.bodyStrong);
     } else {
-      return Text('Up ${diff.abs().toStringAsFixed(1)} kg $label', style: AppTheme.body);
+      return Text('Up ${diff.abs().toStringAsFixed(1)} kg $label', style: theme.textTheme.bodyStrong);
     }
   }
 
-  Widget _buildChart(List<WeightEntry> filtered, double? goalWeightKg) {
+  Widget _buildChart(ThemeData theme, AppColors ext, List<WeightEntry> filtered, double? goalWeightKg) {
     if (filtered.isEmpty) {
       return Center(
-        child: Text('No data in this period', style: AppTheme.body),
+        child: Text('No data in this period', style: theme.textTheme.caption),
       );
     }
 
-    // fl_chart requires at least 2 spots to draw a line. If only 1 entry, 
-    // we duplicate it to render a horizontal line, or just show a dot.
     List<FlSpot> spots = filtered.map((e) {
       return FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.weightKg);
     }).toList();
 
     if (spots.length == 1) {
-      // Add a dummy spot 1 ms later so the chart doesn't crash on single points
       spots.add(FlSpot(spots.first.x + 1, spots.first.y));
     }
 
     return LineChart(
       LineChartData(
-        gridData: FlGridData(show: false),
-        titlesData: FlTitlesData(
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(
           bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -172,14 +174,14 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
               ? [
                   HorizontalLine(
                     y: goalWeightKg,
-                    color: AppTheme.warning.withAlpha(127),
+                    color: ext.warning.withValues(alpha: 0.5),
                     strokeWidth: 2,
                     dashArray: [5, 5],
                     label: HorizontalLineLabel(
                       show: true,
                       alignment: Alignment.topRight,
                       padding: const EdgeInsets.only(right: 5, bottom: 5),
-                      style: AppTheme.caption.copyWith(color: AppTheme.warning),
+                      style: theme.textTheme.caption.copyWith(color: ext.warning),
                       labelResolver: (line) => 'Goal',
                     ),
                   )
@@ -189,29 +191,31 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: false, // gaps between months look better with straight lines or simple curves
-            color: AppTheme.accent,
+            isCurved: false,
+            color: theme.colorScheme.primary,
             barWidth: 3,
             isStrokeCapRound: true,
-            dotData: FlDotData(show: true),
-            belowBarData: BarAreaData(show: false),
+            dotData: const FlDotData(show: true),
+            belowBarData: BarAreaData(
+              show: true,
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEntryList(List<WeightEntry> sortedDesc) {
+  Widget _buildEntryList(ThemeData theme, List<WeightEntry> sortedDesc) {
     if (sortedDesc.isEmpty) return const SizedBox.shrink();
     
     return Column(
       children: sortedDesc.map((e) {
         return ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text('${e.weightKg} kg', style: AppTheme.body.copyWith(fontWeight: FontWeight.bold)),
-          subtitle: Text(DateFormat.yMMMd().format(e.date), style: AppTheme.caption),
+          title: Text('${e.weightKg} kg', style: theme.textTheme.bodyStrong),
+          subtitle: Text(DateFormat.yMMMd().format(e.date), style: theme.textTheme.caption),
           trailing: IconButton(
-            icon: const Icon(Icons.more_vert),
+            icon: Icon(Icons.more_horiz, color: theme.textTheme.caption.color),
             onPressed: () => _showEditOptions(context, e),
           ),
         );
@@ -220,124 +224,82 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
   }
 
   void _showEditOptions(BuildContext context, WeightEntry entry) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surface,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.edit, color: AppTheme.accent),
-                title: Text('Edit Weight', style: AppTheme.body),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showEditWeightDialog(context, ref, entry);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.delete, color: AppTheme.error),
-                title: Text('Delete', style: AppTheme.body),
-                onTap: () {
-                  Navigator.pop(context);
-                  ref.read(progressProvider.notifier).deleteWeight(entry.id);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showEditWeightDialog(BuildContext context, WidgetRef ref, WeightEntry entry) {
-    final controller = TextEditingController(text: entry.weightKg.toString());
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: Text('Edit Weight (kg)', style: AppTheme.title),
-        content: TextField(
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppTheme.accent),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppTheme.hairline),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              final val = double.tryParse(controller.text);
-              if (val != null && val >= 25 && val <= 300) {
-                ref.read(progressProvider.notifier).editWeight(entry.id, val);
-                Navigator.pop(context);
-              }
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    
+    AppBottomSheet.show(
+      context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(Icons.edit, color: theme.colorScheme.primary),
+            title: Text('Edit Weight', style: theme.textTheme.bodyStrong),
+            onTap: () {
+              Navigator.pop(context);
+              _showEditWeightDialog(context, ref, entry);
             },
-            child: Text('Save', style: AppTheme.body),
+          ),
+          ListTile(
+            leading: Icon(Icons.delete, color: ext.error),
+            title: Text('Delete', style: theme.textTheme.bodyStrong.copyWith(color: ext.error)),
+            onTap: () {
+              Navigator.pop(context);
+              ref.read(progressProvider.notifier).deleteWeight(entry.id);
+            },
           ),
         ],
       ),
     );
   }
 
+  void _showEditWeightDialog(BuildContext context, WidgetRef ref, WeightEntry entry) {
+    final controller = TextEditingController(text: entry.weightKg.toString());
+    _showWeightDialog(context, ref, 'Edit Weight', controller, () {
+      final val = double.tryParse(controller.text);
+      if (val != null && val >= 25 && val <= 300) {
+        ref.read(progressProvider.notifier).editWeight(entry.id, val);
+        Navigator.pop(context);
+      }
+    });
+  }
+
   void _showAddWeightDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
+    _showWeightDialog(context, ref, 'Add Weight', controller, () {
+      final val = double.tryParse(controller.text);
+      if (val != null && val >= 25 && val <= 300) {
+        ref.read(progressProvider.notifier).addWeight(val);
+        Navigator.pop(context);
+      }
+    });
+  }
+
+  void _showWeightDialog(BuildContext context, WidgetRef ref, String title, TextEditingController controller, VoidCallback onSave) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: Text('Add Weight (kg)', style: AppTheme.title),
-        content: TextField(
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(title, style: theme.textTheme.h2),
+        content: AppTextField(
+          label: 'WEIGHT (KG)',
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            hintText: 'e.g. 70.5',
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppTheme.accent),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppTheme.hairline),
-            ),
-          ),
         ),
         actions: [
-          TextButton(
+          TertiaryButton(
+            label: 'Cancel',
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
-            ),
+            color: theme.textTheme.caption.color,
           ),
-          TextButton(
-            onPressed: () {
-              final val = double.tryParse(controller.text);
-              if (val != null && val >= 25 && val <= 300) {
-                ref.read(progressProvider.notifier).addWeight(val);
-                Navigator.pop(context);
-              }
-            },
-            child: Text('Save', style: AppTheme.body),
+          TertiaryButton(
+            label: 'Save',
+            onPressed: onSave,
+            color: theme.colorScheme.primary,
           ),
         ],
       ),
     );
   }
 }
-

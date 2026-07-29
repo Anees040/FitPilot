@@ -13,7 +13,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -25,7 +25,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     return openDatabase(
       inMemoryDatabasePath,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -109,6 +109,7 @@ class AppDatabase {
         allowance_kcal INTEGER NOT NULL DEFAULT 300,
         target_override INTEGER,
         equipment TEXT NOT NULL DEFAULT '[]',
+        theme_mode TEXT NOT NULL DEFAULT 'system',
         updated_at TEXT NOT NULL
       )
     ''');
@@ -201,6 +202,11 @@ class AppDatabase {
           global_mute INTEGER NOT NULL DEFAULT 0
         )
       ''');
+    }
+    if (oldVersion < 6) {
+      await db.execute(
+        "ALTER TABLE profile ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'system'",
+      );
     }
   }
 

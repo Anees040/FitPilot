@@ -11,6 +11,9 @@ class FoodResultTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -26,19 +29,14 @@ class FoodResultTile extends StatelessWidget {
                       Flexible(
                         child: Text(
                           food.name,
-                          style: AppTheme.lightTheme.textTheme.bodyLarge
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodyStrong,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (food.isVerified)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4.0),
-                          child: Icon(
-                            Icons.verified,
-                            color: AppTheme.success,
-                            size: 16,
-                          ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Icon(Icons.verified, color: ext.success, size: 16),
                         ),
                     ],
                   ),
@@ -48,27 +46,23 @@ class FoodResultTile extends StatelessWidget {
                       Flexible(
                         child: Text(
                           food.portionLabel,
-                          style: AppTheme.lightTheme.textTheme.bodyMedium,
+                          style: theme.textTheme.caption,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (!food.isVerified) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppTheme.warning.withValues(alpha: 0.1),
+                            color: ext.warning.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: const Text(
-                            'Estimate',
-                            style: TextStyle(
-                              color: AppTheme.warning,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                          child: Text(
+                            'ESTIMATE',
+                            style: theme.textTheme.overline.copyWith(
+                              color: ext.warning,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
@@ -79,7 +73,10 @@ class FoodResultTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            KcalRangeText(range: food.kcalPerPortion),
+            KcalRangeText(
+              range: food.kcalPerPortion,
+              style: theme.textTheme.bodyStrong,
+            ),
           ],
         ),
       ),

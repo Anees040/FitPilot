@@ -1,4 +1,4 @@
-# FitPilot UI Specification (UI_SPEC.md) — v1
+# FitPilot UI Specification (UI_SPEC.md) — v1.1
 
 > AUTHORITY: For anything visual, this file wins over every other doc except DOMAIN_RULES.md
 > (domain math is never changed for visual reasons). Where an attached mockup image and this
@@ -26,6 +26,9 @@
 9. Numbers that change on screen use tabular figures (`FontFeature.tabularFigures()`), so
    digits don't jitter.
 10. No RenderFlex overflow banners at ANY size in section 6's test matrix. Ever.
+11. Precision honesty: values read from a nutrition label or a barcode database are EXACT and
+    may be shown as a single number ("= 280 kcal"). Estimated foods are ALWAYS ranges. Never
+    fake a range for known data; never fake precision for estimates.
 
 ---
 
@@ -202,20 +205,35 @@ is the exact defect being fixed in F1); empty search "No foods match 'xyz'" + "A
 Quantity sheet: food name title, portion caption, 44 dp stepper, live range (animated), PrimaryButton
 "Add to today".
 
-### 4.7 Plan
-Top: purpose line "Your daily burn plan".
-Over: kcal-over headline + full burn options list (icon, activity, minutes/steps, Done).
+### 4.7 Plan (matches the Burn Plan mockup)
+Header: "Burn it off" h1.
+Over: headline "You're 350 kcal over" (number in error color) + caption "Options sized for your
+70 kg — pick whichever fits your day."
+Streak banner (only when a streak is actually at risk): accentSoft card — flame icon, "Keep your
+12-day streak", caption "Burn it by tomorrow 11:59 AM", right-aligned "14 h left" pill (switches
+to warning color under 6 h). The deadline comes from StreakEngine.graceDeadlineFor — never
+hardcoded, never shown when nothing is at risk.
+Option rows (AppCard list): leading icon; name bodyStrong + meta caption ("high intensity" /
+"8 km/h" / "≈6,500 steps"); trailing minutes as "25" 24/w700 + "min" caption; outlined 36 dp
+Done pill. Walking row footer caption: "Always available — no equipment needed."
+List footer caption: "Do part of one — every minute counts toward the 350."
 Under + goal=build: fork-icon card "You still need to eat 2,962 kcal to hit your target."
 Nothing to do: EmptyState "Nothing to burn today. Enjoy it." with resting line-art figure.
 Every number here MUST come from the same provider as Today — one source of truth.
 
-### 4.8 Progress
-Order: streak card (count display + phase line); 5-week heatmap 7x5 (12 dp squares, 4 dp gap):
-green = compliant WITH logs, red = over-unresolved, hairline outline = NO DATA (never green);
-legend row below. Weekly Summary card: Total Intake (range), Total Burned — NO "Planner
-Adherence" row until Milestone C ships a planner. Recent Days rows: date; "X–Y kcal logged ·
-Z kcal burned"; status icon ✅ compliant / ⚠ over / — (dash) no data. Weight trend: fl_chart
-line + dashed goal line + "Log weight" button.
+### 4.8 Progress (matches the Progress mockup)
+Order, top to bottom:
+1. Streak card: flame icon, "12-day streak" display, "Longest: 18 days" caption, plus the
+   explainer chip: "Days you don't log stay neutral — they never break your streak."
+2. Month heatmap: calendar layout with M/T/W/T/F/S/S column headers. Squares: success dot =
+   safe WITH logs; error dot = over-unresolved; hairline empty square = no logs (NEVER green);
+   today outlined in accent. Legend row below: ● Safe · ● Over · ○ No logs.
+3. "Last 7 days" rows: day name; intake summary ("≤1,480 kcal") + small flame icon when kcal
+   were burned; trailing status pill: Safe (success) / Over (error) / No logs (neutral — value
+   shown as a dash).
+4. "This week" summary: Eaten (range, e.g. "8.9–10.4k"), Burned. A "Plan done %" column appears
+   ONLY once the weekly planner exists (Milestone C) — hidden until then.
+5. Weight trend: fl_chart line + dashed goal line + "Log weight" button.
 
 ### 4.9 Profile (restructure into grouped settings — WhatsApp/Instagram pattern)
 Header card: 64 dp avatar circle (initial), name/email or "Guest" + "Sign in to back up your
@@ -235,6 +253,15 @@ never silently folded into a bigger "limit".
 Keep the 4-mode pill; "Scan Food" shows a lock icon + "Coming in a later update". Barcode result
 sheet adds provenance: product name + "Data from Open Food Facts". Torch state persists per
 session. Any capture failure -> inline sheet with the reason + "Try again" — never a dead end.
+
+Label review sheet ("Check what we read" — matches mockup): captured label thumbnail +
+reassurance caption "Read on your phone — works offline, nothing uploaded." Card "Confirm the
+numbers" with rows Energy per serving / Serving size / Servings per pack; any LOW-CONFIDENCE OCR
+value gets an edit pencil + warning-colored helper "please check this one" — every number must be
+user-correctable before logging. Card "How much did you eat?" with a servings stepper and live
+total ("= 280 kcal" — single exact value per §0.11). Toggle card "Save product for next time"
+(writes saved_products). PrimaryButton "Confirm & log 280 kcal" — the button label carries the
+final number.
 
 ---
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 
 /// Reusable widget for displaying calorie ranges consistently.
@@ -22,7 +21,7 @@ class KcalRangeText extends StatelessWidget {
       '${range.format()}$suffix',
       style:
           style ??
-          AppTheme.lightTheme.textTheme.bodyLarge?.copyWith(
+          Theme.of(context).textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
     );

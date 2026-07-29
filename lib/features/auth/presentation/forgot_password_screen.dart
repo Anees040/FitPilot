@@ -4,13 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/app_text_field.dart';
+import 'package:fitpilot/core/ui/states.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -29,7 +31,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty || !email.contains('@')) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
 
     try {
       await ref.read(authRepositoryProvider).sendPasswordReset(email: email);
@@ -49,119 +54,53 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (_sent) {
       return Scaffold(
-        backgroundColor: AppTheme.bg,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(
-                  Icons.mark_email_read,
-                  size: 64,
-                  color: AppTheme.success,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Check your email',
-                  style: AppTheme.title,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'If an account exists, a reset link has been sent.',
-                  style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: () => context.pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accent,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(52),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Back to Sign in',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
+          child: EmptyState(
+            message: 'If an account exists, a reset link has been sent to your email.',
+            buttonLabel: 'Back to Sign in',
+            onAction: () => context.pop(),
+            illustration: 'email_sent',
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        backgroundColor: AppTheme.surface,
-        title: Text('Reset Password', style: AppTheme.title),
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        title: Text('Reset Password', style: theme.textTheme.h2),
+        centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'Enter your email and we\'ll send you a reset link.',
-                style: AppTheme.body.copyWith(color: AppTheme.secondaryText),
+                style: theme.textTheme.body,
               ),
               const SizedBox(height: 32),
 
-              TextField(
+              AppTextField(
+                label: 'EMAIL',
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  errorText: _errorText,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
+                errorText: _errorText,
                 onChanged: (_) {
                   if (_errorText != null) setState(() => _errorText = null);
                 },
               ),
               const SizedBox(height: 24),
 
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accent,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        'Send Link',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+              PrimaryButton(
+                label: 'Send Link',
+                onPressed: _submit,
+                isLoading: _isLoading,
               ),
             ],
           ),
