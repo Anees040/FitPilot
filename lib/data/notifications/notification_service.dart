@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -15,7 +16,7 @@ class NotificationService {
   bool _initialized = false;
 
   Future<void> initialize() async {
-    if (_initialized) return;
+    if (kIsWeb || _initialized) return;
 
     tz.initializeTimeZones();
     // Default location is local
@@ -36,6 +37,8 @@ class NotificationService {
   }
 
   Future<bool> requestPermissions() async {
+    if (kIsWeb) return false;
+    
     if (Platform.isIOS) {
       final iosImpl = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
       return await iosImpl?.requestPermissions(alert: true, badge: true, sound: true) ?? false;
@@ -48,6 +51,8 @@ class NotificationService {
   }
 
   Future<void> syncSchedules(List<NotificationSchedule> schedules) async {
+    if (kIsWeb) return;
+    
     if (!_initialized) await initialize();
     
     await _plugin.cancelAll();
