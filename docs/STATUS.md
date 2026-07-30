@@ -25,11 +25,12 @@
 - [x] F4 — First impression: onboarding, illustration, empty states
 - [x] F5 — Correctness + UX drop
 - [x] F7 — Chrome/web correctness fixes
+- [x] C1 — Exercise library and Burn Plan v2
 
 ## Last completed
 
-- F7 — Chrome/web correctness fixes
-(Included SQLite web fix, BurnPlanner UI filters, Profile synchronization fixes, and Splash animation)
+- C1 — Exercise library and Burn Plan v2
+(Included database schema v8 and v9 migrations, complete exercise catalog seed, BurnPlanner rewrite with preference filters, AI Food Scan proxy integration, and OCR food label review)
 
 ## Known issues / debt
 

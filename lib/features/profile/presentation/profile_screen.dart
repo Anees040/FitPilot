@@ -236,6 +236,61 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Divider(color: theme.dividerColor, height: 1),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.category, color: theme.colorScheme.primary),
+                  title: Text('Plan Category', style: theme.textTheme.bodyStrong),
+                  trailing: DropdownButton<String>(
+                    value: ref.watch(profileProvider).valueOrNull?.planCategoryPref ?? 'recommended',
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(value: 'recommended', child: Text('Recommended')),
+                      DropdownMenuItem(value: 'gym', child: Text('Gym')),
+                      DropdownMenuItem(value: 'indoor', child: Text('Indoor')),
+                      DropdownMenuItem(value: 'outdoor', child: Text('Outdoor')),
+                      DropdownMenuItem(value: 'calisthenics', child: Text('Calisthenics')),
+                    ],
+                    onChanged: (v) async {
+                      if (v != null) {
+                        final p = ref.read(profileProvider).valueOrNull;
+                        if (p != null) {
+                          final newP = p.copyWith(planCategoryPref: v);
+                          final repo = await ref.read(profileRepositoryProvider.future);
+                          await repo.save(newP);
+                          ref.invalidate(profileProvider);
+                        }
+                      }
+                    },
+                  ),
+                ),
+                Divider(color: theme.dividerColor, height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.speed, color: theme.colorScheme.primary),
+                  title: Text('Plan Pace', style: theme.textTheme.bodyStrong),
+                  trailing: DropdownButton<String>(
+                    value: ref.watch(profileProvider).valueOrNull?.planPacePref ?? 'any',
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(value: 'any', child: Text('Any pace')),
+                      DropdownMenuItem(value: 'quick', child: Text('Quick burn')),
+                      DropdownMenuItem(value: 'moderate', child: Text('Moderate')),
+                      DropdownMenuItem(value: 'easy', child: Text('Easy pace')),
+                    ],
+                    onChanged: (v) async {
+                      if (v != null) {
+                        final p = ref.read(profileProvider).valueOrNull;
+                        if (p != null) {
+                          final newP = p.copyWith(planPacePref: v);
+                          final repo = await ref.read(profileRepositoryProvider.future);
+                          await repo.save(newP);
+                          ref.invalidate(profileProvider);
+                        }
+                      }
+                    },
+                  ),
+                ),
+                Divider(color: theme.dividerColor, height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.fitness_center, color: theme.colorScheme.primary),
                   title: Text('Manage Equipment', style: theme.textTheme.bodyStrong),
                   trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
@@ -251,6 +306,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const fitpilot_settings.NotificationPrefsScreen()),
+                    );
+                  },
+                ),
+                Divider(color: theme.dividerColor, height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.info_outline, color: theme.colorScheme.primary),
+                  title: Text('About & Attributions', style: theme.textTheme.bodyStrong),
+                  trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
+                  onTap: () {
+                    showAboutDialog(
+                      context: context,
+                      applicationName: 'FitPilot',
+                      applicationVersion: '1.0.0',
+                      children: const [
+                        SizedBox(height: 16),
+                        Text('Media assets sourced from SVGRepo and Giphy/Tenor.\nAll rights belong to their respective creators.\n\nFonts by Google Fonts (Inter).'),
+                      ],
                     );
                   },
                 ),

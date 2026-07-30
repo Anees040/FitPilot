@@ -3,6 +3,7 @@ import 'package:fitpilot/domain/entities/day_status.dart';
 import 'package:fitpilot/domain/entities/streak_state.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/domain/engines/burn_planner.dart';
+import 'package:fitpilot/domain/entities/exercise.dart';
 
 class NotificationSchedule {
   final int id;
@@ -76,6 +77,15 @@ class ReminderScheduler {
         final options = _burnPlanner.planFor(
           kcalOver: streakState.kcalStillToBurn,
           weightKg: profile.weightKg,
+          candidates: [
+            Exercise(
+              id: 'fallback-walking',
+              name: 'Walking (brisk pace)',
+              category: ExerciseCategory.outdoor,
+              met: 4.3,
+              difficulty: 1,
+            )
+          ],
         );
 
         if (options.isNotEmpty) {

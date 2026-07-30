@@ -59,13 +59,18 @@ void main() {
           CREATE TABLE exercises (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
-            category TEXT NOT NULL,
-            equipment TEXT NOT NULL,
-            difficulty INTEGER NOT NULL,
-            muscles TEXT NOT NULL,
-            steps TEXT NOT NULL,
-            mistakes TEXT NOT NULL,
-            met REAL NOT NULL
+            category TEXT NOT NULL DEFAULT 'indoor',
+            subcategory TEXT,
+            met REAL NOT NULL DEFAULT 5.0,
+            equipment TEXT,
+            primary_muscles TEXT NOT NULL DEFAULT '[]',
+            secondary_muscles TEXT NOT NULL DEFAULT '[]',
+            difficulty INTEGER NOT NULL DEFAULT 1,
+            pace_tier TEXT NOT NULL DEFAULT 'moderate',
+            steps TEXT NOT NULL DEFAULT '[]',
+            mistakes TEXT NOT NULL DEFAULT '[]',
+            media_asset TEXT,
+            video_url TEXT
           )
         ''');
           await db.execute('''

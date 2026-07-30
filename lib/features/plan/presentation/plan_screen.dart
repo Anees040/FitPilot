@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
 import 'package:fitpilot/domain/entities/burn_option.dart';
-import 'package:fitpilot/domain/engines/burn_planner.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
@@ -107,31 +106,87 @@ class PlanScreen extends ConsumerWidget {
   }
 
   Widget _buildCategoryFilters(BuildContext context, WidgetRef ref) {
-    final currentFilter = ref.watch(burnCategoryFilterProvider);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: SelectChip(
-              label: 'All',
-              isSelected: currentFilter == null,
-              onSelected: () => ref.read(burnCategoryFilterProvider.notifier).state = null,
-            ),
-          ),
-          ...ActivityCategory.values.map((cat) {
-            final label = cat.name[0].toUpperCase() + cat.name.substring(1);
-            return Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: SelectChip(
-                label: label,
-                isSelected: currentFilter == cat,
-                onSelected: () => ref.read(burnCategoryFilterProvider.notifier).state = cat,
+    final currentCat = ref.watch(burnCategoryFilterProvider);
+    final currentPace = ref.watch(burnPaceFilterProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildFilterChip(
+                label: 'Recommended',
+                isSelected: currentCat == null || currentCat == 'recommended',
+                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'recommended',
               ),
-            );
-          }),
-        ],
+              _buildFilterChip(
+                label: 'Gym',
+                isSelected: currentCat == 'gym',
+                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'gym',
+              ),
+              _buildFilterChip(
+                label: 'Indoor',
+                isSelected: currentCat == 'indoor',
+                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'indoor',
+              ),
+              _buildFilterChip(
+                label: 'Outdoor',
+                isSelected: currentCat == 'outdoor',
+                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'outdoor',
+              ),
+              _buildFilterChip(
+                label: 'Calisthenics',
+                isSelected: currentCat == 'calisthenics',
+                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'calisthenics',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildFilterChip(
+                label: 'Any pace',
+                isSelected: currentPace == null || currentPace == 'any',
+                onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'any',
+              ),
+              _buildFilterChip(
+                label: 'Quick burn',
+                isSelected: currentPace == 'quick',
+                onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'quick',
+              ),
+              _buildFilterChip(
+                label: 'Moderate',
+                isSelected: currentPace == 'moderate',
+                onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'moderate',
+              ),
+              _buildFilterChip(
+                label: 'Easy pace',
+                isSelected: currentPace == 'easy',
+                onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'easy',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: SelectChip(
+        label: label,
+        isSelected: isSelected,
+        onSelected: onTap,
       ),
     );
   }
@@ -143,56 +198,110 @@ class PlanScreen extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
-    final isWalking = option.activity == 'Walking (brisk)';
+    final isWalking = option.activity.contains('Walking');
     final subtitle = isWalking && option.steps != null
         ? '${option.minutes} min • ~${option.steps} steps'
         : '${option.minutes} min';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
-      child: AppCard(
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    option.activity,
-                    style: theme.textTheme.bodyStrong,
+      child: GestureDetector(
+        onTap: () {
+          if (option.exerciseId != null) {
+            context.push('/exercises/${option.exerciseId}');
+          }
+        },
+        child: AppCard(
+          child: Row(
+            children: [
+              if (option.mediaAsset != null)
+                Container(
+                  width: 48,
+                  height: 48,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: ext.hairline,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.caption,
-                  ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                ref.read(burnPlanProvider.notifier).markDone(option);
-                confirmSnackbar(context, 'Marked ${option.activity} as done!');
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: ext.hairline),
-                  color: Colors.transparent,
-                ),
-                child: Text(
-                  'Done',
-                  style: theme.textTheme.caption.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.textTheme.bodyStrong.color,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/${option.mediaAsset!.replaceAll('.gif', '.webp')}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Icon(Icons.image_not_supported, color: ext.accentSoft),
+                    ),
                   ),
                 ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          option.activity,
+                          style: theme.textTheme.bodyStrong,
+                        ),
+                        if (option.difficulty != null) ...[
+                          const SizedBox(width: 8),
+                          _buildDifficultyDots(option.difficulty!, theme, ext),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.caption,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              GestureDetector(
+                onTap: () {
+                  ref.read(burnPlanProvider.notifier).markDone(option);
+                  confirmSnackbar(context, 'Marked ${option.activity} as done!');
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: ext.hairline),
+                    color: Colors.transparent,
+                  ),
+                  child: Text(
+                    'Done',
+                    style: theme.textTheme.caption.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.textTheme.bodyStrong.color,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDifficultyDots(int difficulty, ThemeData theme, AppColors ext) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (index) {
+        final active = index < difficulty;
+        return Container(
+          width: 6,
+          height: 6,
+          margin: const EdgeInsets.only(right: 2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: active ? theme.colorScheme.primary : ext.hairline,
+          ),
+        );
+      }),
     );
   }
 }

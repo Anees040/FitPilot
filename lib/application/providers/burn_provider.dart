@@ -26,7 +26,8 @@ class BurnPlanState {
   });
 }
 
-final burnCategoryFilterProvider = StateProvider<ActivityCategory?>((ref) => null);
+final burnCategoryFilterProvider = StateProvider<String?>((ref) => null);
+final burnPaceFilterProvider = StateProvider<String?>((ref) => null);
 
 final burnPlanProvider = AsyncNotifierProvider<BurnPlanNotifier, BurnPlanState>(
   BurnPlanNotifier.new,
@@ -36,10 +37,12 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
   @override
   Future<BurnPlanState> build() async {
     final now = DateTime.now();
-    final filter = ref.watch(burnCategoryFilterProvider);
+    final categoryFilter = ref.watch(burnCategoryFilterProvider);
+    final paceFilter = ref.watch(burnPaceFilterProvider);
     final profile = await ref.watch(profileProvider.future);
     final logRepo = await ref.watch(logRepositoryProvider.future);
     final burnRepo = await ref.watch(burnRepositoryProvider.future);
+    final exerciseRepo = await ref.watch(exerciseRepositoryProvider.future);
 
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
@@ -83,6 +86,18 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
       }
     }
 
+    final allExercises = await exerciseRepo.all();
+    final profileEq = profile.equipment;
+    // Filter candidates by equipment
+    final candidates = allExercises.where((e) {
+      if (e.equipment == null) return true; // Needs no equipment
+      if (e.equipment == 'none') return true;
+      return profileEq.contains(e.equipment);
+    }).toList();
+
+    final activeCategoryPref = categoryFilter ?? profile.planCategoryPref;
+    final activePacePref = paceFilter ?? profile.planPacePref;
+
     // Is there a surplus yesterday (grace window)?
     if (streakState.kcalStillToBurn > 0 &&
         yesterdayStatus.state == DayState.over) {
@@ -91,7 +106,9 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
       final options = const BurnPlanner().planFor(
         kcalOver: kcalOver,
         weightKg: profile.weightKg,
-        categoryFilter: filter,
+        candidates: candidates,
+        categoryPref: activeCategoryPref,
+        pacePref: activePacePref,
       );
       return BurnPlanState(
         frame: BurnPlanFrame.surplusYesterday,
@@ -110,7 +127,9 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
         final options = const BurnPlanner().planFor(
           kcalOver: kcalOver,
           weightKg: profile.weightKg,
-          categoryFilter: filter,
+          candidates: candidates,
+          categoryPref: activeCategoryPref,
+          pacePref: activePacePref,
         );
         return BurnPlanState(
           frame: BurnPlanFrame.surplusToday,

@@ -5,14 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:convert';
 import 'package:fitpilot/data/ocr/nutrition_label_parser.dart';
 import 'package:fitpilot/application/providers/capture_provider.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
-import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:fitpilot/data/ai/ai_food_service.dart';
+import 'package:fitpilot/domain/entities/kcal_range.dart';
+import 'package:fitpilot/data/remote/open_food_facts_client.dart';
+
 import 'widgets/barcode_quantity_sheet.dart';
 import 'widgets/ocr_review_sheet.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
 
 enum CaptureMode { scanFood, barcode, foodLabel, library }
 
@@ -52,10 +55,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   }
 
   void _onModeChanged(CaptureMode newMode) {
-    if (newMode == CaptureMode.scanFood) {
-      _showScanFoodLockedDialog();
-      return;
-    }
     if (newMode == CaptureMode.library) {
       context.go('/log');
       return;
@@ -75,39 +74,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     });
   }
 
-  void _showScanFoodLockedDialog() {
-    final theme = Theme.of(context);
-    AppBottomSheet.show(
-      context,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Icon(Icons.auto_awesome, color: theme.colorScheme.primary, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              'AI Photo Logging',
-              style: theme.textTheme.h2,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'AI photo logging arrives with the next release! For now, please use Barcode, Food Label, or Library to log your meals.',
-              style: theme.textTheme.body,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            PrimaryButton(
-              label: 'Got it',
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Future<void> _handleBarcode(BarcodeCapture capture) async {
     if (_mode != CaptureMode.barcode || _isProcessing) return;
@@ -247,7 +214,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                       onDetect: (capture) {
                         if (_mode == CaptureMode.barcode) {
                           _handleBarcode(capture);
-                        } else if (_mode == CaptureMode.foodLabel) {
+                        } else if (_mode == CaptureMode.foodLabel || _mode == CaptureMode.scanFood) {
                           if (_isProcessing && _latestCapture == null) {
                             _latestCapture = capture;
                           }
@@ -257,7 +224,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                   if (_mode == CaptureMode.barcode)
                     _buildBarcodeOverlay()
                   else if (_mode == CaptureMode.foodLabel)
-                    _buildOcrOverlay(),
+                    _buildOcrOverlay()
+                  else if (_mode == CaptureMode.scanFood)
+                    _buildAiOverlay(),
                   if (_isProcessing)
                     Center(
                       child: CircularProgressIndicator(color: theme.colorScheme.primary),
@@ -272,7 +241,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_mode == CaptureMode.foodLabel)
+                  if (_mode == CaptureMode.foodLabel || _mode == CaptureMode.scanFood)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 24.0),
                       child: ElevatedButton(
@@ -282,8 +251,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(24),
                         ),
-                        onPressed: _isProcessing ? null : _processOcrCapture,
-                        child: const Icon(Icons.camera_alt, size: 32),
+                        onPressed: _isProcessing ? null : (_mode == CaptureMode.foodLabel ? _processOcrCapture : _processAiCapture),
+                        child: Icon(_mode == CaptureMode.scanFood ? Icons.auto_awesome : Icons.camera_alt, size: 32),
                       ),
                     ),
                   Container(
@@ -363,6 +332,71 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     }
   }
 
+  Future<void> _processAiCapture() async {
+    setState(() {
+      _isProcessing = true;
+      _latestCapture = null;
+    });
+
+    for (int i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(milliseconds: 50));
+      if (_latestCapture != null && _latestCapture!.image != null) break;
+    }
+
+    final imageBytes = _latestCapture?.image;
+    if (imageBytes == null) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        confirmSnackbar(context, 'Failed to capture image');
+      }
+      return;
+    }
+
+    try {
+      final base64Image = base64Encode(imageBytes);
+      final aiService = AiFoodService();
+      final result = await aiService.estimateFood(base64Image);
+
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        
+        if (result == null) {
+          confirmSnackbar(context, 'Failed to estimate food from AI.');
+          return;
+        }
+
+        final name = result['name'] as String? ?? 'AI Identified Food';
+        final minKcal = (result['minKcal'] as num?)?.toInt() ?? 0;
+        final maxKcal = (result['maxKcal'] as num?)?.toInt() ?? 0;
+
+        final kcalRange = KcalRange(minKcal, maxKcal);
+
+        // Provide a mock OffFound where 100g = 1 portion = estimated calories
+        final mockOffResult = OffFound(
+          productName: name,
+          kcalPer100g: kcalRange.midpoint,
+          netWeightGrams: 100,
+          isLocal: true,
+        );
+        
+        // Show the BarcodeQuantitySheet but trick it into thinking it's a found food
+        // We can reuse BarcodeQuantitySheet with this item
+        await AppBottomSheet.show(
+          context,
+          child: BarcodeQuantitySheet(
+            barcode: 'ai_scan',
+            offResult: mockOffResult,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        confirmSnackbar(context, 'Error analyzing image with AI');
+      }
+    }
+  }
+
   Widget _buildModeTab(String text, CaptureMode mode, IconData icon) {
     final theme = Theme.of(context);
     final isSelected = _mode == mode;
@@ -429,6 +463,31 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
             padding: const EdgeInsets.all(8),
             child: Text(
               'Align nutrition panel within frame',
+              style: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiOverlay() {
+    final theme = Theme.of(context);
+    return Center(
+      child: Container(
+        width: 300,
+        height: 300,
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.primary, width: 2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              'Center food item in frame',
               style: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
             ),
           ),

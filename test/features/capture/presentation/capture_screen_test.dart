@@ -5,7 +5,7 @@ import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
 void main() {
-  testWidgets('CaptureScreen mode switching and locked Scan Food', (
+  testWidgets('CaptureScreen mode switching', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -24,18 +24,8 @@ void main() {
     await tester.tap(find.text('Scan Food'));
     await tester.pumpAndSettle();
 
-    // Dialog appears
-    expect(find.text('AI Photo Logging'), findsOneWidget);
-
-    // Dismiss dialog
-    await tester.tap(find.text('Got it'));
-    await tester.pumpAndSettle();
-
-    // Mode is still barcode
-    expect(
-      find.byIcon(Icons.camera_alt),
-      findsNothing,
-    ); // Barcode mode has no manual capture button
+    // Mode is now scanFood, check for the auto_awesome icon (one in tab, one in big button)
+    expect(find.byIcon(Icons.auto_awesome), findsNWidgets(2));
 
     // Tap Food Label
     await tester.tap(find.text('Food Label'));

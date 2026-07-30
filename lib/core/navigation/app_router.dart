@@ -15,6 +15,8 @@ import 'package:fitpilot/features/auth/presentation/otp_verify_screen.dart';
 import 'package:fitpilot/features/auth/presentation/forgot_password_screen.dart';
 import 'package:fitpilot/features/profile/presentation/profile_setup_screen.dart';
 import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/exercise_library_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/exercise_detail_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -72,6 +74,18 @@ final appRouter = GoRouter(
       path: '/capture',
       parentNavigatorKey: rootNavigatorKey, // Overlay above bottom nav
       builder: (context, state) => const CaptureScreen(),
+    ),
+    GoRoute(
+      path: '/exercises',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const ExerciseLibraryScreen(),
+    ),
+    GoRoute(
+      path: '/exercises/:id',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => ExerciseDetailScreen(
+        exerciseId: state.pathParameters['id']!,
+      ),
     ),
     StatefulShellRoute(
       builder: (context, state, navigationShell) {

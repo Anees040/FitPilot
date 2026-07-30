@@ -13,7 +13,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 7,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -25,7 +25,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 7,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -89,13 +89,18 @@ class AppDatabase {
       CREATE TABLE exercises (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        equipment TEXT NOT NULL,
-        difficulty INTEGER NOT NULL,
-        muscles TEXT NOT NULL,
-        steps TEXT NOT NULL,
-        mistakes TEXT NOT NULL,
-        met REAL NOT NULL
+        category TEXT NOT NULL DEFAULT 'indoor',
+        subcategory TEXT,
+        met REAL NOT NULL DEFAULT 5.0,
+        equipment TEXT,
+        primary_muscles TEXT NOT NULL DEFAULT '[]',
+        secondary_muscles TEXT NOT NULL DEFAULT '[]',
+        difficulty INTEGER NOT NULL DEFAULT 1,
+        pace_tier TEXT NOT NULL DEFAULT 'moderate',
+        steps TEXT NOT NULL DEFAULT '[]',
+        mistakes TEXT NOT NULL DEFAULT '[]',
+        media_asset TEXT,
+        video_url TEXT
       )
     ''');
 
@@ -113,6 +118,8 @@ class AppDatabase {
         target_override INTEGER,
         equipment TEXT NOT NULL DEFAULT '[]',
         theme_mode TEXT NOT NULL DEFAULT 'system',
+        plan_category_pref TEXT NOT NULL DEFAULT 'recommended',
+        plan_pace_pref TEXT NOT NULL DEFAULT 'any',
         updated_at TEXT NOT NULL
       )
     ''');
@@ -157,6 +164,7 @@ class AppDatabase {
       'CREATE INDEX idx_burn_completions_for_date ON burn_completions (for_date)',
     );
     batch.execute('CREATE INDEX idx_food_catalog_name ON food_catalog (name)');
+    batch.execute('CREATE INDEX idx_exercises_category ON exercises (category)');
 
     await batch.commit(noResult: true);
   }
@@ -220,6 +228,77 @@ class AppDatabase {
         )
         WHERE food_name IS NULL AND food_id IS NOT NULL
       ''');
+    }
+    if (oldVersion < 8) {
+      // Migrate exercises table from old v7 schema (columns: id, name,
+      // category, equipment, difficulty, muscles, steps, mistakes, met)
+      // to v8 schema with new columns.
+      // SQLite ALTER TABLE only supports ADD COLUMN, so we add new columns
+      // and migrate data.
+      try {
+        await db.execute(
+          "ALTER TABLE exercises ADD COLUMN subcategory TEXT",
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          "ALTER TABLE exercises ADD COLUMN primary_muscles TEXT NOT NULL DEFAULT '[]'",
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          "ALTER TABLE exercises ADD COLUMN secondary_muscles TEXT NOT NULL DEFAULT '[]'",
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          "ALTER TABLE exercises ADD COLUMN pace_tier TEXT NOT NULL DEFAULT 'moderate'",
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          "ALTER TABLE exercises ADD COLUMN media_asset TEXT",
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          "ALTER TABLE exercises ADD COLUMN video_url TEXT",
+        );
+      } catch (_) {}
+
+      // Copy old muscles column into primary_muscles for existing rows
+      await db.execute('''
+        UPDATE exercises SET primary_muscles = muscles
+        WHERE primary_muscles = '[]' AND muscles IS NOT NULL AND muscles != '[]'
+      ''');
+
+      // Compute pace_tier from met for existing rows
+      await db.execute('''
+        UPDATE exercises SET pace_tier = 'quick'
+        WHERE met >= 8.0 AND pace_tier = 'moderate'
+      ''');
+      await db.execute('''
+        UPDATE exercises SET pace_tier = 'easy'
+        WHERE met < 5.0 AND pace_tier = 'moderate'
+      ''');
+
+      // Clear old exercises so seed importer will re-import the new 60
+      await db.execute('DELETE FROM exercises');
+
+      // Add index on category for faster filtering
+      try {
+        await db.execute(
+          'CREATE INDEX idx_exercises_category ON exercises (category)',
+        );
+      } catch (_) {}
+    }
+    if (oldVersion < 9) {
+      await db.execute(
+        "ALTER TABLE profile ADD COLUMN plan_category_pref TEXT NOT NULL DEFAULT 'recommended'",
+      );
+      await db.execute(
+        "ALTER TABLE profile ADD COLUMN plan_pace_pref TEXT NOT NULL DEFAULT 'any'",
+      );
     }
   }
 

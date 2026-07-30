@@ -59,12 +59,17 @@ class SeedImporter {
         'id': e['id'] as String,
         'name': e['name'] as String,
         'category': e['category'] as String,
-        'equipment': json.encode(e['equipment']),
-        'difficulty': e['difficulty'] as int,
-        'muscles': json.encode(e['muscles']),
-        'steps': json.encode(e['steps']),
-        'mistakes': json.encode(e['mistakes']),
+        'subcategory': e['subcategory'] as String?,
         'met': (e['met'] as num).toDouble(),
+        'equipment': e['equipment'] as String?,
+        'primary_muscles': json.encode(e['primary_muscles'] ?? []),
+        'secondary_muscles': json.encode(e['secondary_muscles'] ?? []),
+        'difficulty': (e['difficulty'] as num).toInt(),
+        'pace_tier': e['pace_tier'] as String,
+        'steps': json.encode(e['steps'] ?? []),
+        'mistakes': json.encode(e['mistakes'] ?? []),
+        'media_asset': e['media_asset'] as String?,
+        'video_url': e['video_url'] as String?,
       });
     }
     await batch.commit(noResult: true);

@@ -31,6 +31,8 @@ class ProfileRepository {
       'target_override': profile.targetOverride,
       'equipment': jsonEncode(profile.equipment),
       'theme_mode': profile.themeMode.name,
+      'plan_category_pref': profile.planCategoryPref,
+      'plan_pace_pref': profile.planPacePref,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
 
@@ -65,6 +67,8 @@ class ProfileRepository {
       targetOverride: (map['target_override'] as num?)?.round(),
       equipment: equipmentList.map((e) => e.toString()).toList(),
       themeMode: themeMode,
+      planCategoryPref: map['plan_category_pref'] as String? ?? 'recommended',
+      planPacePref: map['plan_pace_pref'] as String? ?? 'any',
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
   }

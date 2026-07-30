@@ -1,16 +1,5 @@
 import '../entities/burn_option.dart';
-
-/// Exercise category filter for burn plans.
-enum ActivityCategory { indoor, outdoor, gym, equipment }
-
-/// Activity entry in the internal MET table.
-class _Activity {
-  final String name;
-  final double met;
-  final ActivityCategory category;
-
-  const _Activity(this.name, this.met, this.category);
-}
+import '../entities/exercise.dart';
 
 /// Computes burn plan options using the MET formula.
 ///
@@ -18,77 +7,105 @@ class _Activity {
 class BurnPlanner {
   const BurnPlanner();
 
-  static const List<_Activity> _activities = [
-    _Activity('Walking (brisk)', 3.5, ActivityCategory.outdoor),
-    _Activity('Jump rope', 11.0, ActivityCategory.equipment),
-    _Activity('Running', 9.8, ActivityCategory.outdoor),
-    _Activity('Cycling', 7.5, ActivityCategory.equipment),
-    _Activity('Burpees', 8.0, ActivityCategory.indoor),
-    _Activity('Stair climbing', 8.8, ActivityCategory.indoor),
-    _Activity('Swimming', 8.3, ActivityCategory.gym),
-    _Activity('Weight training', 5.0, ActivityCategory.gym),
-  ];
-
-  /// Generates up to 4 burn options for the given [kcalOver] surplus,
-  /// user [weightKg], and available [equipment].
+  /// Generates up to 5 burn options (Walking + up to 4 others) for the given
+  /// [kcalOver] surplus, user [weightKg], and list of filtered [candidates].
   ///
-  /// Returns an empty list when [kcalOver] <= 0.
-  /// Walking is always included regardless of equipment.
-  /// Options sorted by minutes ascending.
+  /// The [candidates] should already be filtered by equipment availability.
+  /// 
+  /// Selection modes:
+  /// - 'recommended': 2 fastest overall, 1 easy-pace, plus Walking.
+  /// - Specific category ('gym', 'indoor', 'outdoor', 'calisthenics'): up to 4 fastest in category, plus Walking.
+  /// 
+  /// Walking ALWAYS appears, naturally sorted by minutes.
   List<BurnOption> planFor({
     required int kcalOver,
     required double weightKg,
-    ActivityCategory? categoryFilter,
+    required List<Exercise> candidates,
+    String categoryPref = 'recommended',
+    String pacePref = 'any',
   }) {
-    if (kcalOver <= 0) return [];
+    if (kcalOver <= 0 || candidates.isEmpty) return [];
+
+    // Find walking
+    final walkingEx = candidates.firstWhere(
+      (e) => e.name.contains('Walking'),
+      orElse: () => candidates.first,
+    );
+    final walkingOpt = _createOption(walkingEx, kcalOver, weightKg, true);
+
+    // Filter out walking for the pool
+    var pool = candidates.where((e) => !e.name.contains('Walking')).toList();
+
+    // Apply pace filter
+    if (pacePref != 'any') {
+      pool = pool.where((e) => e.paceTier == pacePref).toList();
+    }
 
     final options = <BurnOption>[];
 
-    for (final activity in _activities) {
-      // Include if no filter is active, or the category matches,
-      // or it's walking (always included).
-      final isWalking = activity.name == 'Walking (brisk)';
-      final categorySatisfied =
-          categoryFilter == null || activity.category == categoryFilter;
-
-      if (!isWalking && !categorySatisfied) continue;
-
-      final rawMinutes = kcalOver * 200 / (activity.met * 3.5 * weightKg);
-
-      // Round UP to next multiple of 5, minimum 5.
-      var minutes = (rawMinutes / 5).ceil() * 5;
-      if (minutes < 5) minutes = 5;
-
-      int? steps;
-      if (isWalking) {
-        // steps = minutes * 100, rounded to nearest 500
-        steps = ((minutes * 100) / 500).round() * 500;
-      }
-
-      options.add(
-        BurnOption(
-          activity: activity.name,
-          minutes: minutes,
-          kcal: kcalOver,
-          steps: steps,
-        ),
-      );
-    }
-
-    if (options.length > 4) {
-      final walkingOption = options.firstWhere(
-        (o) => o.activity == 'Walking (brisk)',
-      );
-      final nonWalkingOptions = options
-          .where((o) => o.activity != 'Walking (brisk)')
+    if (categoryPref == 'recommended') {
+      // 2 fastest overall, 1 easy-pace
+      var sortedBySpeed = List<Exercise>.from(pool)
+        ..sort((a, b) => b.met.compareTo(a.met)); // highest MET = fastest
+      var fastExercises = sortedBySpeed.take(2).toList();
+      var easyExercises = pool
+          .where((e) => e.paceTier == 'easy' && !fastExercises.contains(e))
           .toList();
-      nonWalkingOptions.sort((a, b) => a.minutes.compareTo(b.minutes));
-      final finalOptions = [...nonWalkingOptions.sublist(0, 3), walkingOption];
-      finalOptions.sort((a, b) => a.minutes.compareTo(b.minutes));
-      return finalOptions;
+
+      for (var ex in fastExercises) {
+        options.add(_createOption(ex, kcalOver, weightKg, false));
+      }
+      if (easyExercises.isNotEmpty) {
+        options.add(_createOption(easyExercises.first, kcalOver, weightKg, false));
+      }
     } else {
-      options.sort((a, b) => a.minutes.compareTo(b.minutes));
-      return options;
+      // Category mode
+      var catPool = pool
+          .where((e) => e.category.name == categoryPref)
+          .toList();
+      catPool.sort((a, b) => b.met.compareTo(a.met)); // fastest first
+
+      for (var ex in catPool.take(4)) {
+        options.add(_createOption(ex, kcalOver, weightKg, false));
+      }
     }
+
+    options.add(walkingOpt);
+    
+    // Sort all by minutes ascending
+    options.sort((a, b) => a.minutes.compareTo(b.minutes));
+
+    // Deduplicate by activity name in case walking was used twice (fallback case)
+    final seen = <String>{};
+    final uniqueOptions = <BurnOption>[];
+    for (var opt in options) {
+      if (seen.add(opt.activity)) {
+        uniqueOptions.add(opt);
+      }
+    }
+
+    return uniqueOptions;
+  }
+
+  BurnOption _createOption(
+    Exercise exercise,
+    int kcalOver,
+    double weightKg,
+    bool isWalking,
+  ) {
+    int minutes = exercise.minutesToBurn(weightKg, kcalOver);
+    int? steps;
+    if (isWalking) {
+      steps = ((minutes * 100) / 500).round() * 500;
+    }
+    return BurnOption(
+      activity: exercise.name,
+      minutes: minutes,
+      kcal: kcalOver,
+      steps: steps,
+      exerciseId: exercise.id,
+      difficulty: exercise.difficulty,
+      mediaAsset: exercise.mediaAsset,
+    );
   }
 }

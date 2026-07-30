@@ -26,6 +26,8 @@ class Profile extends Equatable {
   final int? targetOverride;
   final List<String> equipment;
   final ThemeModePref themeMode;
+  final String planCategoryPref;
+  final String planPacePref;
   final DateTime updatedAt;
 
   static const int defaultAllowanceKcal = 300;
@@ -42,6 +44,8 @@ class Profile extends Equatable {
     this.targetOverride,
     this.equipment = const [],
     this.themeMode = ThemeModePref.system,
+    this.planCategoryPref = 'recommended',
+    this.planPacePref = 'any',
     required this.updatedAt,
   }) {
     if (weightKg < 25 || weightKg > 300) {
@@ -94,6 +98,8 @@ class Profile extends Equatable {
     int? targetOverride,
     List<String>? equipment,
     ThemeModePref? themeMode,
+    String? planCategoryPref,
+    String? planPacePref,
     DateTime? updatedAt,
     bool clearOverride = false,
   }) {
@@ -109,6 +115,8 @@ class Profile extends Equatable {
       targetOverride: clearOverride ? null : (targetOverride ?? this.targetOverride),
       equipment: equipment ?? this.equipment,
       themeMode: themeMode ?? this.themeMode,
+      planCategoryPref: planCategoryPref ?? this.planCategoryPref,
+      planPacePref: planPacePref ?? this.planPacePref,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -126,6 +134,8 @@ class Profile extends Equatable {
     targetOverride,
     equipment,
     themeMode,
+    planCategoryPref,
+    planPacePref,
     updatedAt,
   ];
 
