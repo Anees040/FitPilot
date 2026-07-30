@@ -392,7 +392,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        confirmSnackbar(context, 'Error analyzing image with AI');
+        String msg = 'Error analyzing image with AI';
+        if (e is Exception) {
+          final eStr = e.toString();
+          if (eStr.contains('Daily photo limit reached') || eStr.contains("Couldn't reach the server")) {
+            msg = eStr.replaceFirst('Exception: ', '');
+          }
+        }
+        confirmSnackbar(context, msg);
       }
     }
   }
