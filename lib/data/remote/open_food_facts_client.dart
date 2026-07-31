@@ -10,6 +10,7 @@ class OffFound extends OffResult {
   final String? brand;
   final double? netWeightGrams;
   final int kcalPer100g;
+  final String? imageUrl;
   final bool isLocal;
 
   OffFound({
@@ -17,6 +18,7 @@ class OffFound extends OffResult {
     this.brand,
     this.netWeightGrams,
     required this.kcalPer100g,
+    this.imageUrl,
     this.isLocal = false,
   });
 }
@@ -46,7 +48,7 @@ class HttpOpenFoodFactsClient implements OpenFoodFactsClient {
     debugPrint('OpenFoodFacts lookup: $barcode');
     try {
       final uri = Uri.parse(
-        'https://world.openfoodfacts.org/api/v2/product/$barcode.json?fields=product_name,brands,quantity,product_quantity,nutriments',
+        'https://world.openfoodfacts.org/api/v2/product/$barcode.json?fields=product_name,brands,quantity,product_quantity,nutriments,image_url',
       );
       final response = await client
           .get(
@@ -116,11 +118,14 @@ class HttpOpenFoodFactsClient implements OpenFoodFactsClient {
         return OffFoundMissingEnergy(name);
       }
 
+      final imageUrl = product['image_url']?.toString();
+
       return OffFound(
         productName: name,
         brand: brands,
         netWeightGrams: netWeight,
         kcalPer100g: kcal.round(),
+        imageUrl: imageUrl,
       );
     } on TimeoutException {
       return OffNetworkError();

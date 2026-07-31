@@ -13,6 +13,7 @@ import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 import 'package:fitpilot/data/ai/ai_food_service.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'widgets/barcode_quantity_sheet.dart';
 import 'widgets/ocr_review_sheet.dart';
@@ -76,12 +77,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
 
 
-  Future<void> _handleBarcode(BarcodeCapture capture) async {
-    if (_mode != CaptureMode.barcode || _isProcessing) return;
-
-    final barcode = capture.barcodes.firstOrNull?.rawValue;
-    if (barcode == null || barcode.isEmpty) return;
-
+  Future<void> _processBarcode(String barcode) async {
     setState(() => _isProcessing = true);
 
     final result = await ref
@@ -120,6 +116,108 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     }
   }
 
+  Future<void> _handleBarcode(BarcodeCapture capture) async {
+    if (_mode != CaptureMode.barcode || _isProcessing) return;
+
+    final barcode = capture.barcodes.firstOrNull?.rawValue;
+    if (barcode == null || barcode.isEmpty) return;
+
+    await _processBarcode(barcode);
+  }
+
+  Future<void> _pickFromGallery() async {
+    if (_isProcessing) return;
+
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    
+    if (pickedFile == null) return;
+    
+    setState(() => _isProcessing = true);
+
+    try {
+      if (_mode == CaptureMode.barcode) {
+        final controller = MobileScannerController();
+        final barcodeCapture = await controller.analyzeImage(pickedFile.path);
+        
+        final barcode = barcodeCapture?.barcodes.firstOrNull?.rawValue;
+        if (barcode != null && barcode.isNotEmpty) {
+          await _processBarcode(barcode);
+        } else {
+          if (mounted) confirmSnackbar(context, 'No barcode found in image');
+          if (mounted) setState(() => _isProcessing = false);
+        }
+        controller.dispose();
+      } else if (_mode == CaptureMode.foodLabel) {
+        final inputImage = InputImage.fromFilePath(pickedFile.path);
+        final recognizedText = await _textRecognizer?.processImage(inputImage);
+        
+        if (recognizedText == null) {
+          throw Exception('Text recognizer not initialized');
+        }
+
+        final parser = NutritionLabelParser();
+        final result = parser.parse(recognizedText.text);
+
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          await AppBottomSheet.show(
+            context,
+            child: OcrReviewSheet(result: result),
+          );
+        }
+      } else if (_mode == CaptureMode.scanFood) {
+        final bytes = await File(pickedFile.path).readAsBytes();
+        final base64Image = base64Encode(bytes);
+        
+        final aiService = AiFoodService();
+        final result = await aiService.estimateFood(base64Image);
+
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          
+          if (result == null) {
+            confirmSnackbar(context, 'Failed to estimate food from AI.');
+            return;
+          }
+
+          final name = result['name'] as String? ?? 'AI Identified Food';
+          final minKcal = (result['minKcal'] as num?)?.toInt() ?? 0;
+          final maxKcal = (result['maxKcal'] as num?)?.toInt() ?? 0;
+
+          final kcalRange = KcalRange(minKcal, maxKcal);
+
+          final mockOffResult = OffFound(
+            productName: name,
+            kcalPer100g: kcalRange.midpoint,
+            netWeightGrams: 100,
+            isLocal: true,
+          );
+          
+          await AppBottomSheet.show(
+            context,
+            child: BarcodeQuantitySheet(
+              barcode: 'ai_scan',
+              offResult: mockOffResult,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        String msg = 'Error processing image';
+        if (e is Exception) {
+          final eStr = e.toString();
+          if (eStr.contains('Daily photo limit reached') || eStr.contains("Couldn't reach the server")) {
+            msg = eStr.replaceFirst('Exception: ', '');
+          }
+        }
+        confirmSnackbar(context, msg);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -142,6 +240,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const Spacer(),
+                  if (!kIsWeb && _mode != CaptureMode.library)
+                    IconButton(
+                      icon: Icon(
+                        Icons.photo_library,
+                        color: theme.colorScheme.surface,
+                      ),
+                      onPressed: _pickFromGallery,
+                    ),
                   if (!kIsWeb)
                     IconButton(
                       icon: Icon(

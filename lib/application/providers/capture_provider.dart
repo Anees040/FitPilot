@@ -54,6 +54,7 @@ class CaptureNotifier extends Notifier<void> {
           'grams': result.netWeightGrams,
           'kcal_min': result.kcalPer100g,
           'kcal_max': result.kcalPer100g,
+          'image_url': result.imageUrl,
           'is_verified': 0, // Externally sourced
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
@@ -98,6 +99,7 @@ class CaptureNotifier extends Notifier<void> {
     final log = FoodLog(
       id: const Uuid().v4(),
       foodId: barcode, // null if OCR
+      foodName: barcode != null ? name : null,
       customName: barcode == null ? name : null,
       quantity:
           1.0, // Quantity is 1 because we pre-computed the final kcal based on grams

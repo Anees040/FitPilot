@@ -10,6 +10,7 @@ class FoodItem extends Equatable {
   final String portionLabel;
   final int? grams;
   final KcalRange kcalPerPortion;
+  final String? imageUrl;
   final bool isVerified;
 
   FoodItem({
@@ -19,6 +20,7 @@ class FoodItem extends Equatable {
     required this.portionLabel,
     this.grams,
     required this.kcalPerPortion,
+    this.imageUrl,
     this.isVerified = true,
   }) {
     if (id.isEmpty) {
@@ -43,6 +45,7 @@ class FoodItem extends Equatable {
     portionLabel,
     grams,
     kcalPerPortion,
+    imageUrl,
     isVerified,
   ];
 

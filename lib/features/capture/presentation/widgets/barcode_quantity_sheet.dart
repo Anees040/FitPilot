@@ -167,45 +167,87 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
           const SizedBox(height: 24),
 
           if (_netWeightGrams != null) ...[
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text('Whole pack (${_netWeightGrams}g)', style: theme.textTheme.bodyStrong),
-              trailing: Icon(
-                _selectedPreset == 'whole_pack' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: _selectedPreset == 'whole_pack' ? theme.colorScheme.primary : theme.textTheme.caption.color,
+            Text('AMOUNT', style: theme.textTheme.overline),
+            const SizedBox(height: 8),
+            InputDecorator(
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: theme.colorScheme.surface,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: theme.colorScheme.primary),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: theme.dividerColor),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               ),
-              onTap: () => setState(() => _selectedPreset = 'whole_pack'),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text('Half pack (${_netWeightGrams! / 2}g)', style: theme.textTheme.bodyStrong),
-              trailing: Icon(
-                _selectedPreset == 'half_pack' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: _selectedPreset == 'half_pack' ? theme.colorScheme.primary : theme.textTheme.caption.color,
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedPreset,
+                  isExpanded: true,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'whole_pack',
+                      child: Text('Whole pack (${_netWeightGrams}g)', style: theme.textTheme.bodyStrong),
+                    ),
+                    DropdownMenuItem(
+                      value: 'half_pack',
+                      child: Text('Half pack (${_netWeightGrams! / 2}g)', style: theme.textTheme.bodyStrong),
+                    ),
+                    DropdownMenuItem(
+                      value: 'custom',
+                      child: Text('Custom grams / ml', style: theme.textTheme.bodyStrong),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedPreset = val);
+                  },
+                ),
               ),
-              onTap: () => setState(() => _selectedPreset = 'half_pack'),
             ),
+            const SizedBox(height: 16),
+          ] else ...[
+            Text('AMOUNT', style: theme.textTheme.overline),
+            const SizedBox(height: 8),
+            InputDecorator(
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: theme.colorScheme.surface,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: theme.colorScheme.primary),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: theme.dividerColor),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: 'custom',
+                  isExpanded: true,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'custom',
+                      child: Text('Custom grams / ml', style: theme.textTheme.bodyStrong),
+                    ),
+                  ],
+                  onChanged: null,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
 
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text('Custom grams / ml', style: theme.textTheme.bodyStrong),
-            trailing: Icon(
-              _selectedPreset == 'custom' ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-              color: _selectedPreset == 'custom' ? theme.colorScheme.primary : theme.textTheme.caption.color,
-            ),
-            onTap: () => setState(() => _selectedPreset = 'custom'),
-          ),
-
           if (_selectedPreset == 'custom')
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: AppTextField(
-                label: 'GRAMS / ML',
-                controller: _customController,
-                keyboardType: TextInputType.number,
-                onChanged: (_) => setState(() {}),
-              ),
+            AppTextField(
+              label: 'GRAMS / ML',
+              controller: _customController,
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
             ),
 
           const SizedBox(height: 32),

@@ -55,6 +55,7 @@ class FoodRepository {
       'grams': item.grams,
       'kcal_min': item.kcalPerPortion.min,
       'kcal_max': item.kcalPerPortion.max,
+      'image_url': item.imageUrl,
       'is_verified': item.isVerified ? 1 : 0,
     });
     await _enqueue('food_catalog', id, 'insert', {
@@ -65,6 +66,7 @@ class FoodRepository {
       'grams': item.grams,
       'kcal_min': item.kcalPerPortion.min,
       'kcal_max': item.kcalPerPortion.max,
+      'image_url': item.imageUrl,
       'is_verified': item.isVerified ? 1 : 0,
     });
     return id;
@@ -82,6 +84,7 @@ class FoodRepository {
           (row['kcal_min'] as num?)?.round() ?? 0,
           (row['kcal_max'] as num?)?.round() ?? 0,
         ),
+        imageUrl: row['image_url'] as String?,
         isVerified: ((row['is_verified'] as num?)?.round() ?? 0) == 1,
       );
     } catch (e) {

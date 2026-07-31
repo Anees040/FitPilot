@@ -47,19 +47,15 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    // Get today and yesterday logs + burns
-    final todayLogs = await logRepo.forDay(today);
-    final todayBurns = await burnRepo.burnedKcalForDay(today);
+    // Watch todayProvider so we update reactively when logs/burns change today
+    final todayState = await ref.watch(todayProvider.future);
+    final todayStatus = todayState.dayStatus;
+
+    // Get yesterday logs + burns
     final yesterdayLogs = await logRepo.forDay(yesterday);
     final yesterdayBurns = await burnRepo.burnedKcalForDay(yesterday);
 
     const calculator = RangeCalculator();
-    final todayStatus = calculator.dayStatus(
-      logs: todayLogs,
-      burnedKcal: todayBurns,
-      allowanceKcal: profile.effectiveDailyLimit,
-      targetKcal: profile.effectiveDailyTarget,
-    );
     final yesterdayStatus = calculator.dayStatus(
       logs: yesterdayLogs,
       burnedKcal: yesterdayBurns,
@@ -120,7 +116,7 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
 
     // Is there a surplus today?
     if (todayStatus.state == DayState.over) {
-      final kcalOver = (todayStatus.net.midpoint - profile.allowanceKcal)
+      final kcalOver = (todayStatus.net.midpoint - profile.effectiveDailyLimit)
           .clamp(0, double.infinity)
           .toInt();
       if (kcalOver > 0) {

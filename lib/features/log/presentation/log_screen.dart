@@ -57,49 +57,51 @@ class LogScreen extends ConsumerWidget {
                     );
                   }
 
-                  return ListView.separated(
-                    itemCount: results.length + 1,
-                    separatorBuilder: (context, index) {
-                      if (index == results.length) return const SizedBox.shrink();
-                      return Divider(
-                        height: 1,
-                        color: theme.dividerColor,
-                        indent: 16,
-                        endIndent: 16,
-                      );
-                    },
-                    itemBuilder: (context, index) {
-                      if (index == results.length) {
-                        return Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Center(
-                            child: TextButton(
-                              onPressed: () {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: GridView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 0.8,
+                          ),
+                          itemCount: results.length,
+                          itemBuilder: (context, index) {
+                            final food = results[index];
+                            return FoodResultCard(
+                              food: food,
+                              onTap: () {
                                 AppBottomSheet.show(
                                   context,
-                                  child: const ManualEntrySheet(),
+                                  child: QuantitySheet(food: food),
                                 );
                               },
-                              child: Text(
-                                "Can't find it? Add manually",
-                                style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.primary),
-                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Center(
+                          child: TextButton(
+                            onPressed: () {
+                              AppBottomSheet.show(
+                                context,
+                                child: const ManualEntrySheet(),
+                              );
+                            },
+                            child: Text(
+                              "Can't find it? Add manually",
+                              style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.primary),
                             ),
                           ),
-                        );
-                      }
-
-                      final food = results[index];
-                      return FoodResultTile(
-                        food: food,
-                        onTap: () {
-                          AppBottomSheet.show(
-                            context,
-                            child: QuantitySheet(food: food),
-                          );
-                        },
-                      );
-                    },
+                        ),
+                      ),
+                    ],
                   );
                 },
                 loading: () => const Padding(

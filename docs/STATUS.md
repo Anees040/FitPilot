@@ -27,10 +27,12 @@
 - [x] F7 — Chrome/web correctness fixes
 - [x] C1 — Exercise library and Burn Plan v2
 
+- [x] C3 — Library & Capture UX polish
+
 ## Last completed
 
-- C1 — Exercise library and Burn Plan v2
-(Included database schema v8 and v9 migrations, complete exercise catalog seed, BurnPlanner rewrite with preference filters, AI Food Scan proxy integration, and OCR food label review)
+- C3 — Library & Capture UX polish
+(Converted libraries to 2-column grids, added gallery picker for capture screen, aligned BarcodeQuantitySheet UI with OcrReviewSheet)
 
 ## Known issues / debt
 
@@ -38,5 +40,4 @@
 
 ## Notes for next session
 
-- Polish pass is complete.
-- Milestone C starts with adding the Supabase backend features, replacing mock data, and integrating the Node/Express AI proxy (Gemini) for food analysis.
+- Milestone C continues with deeper integrations and UI refinement.

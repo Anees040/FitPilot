@@ -13,7 +13,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -25,7 +25,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 9,
+      version: 10,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -45,6 +45,7 @@ class AppDatabase {
         grams INTEGER,
         kcal_min INTEGER NOT NULL,
         kcal_max INTEGER NOT NULL,
+        image_url TEXT,
         is_verified INTEGER NOT NULL DEFAULT 1
       )
     ''');
@@ -298,6 +299,11 @@ class AppDatabase {
       );
       await db.execute(
         "ALTER TABLE profile ADD COLUMN plan_pace_pref TEXT NOT NULL DEFAULT 'any'",
+      );
+    }
+    if (oldVersion < 10) {
+      await db.execute(
+        "ALTER TABLE food_catalog ADD COLUMN image_url TEXT",
       );
     }
   }

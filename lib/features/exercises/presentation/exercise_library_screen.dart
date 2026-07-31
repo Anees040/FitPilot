@@ -206,14 +206,18 @@ class _ExerciseCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Media area
-          ExerciseMedia(
-            exercise: exercise,
-            width: double.infinity,
-            height: 100,
-            borderRadius: 0,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ExerciseMedia(
+              exercise: exercise,
+              width: double.infinity,
+              height: 100,
+              borderRadius: 14,
+              fit: BoxFit.cover,
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
