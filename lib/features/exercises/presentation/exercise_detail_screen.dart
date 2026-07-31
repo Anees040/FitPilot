@@ -286,15 +286,33 @@ class _DetailBody extends ConsumerWidget {
             ),
             child: SafeArea(
               top: false,
-              child: PrimaryButton(
-                label: 'Burn $kcalToBurn with this — $minutesToBurn min',
-                onPressed: () {
-                  final option = BurnOption(
-                    activity: exercise.name,
-                    minutes: minutesToBurn,
-                    kcal: kcalToBurn,
-                  );
-                  ref.read(burnPlanProvider.notifier).markDone(option);
+              child: Builder(
+                builder: (context) {
+                  int sessions = 1;
+                  int minutesPerSession = minutesToBurn;
+                  int totalMinutes = minutesToBurn;
+
+                  if (totalMinutes > 90) {
+                    sessions = (totalMinutes / 90.0).ceil();
+                    minutesPerSession = ((totalMinutes / sessions) / 5.0).round() * 5;
+                    totalMinutes = sessions * minutesPerSession;
+                  }
+                  
+                  final label = sessions > 1
+                      ? 'Burn $kcalToBurn with this — $sessions × $minutesPerSession min'
+                      : 'Burn $kcalToBurn with this — $totalMinutes min';
+
+                  return PrimaryButton(
+                    label: label,
+                    onPressed: () {
+                      final option = BurnOption(
+                        activity: exercise.name,
+                        minutes: totalMinutes,
+                        kcal: kcalToBurn,
+                        sessions: sessions,
+                        minutesPerSession: minutesPerSession,
+                      );
+                      ref.read(burnPlanProvider.notifier).markDone(option);
                   ref.invalidate(todayProvider);
                   AppSnackbar.success(
                     context,
@@ -302,9 +320,11 @@ class _DetailBody extends ConsumerWidget {
                   );
                   context.pop();
                 },
-              ),
-            ),
+              );
+            },
           ),
+        ),
+      ),
       ],
     );
   }

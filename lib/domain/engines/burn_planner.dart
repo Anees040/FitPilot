@@ -94,6 +94,15 @@ class BurnPlanner {
     bool isWalking,
   ) {
     int minutes = exercise.minutesToBurn(weightKg, kcalOver);
+    int sessions = 1;
+    int minutesPerSession = minutes;
+
+    if (minutes > 90) {
+      sessions = (minutes / 90.0).ceil();
+      minutesPerSession = ((minutes / sessions) / 5.0).round() * 5;
+      minutes = sessions * minutesPerSession;
+    }
+
     int? steps;
     if (isWalking) {
       steps = ((minutes * 100) / 500).round() * 500;
@@ -106,6 +115,8 @@ class BurnPlanner {
       exerciseId: exercise.id,
       difficulty: exercise.difficulty,
       mediaAsset: exercise.mediaAsset,
+      sessions: sessions,
+      minutesPerSession: minutesPerSession,
     );
   }
 }

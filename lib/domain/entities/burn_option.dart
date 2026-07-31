@@ -9,6 +9,8 @@ class BurnOption extends Equatable {
   final String? exerciseId;
   final int? difficulty;
   final String? mediaAsset;
+  final int sessions;
+  final int minutesPerSession;
 
   const BurnOption({
     required this.activity,
@@ -18,10 +20,12 @@ class BurnOption extends Equatable {
     this.exerciseId,
     this.difficulty,
     this.mediaAsset,
+    this.sessions = 1,
+    this.minutesPerSession = 0,
   });
 
   @override
-  List<Object?> get props => [activity, minutes, kcal, steps, exerciseId, difficulty, mediaAsset];
+  List<Object?> get props => [activity, minutes, kcal, steps, exerciseId, difficulty, mediaAsset, sessions, minutesPerSession];
 
   @override
   String toString() =>

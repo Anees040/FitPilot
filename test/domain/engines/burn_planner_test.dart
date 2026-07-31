@@ -73,5 +73,38 @@ void main() {
       expect(walking.minutes, 25);
       expect(walking.steps, 2500);
     });
+
+    test('cap boundary at exactly 90', () {
+      final mockCandidates = [
+        Exercise(id: 'test_90', name: 'Exactly 90', category: ExerciseCategory.indoor, met: 3.5, difficulty: 1, paceTier: 'easy'),
+      ];
+      final options = planner.planFor(kcalOver: 385, weightKg: 70, candidates: mockCandidates);
+      final opt = options.firstWhere((o) => o.activity == 'Exactly 90');
+      expect(opt.minutes, 90);
+      expect(opt.sessions, 1);
+      expect(opt.minutesPerSession, 90);
+    });
+
+    test('cap boundary at > 90 (split plan)', () {
+      final mockCandidates = [
+        Exercise(id: 'test_95', name: 'Over 90', category: ExerciseCategory.indoor, met: 3.5, difficulty: 1, paceTier: 'easy'),
+      ];
+      final options = planner.planFor(kcalOver: 405, weightKg: 70, candidates: mockCandidates);
+      final opt = options.firstWhere((o) => o.activity == 'Over 90');
+      expect(opt.minutes, 100); 
+      expect(opt.sessions, 2);
+      expect(opt.minutesPerSession, 50);
+    });
+
+    test('split math logic', () {
+      final mockCandidates = [
+        Exercise(id: 'test_140', name: 'Big Split', category: ExerciseCategory.indoor, met: 3.5, difficulty: 1, paceTier: 'easy'),
+      ];
+      final options = planner.planFor(kcalOver: 600, weightKg: 70, candidates: mockCandidates);
+      final opt = options.firstWhere((o) => o.activity == 'Big Split');
+      expect(opt.minutes, 140);
+      expect(opt.sessions, 2);
+      expect(opt.minutesPerSession, 70);
+    });
   });
 }

@@ -8,6 +8,8 @@ import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
+import '../../../core/ui/exercise_media.dart';
+import '../../../domain/entities/exercise.dart';
 
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
@@ -97,7 +99,20 @@ class PlanScreen extends ConsumerWidget {
         Text('AVAILABLE ACTIVITIES', style: theme.textTheme.overline),
         const SizedBox(height: 12),
         _buildCategoryFilters(context, ref),
+        if (state.kcalToBurnOrEat > 2000)
+          Padding(
+            padding: const EdgeInsets.only(top: 16.0),
+            child: AppCard(
+              color: ext.surfaceRaised,
+              child: Text(
+                "Big day. Spread the burn over a few days — or let tomorrow's budget absorb part of it.",
+                style: theme.textTheme.caption,
+              ),
+            ),
+          ),
         const SizedBox(height: 16),
+        Text('Pick ONE — each option clears your surplus on its own.', style: theme.textTheme.caption),
+        const SizedBox(height: 8),
         ...state.options.map(
           (option) => _buildOptionCard(context, ref, option),
         ),
@@ -194,9 +209,15 @@ class PlanScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
     final isWalking = option.activity.contains('Walking');
-    final subtitle = isWalking && option.steps != null
-        ? '${option.minutes} min • ~${option.steps} steps'
-        : '${option.minutes} min';
+    
+    String subtitle;
+    if (option.sessions > 1) {
+      subtitle = 'Too big for one session — ${option.sessions} × ${option.minutesPerSession} min over ${option.sessions} days';
+    } else {
+      subtitle = isWalking && option.steps != null
+          ? '${option.minutes} min • ~${option.steps} steps'
+          : '${option.minutes} min';
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
@@ -212,18 +233,21 @@ class PlanScreen extends ConsumerWidget {
                 width: 48,
                 height: 48,
                 margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: ext.hairline,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/${option.mediaAsset!.replaceAll('.gif', '.webp')}',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        Icon(Icons.image_not_supported, color: ext.accentSoft),
+                child: ExerciseMedia(
+                  exercise: Exercise(
+                    id: option.exerciseId ?? '',
+                    name: option.activity,
+                    category: ExerciseCategory.indoor,
+                    met: 0.0,
+                    primaryMuscles: const [],
+                    secondaryMuscles: const [],
+                    difficulty: option.difficulty ?? 1,
+                    paceTier: 'any',
+                    steps: const [],
+                    mistakes: const [],
+                    mediaAsset: option.mediaAsset,
                   ),
+                  borderRadius: 8,
                 ),
               ),
             // G2.3 — clamp text to prevent overflow
