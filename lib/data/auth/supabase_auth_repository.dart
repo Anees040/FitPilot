@@ -90,6 +90,18 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> resendOtp({required String email}) async {
+    try {
+      await _client.auth.resend(
+        type: supa.OtpType.signup,
+        email: email,
+      );
+    } catch (e) {
+      throw _mapException(e);
+    }
+  }
+
+  @override
   Future<void> sendPasswordReset({required String email}) async {
     try {
       await _client.auth.resetPasswordForEmail(email);

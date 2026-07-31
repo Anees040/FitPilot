@@ -14,6 +14,7 @@ class AppTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextInputAction? textInputAction;
   final void Function(String)? onSubmitted;
+  final FocusNode? focusNode;
 
   const AppTextField({
     super.key,
@@ -28,6 +29,7 @@ class AppTextField extends StatelessWidget {
     this.validator,
     this.textInputAction,
     this.onSubmitted,
+    this.focusNode,
   });
 
   @override
@@ -43,6 +45,7 @@ class AppTextField extends StatelessWidget {
           height: 56,
           child: TextFormField(
             controller: controller,
+            focusNode: focusNode,
             obscureText: obscureText,
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,

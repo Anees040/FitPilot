@@ -13,6 +13,7 @@ import 'package:fitpilot/core/ui/confirm_snackbar.dart';
 import 'package:fitpilot/data/ai/ai_food_service.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
+import 'package:fitpilot/core/services/permission_service.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'widgets/barcode_quantity_sheet.dart';
@@ -35,12 +36,15 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   bool _isProcessing = false;
   bool _isTorchOn = false;
 
+  // Debounce barcode: track the last scanned value to avoid duplicate processing
+  String? _lastScannedBarcode;
+
   @override
   void initState() {
     super.initState();
     if (!kIsWeb) {
       _cameraController = MobileScannerController(
-        returnImage: true,
+        returnImage: false, // We use image_picker for OCR/AI — no need for frame images
         formats: const [BarcodeFormat.all],
         autoStart: true,
       );
@@ -72,13 +76,16 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     setState(() {
       _mode = newMode;
       _isProcessing = false;
+      _lastScannedBarcode = null; // reset debounce on mode switch
     });
   }
 
-
-
+  // ── G2.1: Barcode processing with camera pause/resume ─────────────────────
   Future<void> _processBarcode(String barcode) async {
     setState(() => _isProcessing = true);
+
+    // G2.2: Pause camera immediately after first detection
+    await _cameraController?.stop();
 
     final result = await ref
         .read(captureProvider.notifier)
@@ -93,14 +100,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
             label: 'Enter Manually',
-            onPressed: () {
-              context.go('/log');
-            },
+            onPressed: () => context.go('/log'),
           ),
         ),
       );
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
+        _lastScannedBarcode = null;
+        await _cameraController?.start();
         setState(() => _isProcessing = false);
       }
       return;
@@ -112,6 +119,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     );
 
     if (mounted) {
+      // G2.2: Resume camera only after sheet closes
+      _lastScannedBarcode = null;
+      await _cameraController?.start();
       setState(() => _isProcessing = false);
     }
   }
@@ -122,24 +132,29 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     final barcode = capture.barcodes.firstOrNull?.rawValue;
     if (barcode == null || barcode.isEmpty) return;
 
+    // G2.2: Debounce — ignore duplicate detection of same barcode
+    if (barcode == _lastScannedBarcode) return;
+    _lastScannedBarcode = barcode;
+
     await _processBarcode(barcode);
   }
 
+  // ── Gallery picker (all modes) ─────────────────────────────────────────────
   Future<void> _pickFromGallery() async {
     if (_isProcessing) return;
 
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    
+
     if (pickedFile == null) return;
-    
+
     setState(() => _isProcessing = true);
 
     try {
       if (_mode == CaptureMode.barcode) {
         final controller = MobileScannerController();
         final barcodeCapture = await controller.analyzeImage(pickedFile.path);
-        
+
         final barcode = barcodeCapture?.barcodes.firstOrNull?.rawValue;
         if (barcode != null && barcode.isNotEmpty) {
           await _processBarcode(barcode);
@@ -149,73 +164,175 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         }
         controller.dispose();
       } else if (_mode == CaptureMode.foodLabel) {
-        final inputImage = InputImage.fromFilePath(pickedFile.path);
-        final recognizedText = await _textRecognizer?.processImage(inputImage);
-        
-        if (recognizedText == null) {
-          throw Exception('Text recognizer not initialized');
-        }
-
-        final parser = NutritionLabelParser();
-        final result = parser.parse(recognizedText.text);
-
-        if (mounted) {
-          setState(() => _isProcessing = false);
-          await AppBottomSheet.show(
-            context,
-            child: OcrReviewSheet(result: result),
-          );
-        }
+        await _runOcrOnFile(pickedFile.path);
       } else if (_mode == CaptureMode.scanFood) {
-        final bytes = await File(pickedFile.path).readAsBytes();
-        final base64Image = base64Encode(bytes);
-        
-        final aiService = AiFoodService();
-        final result = await aiService.estimateFood(base64Image);
-
-        if (mounted) {
-          setState(() => _isProcessing = false);
-          
-          if (result == null) {
-            confirmSnackbar(context, 'Failed to estimate food from AI.');
-            return;
-          }
-
-          final name = result['name'] as String? ?? 'AI Identified Food';
-          final minKcal = (result['minKcal'] as num?)?.toInt() ?? 0;
-          final maxKcal = (result['maxKcal'] as num?)?.toInt() ?? 0;
-
-          final kcalRange = KcalRange(minKcal, maxKcal);
-
-          final mockOffResult = OffFound(
-            productName: name,
-            kcalPer100g: kcalRange.midpoint,
-            netWeightGrams: 100,
-            isLocal: true,
-          );
-          
-          await AppBottomSheet.show(
-            context,
-            child: BarcodeQuantitySheet(
-              barcode: 'ai_scan',
-              offResult: mockOffResult,
-            ),
-          );
-        }
+        await _runAiOnFile(pickedFile.path);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        String msg = 'Error processing image';
-        if (e is Exception) {
-          final eStr = e.toString();
-          if (eStr.contains('Daily photo limit reached') || eStr.contains("Couldn't reach the server")) {
-            msg = eStr.replaceFirst('Exception: ', '');
-          }
-        }
-        confirmSnackbar(context, msg);
+        confirmSnackbar(context, _friendlyError(e));
       }
     }
+  }
+
+  // ── G2.1: OCR capture via image_picker camera (fixes "failed to capture") ──
+  Future<void> _processOcrCapture() async {
+    if (_isProcessing) return;
+
+    // G2.1: Request camera permission before opening image_picker
+    final hasPermission = await PermissionService.requestCamera();
+    if (!hasPermission) {
+      if (mounted) {
+        confirmSnackbar(context, 'Camera permission denied. Please enable in Settings.');
+      }
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.rear,
+        imageQuality: 90,
+      );
+
+      if (pickedFile == null) {
+        if (mounted) setState(() => _isProcessing = false);
+        return;
+      }
+
+      await _runOcrOnFile(pickedFile.path);
+    } catch (e) {
+      if (kDebugMode) debugPrint('[CaptureScreen] OCR camera error: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        confirmSnackbar(context, _friendlyError(e));
+      }
+    }
+  }
+
+  // ── G2.1: AI food scan via image_picker camera ────────────────────────────
+  Future<void> _processAiCapture() async {
+    if (_isProcessing) return;
+
+    final hasPermission = await PermissionService.requestCamera();
+    if (!hasPermission) {
+      if (mounted) {
+        confirmSnackbar(context, 'Camera permission denied. Please enable in Settings.');
+      }
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.rear,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) {
+        if (mounted) setState(() => _isProcessing = false);
+        return;
+      }
+
+      await _runAiOnFile(pickedFile.path);
+    } catch (e) {
+      if (kDebugMode) debugPrint('[CaptureScreen] AI camera error: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        confirmSnackbar(context, _friendlyError(e));
+      }
+    }
+  }
+
+  // ── Shared helpers ─────────────────────────────────────────────────────────
+  Future<void> _runOcrOnFile(String filePath) async {
+    try {
+      final inputImage = InputImage.fromFilePath(filePath);
+      final recognizedText = await _textRecognizer?.processImage(inputImage);
+
+      if (recognizedText == null) {
+        throw Exception('Text recognizer not initialized');
+      }
+
+      final parser = NutritionLabelParser();
+      final result = parser.parse(recognizedText.text);
+
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        await AppBottomSheet.show(
+          context,
+          child: OcrReviewSheet(result: result),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('[CaptureScreen] OCR error: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        confirmSnackbar(context, 'Error analyzing label');
+      }
+    }
+  }
+
+  Future<void> _runAiOnFile(String filePath) async {
+    try {
+      final bytes = await File(filePath).readAsBytes();
+      final base64Image = base64Encode(bytes);
+      final aiService = AiFoodService();
+      final result = await aiService.estimateFood(base64Image);
+
+      if (mounted) {
+        setState(() => _isProcessing = false);
+
+        if (result == null) {
+          confirmSnackbar(context, 'Failed to estimate food from AI.');
+          return;
+        }
+
+        final name = result['name'] as String? ?? 'AI Identified Food';
+        final minKcal = (result['minKcal'] as num?)?.toInt() ?? 0;
+        final maxKcal = (result['maxKcal'] as num?)?.toInt() ?? 0;
+        final kcalRange = KcalRange(minKcal, maxKcal);
+
+        final mockOffResult = OffFound(
+          productName: name,
+          kcalPer100g: kcalRange.midpoint,
+          netWeightGrams: 100,
+          isLocal: true,
+        );
+
+        await AppBottomSheet.show(
+          context,
+          child: BarcodeQuantitySheet(
+            barcode: 'ai_scan',
+            offResult: mockOffResult,
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('[CaptureScreen] AI error: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        confirmSnackbar(context, _friendlyError(e));
+      }
+    }
+  }
+
+  String _friendlyError(Object e) {
+    final eStr = e.toString();
+    if (eStr.contains('Daily photo limit reached')) {
+      return 'Daily photo limit reached (3/day)';
+    }
+    if (eStr.contains("Couldn't reach the server")) {
+      return "Couldn't reach the server";
+    }
+    return 'Error processing image';
   }
 
   @override
@@ -285,17 +402,17 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                     MobileScanner(
                       controller: _cameraController!,
                       errorBuilder: (context, error, child) {
-                        String message = 'Camera error occurred.';
+                        String message;
                         switch (error.errorCode.name) {
                           case 'permissionDenied':
-                            message = 'Camera permission denied.';
+                            message = 'Camera permission denied. Enable it in Settings.';
                             break;
                           case 'unsupported':
                             message = 'Camera not supported on this device.';
                             break;
                           default:
-                            message = 'Camera in use or capture failed.';
-                            break;
+                            if (kDebugMode) debugPrint('[MobileScanner] error: ${error.errorCode} — ${error.errorDetails}');
+                            message = 'Camera unavailable. Tap Retry.';
                         }
                         return Center(
                           child: Column(
@@ -303,10 +420,13 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                             children: [
                               Icon(Icons.camera_alt, color: theme.colorScheme.error, size: 48),
                               const SizedBox(height: 16),
-                              Text(
-                                message,
-                                style: TextStyle(color: theme.colorScheme.surface),
-                                textAlign: TextAlign.center,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 32),
+                                child: Text(
+                                  message,
+                                  style: TextStyle(color: theme.colorScheme.surface),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton(
@@ -320,11 +440,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                       onDetect: (capture) {
                         if (_mode == CaptureMode.barcode) {
                           _handleBarcode(capture);
-                        } else if (_mode == CaptureMode.foodLabel || _mode == CaptureMode.scanFood) {
-                          if (_isProcessing && _latestCapture == null) {
-                            _latestCapture = capture;
-                          }
                         }
+                        // foodLabel and scanFood use image_picker — no onDetect needed
                       },
                     ),
                   if (_mode == CaptureMode.barcode)
@@ -357,8 +474,15 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(24),
                         ),
-                        onPressed: _isProcessing ? null : (_mode == CaptureMode.foodLabel ? _processOcrCapture : _processAiCapture),
-                        child: Icon(_mode == CaptureMode.scanFood ? Icons.auto_awesome : Icons.camera_alt, size: 32),
+                        onPressed: _isProcessing
+                            ? null
+                            : (_mode == CaptureMode.foodLabel
+                                ? _processOcrCapture
+                                : _processAiCapture),
+                        child: Icon(
+                          _mode == CaptureMode.scanFood ? Icons.auto_awesome : Icons.camera_alt,
+                          size: 32,
+                        ),
                       ),
                     ),
                   Container(
@@ -386,135 +510,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     );
   }
 
-  BarcodeCapture? _latestCapture;
-
-  Future<void> _processOcrCapture() async {
-    setState(() {
-      _isProcessing = true;
-      _latestCapture = null;
-    });
-
-    for (int i = 0; i < 20; i++) {
-      await Future.delayed(const Duration(milliseconds: 50));
-      if (_latestCapture != null && _latestCapture!.image != null) break;
-    }
-
-    final imageBytes = _latestCapture?.image;
-    if (imageBytes == null) {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        confirmSnackbar(context, 'Failed to capture image');
-      }
-      return;
-    }
-
-    try {
-      final tempDir = Directory.systemTemp;
-      final file = File('${tempDir.path}/ocr_temp.jpg');
-      await file.writeAsBytes(imageBytes);
-
-      final inputImage = InputImage.fromFilePath(file.path);
-      final recognizedText = await _textRecognizer?.processImage(inputImage);
-      
-      if (recognizedText == null) {
-        throw Exception('Text recognizer not initialized');
-      }
-
-      final parser = NutritionLabelParser();
-      final result = parser.parse(recognizedText.text);
-
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        await AppBottomSheet.show(
-          context,
-          child: OcrReviewSheet(result: result),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        confirmSnackbar(context, 'Error analyzing label');
-      }
-    }
-  }
-
-  Future<void> _processAiCapture() async {
-    setState(() {
-      _isProcessing = true;
-      _latestCapture = null;
-    });
-
-    for (int i = 0; i < 20; i++) {
-      await Future.delayed(const Duration(milliseconds: 50));
-      if (_latestCapture != null && _latestCapture!.image != null) break;
-    }
-
-    final imageBytes = _latestCapture?.image;
-    if (imageBytes == null) {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        confirmSnackbar(context, 'Failed to capture image');
-      }
-      return;
-    }
-
-    try {
-      final base64Image = base64Encode(imageBytes);
-      final aiService = AiFoodService();
-      final result = await aiService.estimateFood(base64Image);
-
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        
-        if (result == null) {
-          confirmSnackbar(context, 'Failed to estimate food from AI.');
-          return;
-        }
-
-        final name = result['name'] as String? ?? 'AI Identified Food';
-        final minKcal = (result['minKcal'] as num?)?.toInt() ?? 0;
-        final maxKcal = (result['maxKcal'] as num?)?.toInt() ?? 0;
-
-        final kcalRange = KcalRange(minKcal, maxKcal);
-
-        // Provide a mock OffFound where 100g = 1 portion = estimated calories
-        final mockOffResult = OffFound(
-          productName: name,
-          kcalPer100g: kcalRange.midpoint,
-          netWeightGrams: 100,
-          isLocal: true,
-        );
-        
-        // Show the BarcodeQuantitySheet but trick it into thinking it's a found food
-        // We can reuse BarcodeQuantitySheet with this item
-        await AppBottomSheet.show(
-          context,
-          child: BarcodeQuantitySheet(
-            barcode: 'ai_scan',
-            offResult: mockOffResult,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        String msg = 'Error analyzing image with AI';
-        if (e is Exception) {
-          final eStr = e.toString();
-          if (eStr.contains('Daily photo limit reached') || eStr.contains("Couldn't reach the server")) {
-            msg = eStr.replaceFirst('Exception: ', '');
-          }
-        }
-        confirmSnackbar(context, msg);
-      }
-    }
-  }
-
   Widget _buildModeTab(String text, CaptureMode mode, IconData icon) {
     final theme = Theme.of(context);
     final isSelected = _mode == mode;
     final color = isSelected ? theme.colorScheme.primary : theme.colorScheme.surface.withValues(alpha: 0.54);
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: () => _onModeChanged(mode),
@@ -575,8 +575,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
             color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
             padding: const EdgeInsets.all(8),
             child: Text(
-              'Align nutrition panel within frame',
+              'Tap the camera button to capture — or use the gallery icon',
               style: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
+              textAlign: TextAlign.center,
             ),
           ),
         ),
@@ -600,8 +601,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
             color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
             padding: const EdgeInsets.all(8),
             child: Text(
-              'Center food item in frame',
+              'Tap the camera button to capture — or use the gallery icon',
               style: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
+              textAlign: TextAlign.center,
             ),
           ),
         ),

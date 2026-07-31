@@ -105,6 +105,7 @@ class PlanScreen extends ConsumerWidget {
     );
   }
 
+  // G2.4 — horizontally scrollable chip rows with fade hint at trailing edge
   Widget _buildCategoryFilters(BuildContext context, WidgetRef ref) {
     final currentCat = ref.watch(burnCategoryFilterProvider);
     final currentPace = ref.watch(burnPaceFilterProvider);
@@ -112,65 +113,59 @@ class PlanScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildFilterChip(
-                label: 'Recommended',
-                isSelected: currentCat == null || currentCat == 'recommended',
-                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'recommended',
-              ),
-              _buildFilterChip(
-                label: 'Gym',
-                isSelected: currentCat == 'gym',
-                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'gym',
-              ),
-              _buildFilterChip(
-                label: 'Indoor',
-                isSelected: currentCat == 'indoor',
-                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'indoor',
-              ),
-              _buildFilterChip(
-                label: 'Outdoor',
-                isSelected: currentCat == 'outdoor',
-                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'outdoor',
-              ),
-              _buildFilterChip(
-                label: 'Calisthenics',
-                isSelected: currentCat == 'calisthenics',
-                onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'calisthenics',
-              ),
-            ],
-          ),
+        _FadeScrollRow(
+          children: [
+            _buildFilterChip(
+              label: 'Recommended',
+              isSelected: currentCat == null || currentCat == 'recommended',
+              onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'recommended',
+            ),
+            _buildFilterChip(
+              label: 'Gym',
+              isSelected: currentCat == 'gym',
+              onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'gym',
+            ),
+            _buildFilterChip(
+              label: 'Indoor',
+              isSelected: currentCat == 'indoor',
+              onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'indoor',
+            ),
+            _buildFilterChip(
+              label: 'Outdoor',
+              isSelected: currentCat == 'outdoor',
+              onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'outdoor',
+            ),
+            _buildFilterChip(
+              label: 'Calisthenics',
+              isSelected: currentCat == 'calisthenics',
+              onTap: () => ref.read(burnCategoryFilterProvider.notifier).state = 'calisthenics',
+            ),
+          ],
         ),
         const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildFilterChip(
-                label: 'Any pace',
-                isSelected: currentPace == null || currentPace == 'any',
-                onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'any',
-              ),
-              _buildFilterChip(
-                label: 'Quick burn',
-                isSelected: currentPace == 'quick',
-                onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'quick',
-              ),
-              _buildFilterChip(
-                label: 'Moderate',
-                isSelected: currentPace == 'moderate',
-                onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'moderate',
-              ),
-              _buildFilterChip(
-                label: 'Easy pace',
-                isSelected: currentPace == 'easy',
-                onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'easy',
-              ),
-            ],
-          ),
+        _FadeScrollRow(
+          children: [
+            _buildFilterChip(
+              label: 'Any pace',
+              isSelected: currentPace == null || currentPace == 'any',
+              onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'any',
+            ),
+            _buildFilterChip(
+              label: 'Quick burn',
+              isSelected: currentPace == 'quick',
+              onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'quick',
+            ),
+            _buildFilterChip(
+              label: 'Moderate',
+              isSelected: currentPace == 'moderate',
+              onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'moderate',
+            ),
+            _buildFilterChip(
+              label: 'Easy pace',
+              isSelected: currentPace == 'easy',
+              onTap: () => ref.read(burnPaceFilterProvider.notifier).state = 'easy',
+            ),
+          ],
         ),
       ],
     );
@@ -205,83 +200,87 @@ class PlanScreen extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
-      child: GestureDetector(
-        onTap: () {
-          if (option.exerciseId != null) {
-            context.push('/exercises/${option.exerciseId}');
-          }
-        },
-        child: AppCard(
-          child: Row(
-            children: [
-              if (option.mediaAsset != null)
-                Container(
-                  width: 48,
-                  height: 48,
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: ext.hairline,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/${option.mediaAsset!.replaceAll('.gif', '.webp')}',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Icon(Icons.image_not_supported, color: ext.accentSoft),
-                    ),
+      child: AppCard(
+        // G2.5 — whole card is tappable, navigates to exercise detail
+        onTap: option.exerciseId != null
+            ? () => context.push('/exercises/${option.exerciseId}')
+            : null,
+        child: Row(
+          children: [
+            if (option.mediaAsset != null)
+              Container(
+                width: 48,
+                height: 48,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: ext.hairline,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/${option.mediaAsset!.replaceAll('.gif', '.webp')}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.image_not_supported, color: ext.accentSoft),
                   ),
                 ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
+              ),
+            // G2.3 — clamp text to prevent overflow
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
                           option.activity,
                           style: theme.textTheme.bodyStrong,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        if (option.difficulty != null) ...[
-                          const SizedBox(width: 8),
-                          _buildDifficultyDots(option.difficulty!, theme, ext),
-                        ],
+                      ),
+                      if (option.difficulty != null) ...[
+                        const SizedBox(width: 8),
+                        _buildDifficultyDots(option.difficulty!, theme, ext),
                       ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.caption,
-                    ),
-                  ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // G2.5 — "Done" button has its own GestureDetector to avoid absorbing card tap
+            GestureDetector(
+              onTap: () {
+                ref.read(burnPlanProvider.notifier).markDone(option);
+                confirmSnackbar(context, 'Marked ${option.activity} as done!');
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: ext.hairline),
+                  color: Colors.transparent,
+                ),
+                child: Text(
+                  'Done',
+                  style: theme.textTheme.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.textTheme.bodyStrong.color,
+                  ),
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  ref.read(burnPlanProvider.notifier).markDone(option);
-                  confirmSnackbar(context, 'Marked ${option.activity} as done!');
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: ext.hairline),
-                    color: Colors.transparent,
-                  ),
-                  child: Text(
-                    'Done',
-                    style: theme.textTheme.caption.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.textTheme.bodyStrong.color,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -302,6 +301,38 @@ class PlanScreen extends ConsumerWidget {
           ),
         );
       }),
+    );
+  }
+}
+
+/// A horizontally scrollable row with a fade hint at the trailing edge.
+/// G2.4 — replaces the plain SingleChildScrollView + Row pattern.
+class _FadeScrollRow extends StatelessWidget {
+  final List<Widget> children;
+
+  const _FadeScrollRow({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) => LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Colors.white,
+          Colors.white,
+          Colors.white.withValues(alpha: 0.0),
+        ],
+        stops: const [0.0, 0.85, 1.0],
+      ).createShader(bounds),
+      blendMode: BlendMode.dstIn,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.only(left: 0, right: 32), // extra padding for fade
+        child: Row(
+          children: children,
+        ),
+      ),
     );
   }
 }

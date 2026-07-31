@@ -49,6 +49,15 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     super.dispose();
   }
 
+  // G3.4 — friendly error mapping
+  String _mapError(Object e) {
+    if (e is RateLimitedFailure) return 'Too many attempts, wait a minute.';
+    if (e is NetworkUnavailableFailure) return 'No connection.';
+    if (e is InvalidCredentialsFailure) return "That code didn't match. Check the newest email.";
+    if (e is AuthFailure) return e.message;
+    return "That code didn't match. Check the newest email.";
+  }
+
   Future<void> _submit() async {
     final code = _codeCtrl.text.trim();
     if (code.length != 6) return;
@@ -74,31 +83,36 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       }
     } catch (e) {
       if (mounted) {
-        String msg = 'An error occurred';
-        if (e is AuthFailure) msg = e.message;
-        setState(() => _errorText = msg);
+        setState(() => _errorText = _mapError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  // G3.3 — resend actually calls the API
   Future<void> _resend() async {
     if (_resendCooldown > 0) return;
 
     try {
+      await ref
+          .read(authRepositoryProvider)
+          .resendOtp(email: widget.email);
       _startCooldown();
       if (mounted) {
-        confirmSnackbar(context, 'Verification code resent.');
+        confirmSnackbar(context, 'Verification code resent to ${widget.email}.');
       }
     } catch (e) {
-      // ignore
+      if (mounted) {
+        confirmSnackbar(context, _mapError(e));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
 
     return Scaffold(
       appBar: AppBar(
@@ -111,18 +125,45 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'We sent a 6-digit code to ${widget.email}.',
-                style: theme.textTheme.body,
+              // G3.3 — show email address and 'edit' link
+              RichText(
+                text: TextSpan(
+                  style: theme.textTheme.body,
+                  children: [
+                    const TextSpan(text: 'Code sent to '),
+                    TextSpan(
+                      text: widget.email,
+                      style: theme.textTheme.bodyStrong,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              // G3.3 — 'edit' link goes back to sign-up/sign-in
+              GestureDetector(
+                onTap: () => context.pop(),
+                child: Text(
+                  'Wrong address? Edit',
+                  style: theme.textTheme.caption.copyWith(
+                    color: theme.colorScheme.primary,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
 
+              // G3.3 — OTP boxes; validate ONLY on explicit Verify tap or auto-submit after 6th digit
               _OtpDigitBoxes(
                 controller: _codeCtrl,
                 hasError: _errorText != null,
                 onChanged: (val) {
+                  // Clear error when user edits
                   if (_errorText != null) setState(() => _errorText = null);
-                  if (val.length == 6 && !_isLoading) _submit();
+                  // G3.3 — auto-submit on 6th digit WITH loading spinner first
+                  if (val.length == 6 && !_isLoading) {
+                    // Trigger submit asynchronously — spinner shows before network call
+                    Future.microtask(_submit);
+                  }
                   setState(() {});
                 },
               ),
@@ -130,7 +171,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 const SizedBox(height: 8),
                 Text(
                   _errorText!,
-                  style: theme.textTheme.caption.copyWith(color: theme.extension<AppColors>()!.error),
+                  style: theme.textTheme.caption.copyWith(color: ext.error),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -138,7 +179,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
 
               PrimaryButton(
                 label: 'Verify',
-                onPressed: _codeCtrl.text.length == 6 ? _submit : null,
+                onPressed: _codeCtrl.text.length == 6 && !_isLoading ? _submit : null,
                 isLoading: _isLoading,
               ),
               const SizedBox(height: 16),
@@ -260,4 +301,3 @@ class _OtpDigitBoxesState extends State<_OtpDigitBoxes> {
     );
   }
 }
-

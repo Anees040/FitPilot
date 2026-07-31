@@ -26,18 +26,29 @@
 - [x] F5 — Correctness + UX drop
 - [x] F7 — Chrome/web correctness fixes
 - [x] C1 — Exercise library and Burn Plan v2
-
 - [x] C3 — Library & Capture UX polish
+- [x] G2 — Critical bug fixes (camera permission, barcode lag, overflow, chip scroll, plan nav, offline images)
+- [x] G3 — Auth UX (inline validation, password live checklist, OTP behavior, error mapping)
 
 ## Last completed
 
-- C3 — Library & Capture UX polish
-(Converted libraries to 2-column grids, added gallery picker for capture screen, aligned BarcodeQuantitySheet UI with OcrReviewSheet)
+- G2 + G3 — Critical bugs + Auth UX polish
+  - G2.1: OCR/AI capture now uses image_picker + permission_handler (no more "failed to capture image")
+  - G2.2: Barcode camera paused immediately on detection, debounced, resumed after sheet closes
+  - G2.3: Plan/Exercise screen overflow fixed (Flexible + mainAxisExtent)
+  - G2.4: Chip rows horizontally scrollable with fade hint (ShaderMask)
+  - G2.5: Whole plan option card is tappable (AppCard onTap)
+  - G2.6: Product images cached locally via ImageCacheService (path_provider)
+  - G3.1: Login shows inline error under each field (no dead button)
+  - G3.2: Signup checklist shows only on focus, animated, + eye toggle
+  - G3.3: OTP shows email + edit link; resend calls API; auto-submit with spinner
+  - G3.4: Friendly error mapping for RateLimit, Network, wrong OTP
 
 ## Known issues / debt
 
-(none)
+- G1 (media re-conversion) is a manual step requiring original GIF source folder
 
 ## Notes for next session
 
-- Milestone C continues with deeper integrations and UI refinement.
+- Run `flutter run` on device to verify G2.1 camera permission flow end-to-end
+- G1 can be done anytime with: `python tool/convert_media.py <gif_folder> --out assets/exercise_media --fps 20 --max-side 320 --quality 75`

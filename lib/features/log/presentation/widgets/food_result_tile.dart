@@ -1,14 +1,51 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/domain/entities/food_item.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/data/services/image_cache_service.dart';
 import 'kcal_range_text.dart';
 
-class FoodResultCard extends StatelessWidget {
+class FoodResultCard extends StatefulWidget {
   final FoodItem food;
   final VoidCallback onTap;
 
   const FoodResultCard({super.key, required this.food, required this.onTap});
+
+  @override
+  State<FoodResultCard> createState() => _FoodResultCardState();
+}
+
+class _FoodResultCardState extends State<FoodResultCard> {
+  String? _localImagePath;
+  bool _imageChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLocalImage();
+  }
+
+  Future<void> _checkLocalImage() async {
+    if (kIsWeb) {
+      setState(() => _imageChecked = true);
+      return;
+    }
+    // Only check local cache if the food was from a barcode scan (id looks like a barcode)
+    final id = widget.food.id;
+    if (id.isNotEmpty) {
+      final path = await ImageCacheService.localPath(id);
+      if (mounted) {
+        setState(() {
+          _localImagePath = path;
+          _imageChecked = true;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _imageChecked = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +54,7 @@ class FoodResultCard extends StatelessWidget {
 
     return AppCard(
       padding: EdgeInsets.zero,
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -39,13 +76,13 @@ class FoodResultCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        food.name,
+                        widget.food.name,
                         style: theme.textTheme.bodyStrong,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (food.isVerified)
+                    if (widget.food.isVerified)
                       Padding(
                         padding: const EdgeInsets.only(left: 4.0, top: 2.0),
                         child: Icon(Icons.verified, color: ext.success, size: 16),
@@ -61,7 +98,7 @@ class FoodResultCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: KcalRangeText(
-                    range: food.kcalPerPortion,
+                    range: widget.food.kcalPerPortion,
                     style: theme.textTheme.caption.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -77,13 +114,25 @@ class FoodResultCard extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context, AppColors ext) {
-    if (food.imageUrl != null && food.imageUrl!.isNotEmpty) {
-      return Image.network(
-        food.imageUrl!,
+    // 1. Try locally cached file (downloaded when barcode was scanned)
+    if (!kIsWeb && _localImagePath != null) {
+      return Image.file(
+        File(_localImagePath!),
         width: double.infinity,
         height: 100,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _fallbackIcon(context, ext),
+        errorBuilder: (context, error, stack) => _fallbackIcon(context, ext),
+      );
+    }
+    // 2. Try network URL (only when local not available)
+    final url = widget.food.imageUrl;
+    if (!kIsWeb && _imageChecked && url != null && url.isNotEmpty) {
+      return Image.network(
+        url,
+        width: double.infinity,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stack) => _fallbackIcon(context, ext),
       );
     }
     return _fallbackIcon(context, ext);

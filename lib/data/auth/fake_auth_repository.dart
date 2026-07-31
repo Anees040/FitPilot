@@ -87,6 +87,13 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> resendOtp({required String email}) async {
+    await Future.delayed(const Duration(milliseconds: 10));
+    _checkGlobalErrors();
+    // Fake: does nothing — OTP is always '123456'
+  }
+
+  @override
   Future<void> sendPasswordReset({required String email}) async {
     await Future.delayed(const Duration(milliseconds: 10));
     _checkGlobalErrors();

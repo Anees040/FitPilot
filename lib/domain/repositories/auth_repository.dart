@@ -17,6 +17,9 @@ abstract class AuthRepository {
   /// Verifies a 6-digit OTP code sent to the email.
   Future<void> verifyOtp({required String email, required String token});
 
+  /// Resends the OTP verification email.
+  Future<void> resendOtp({required String email});
+
   /// Sends a password reset link to the email.
   Future<void> sendPasswordReset({required String email});
 

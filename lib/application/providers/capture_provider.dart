@@ -5,6 +5,7 @@ import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
+import 'package:fitpilot/data/services/image_cache_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:sqflite/sqflite.dart';
 
@@ -42,7 +43,7 @@ class CaptureNotifier extends Notifier<void> {
       );
     }
 
-    // 2. Query network
+    // Query network
     try {
       final result = await client.getProduct(barcode);
       if (result is OffFound) {
@@ -57,6 +58,10 @@ class CaptureNotifier extends Notifier<void> {
           'image_url': result.imageUrl,
           'is_verified': 0, // Externally sourced
         }, conflictAlgorithm: ConflictAlgorithm.replace);
+        // Download & cache image locally (fire-and-forget, non-blocking)
+        if (result.imageUrl != null) {
+          ImageCacheService.save(barcode, result.imageUrl);
+        }
       }
       return result;
     } catch (_) {

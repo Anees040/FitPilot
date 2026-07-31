@@ -42,16 +42,14 @@ class ExerciseLibraryScreen extends ConsumerWidget {
               ),
             ),
 
-            // Category filter chips
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            // Category filter chips — G2.4: scrollable with fade
+            _FadeScrollRow(
               child: _CategoryChips(),
             ),
             const SizedBox(height: 8),
 
-            // Pace filter chips
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            // Pace filter chips — G2.4: scrollable with fade
+            _FadeScrollRow(
               child: _PaceChips(),
             ),
             const SizedBox(height: 12),
@@ -91,7 +89,8 @@ class ExerciseLibraryScreen extends ConsumerWidget {
                             crossAxisCount: 2,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio: 0.72,
+                            // G2.3: use mainAxisExtent so height is fixed regardless of width
+                            mainAxisExtent: 200,
                           ),
                           itemCount: exercises.length,
                           itemBuilder: (context, index) {
@@ -133,6 +132,7 @@ class _CategoryChips extends ConsumerWidget {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: categories.map((entry) {
           final (value, label) = entry;
@@ -165,6 +165,7 @@ class _PaceChips extends ConsumerWidget {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: paces.map((entry) {
           final (value, label) = entry;
@@ -180,6 +181,26 @@ class _PaceChips extends ConsumerWidget {
           );
         }).toList(),
       ),
+    );
+  }
+}
+
+/// Scrollable row with a trailing fade hint. G2.4.
+class _FadeScrollRow extends StatelessWidget {
+  final Widget child;
+  const _FadeScrollRow({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [Colors.white, Colors.white, Color(0x00FFFFFF)],
+        stops: [0.0, 0.85, 1.0],
+      ).createShader(bounds),
+      blendMode: BlendMode.dstIn,
+      child: child,
     );
   }
 }

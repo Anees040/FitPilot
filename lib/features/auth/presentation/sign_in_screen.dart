@@ -19,7 +19,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _isLoading = false;
-  String? _errorText;
+  bool _obscurePassword = true;
+
+  // G3.1 — per-field inline validation errors
+  String? _emailError;
+  String? _passwordError;
+  String? _formError;
 
   @override
   void dispose() {
@@ -28,12 +33,46 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     super.dispose();
   }
 
+  // G3.1 — client-side validation
+  bool _validate() {
+    final email = _emailCtrl.text.trim();
+    final password = _passCtrl.text;
+    String? emailErr;
+    String? passErr;
+
+    if (email.isEmpty) {
+      emailErr = 'Enter your email';
+    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      emailErr = 'Enter a valid email address';
+    }
+
+    if (password.isEmpty) {
+      passErr = 'Enter your password';
+    }
+
+    setState(() {
+      _emailError = emailErr;
+      _passwordError = passErr;
+    });
+
+    return emailErr == null && passErr == null;
+  }
+
+  // G3.4 — friendly error mapping
+  String _mapError(Object e) {
+    if (e is RateLimitedFailure) return 'Too many attempts, wait a minute.';
+    if (e is NetworkUnavailableFailure) return 'No connection.';
+    if (e is InvalidCredentialsFailure) return 'Email or password is incorrect.';
+    if (e is AuthFailure) return e.message;
+    return 'An error occurred. Please try again.';
+  }
+
   Future<void> _submit() async {
-    if (_emailCtrl.text.isEmpty || _passCtrl.text.isEmpty) return;
+    if (!_validate()) return;
 
     setState(() {
       _isLoading = true;
-      _errorText = null;
+      _formError = null;
     });
 
     try {
@@ -55,9 +94,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       }
     } catch (e) {
       if (mounted) {
-        String msg = 'An error occurred';
-        if (e is AuthFailure) msg = e.message;
-        setState(() => _errorText = msg);
+        setState(() => _formError = _mapError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -131,23 +168,44 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ),
               const SizedBox(height: 32),
 
+              // G3.1 — email with inline validation
               AppTextField(
                 label: 'EMAIL',
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
+                errorText: _emailError,
                 onChanged: (_) {
-                  if (_errorText != null) setState(() => _errorText = null);
+                  if (_emailError != null || _formError != null) {
+                    setState(() {
+                      _emailError = null;
+                      _formError = null;
+                    });
+                  }
                 },
               ),
               const SizedBox(height: 16),
 
+              // G3.2 — password with eye toggle
               AppTextField(
                 label: 'PASSWORD',
                 controller: _passCtrl,
-                obscureText: true,
-                errorText: _errorText,
+                obscureText: _obscurePassword,
+                errorText: _passwordError ?? _formError,
+                trailing: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    size: 20,
+                    color: theme.textTheme.caption.color,
+                  ),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                ),
                 onChanged: (_) {
-                  if (_errorText != null) setState(() => _errorText = null);
+                  if (_passwordError != null || _formError != null) {
+                    setState(() {
+                      _passwordError = null;
+                      _formError = null;
+                    });
+                  }
                 },
               ),
 

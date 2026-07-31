@@ -18,18 +18,32 @@ class SignUpScreen extends ConsumerStatefulWidget {
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  // G3.2 — focus node to show checklist only when password field is focused
+  final _passFocusNode = FocusNode();
+
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String? _emailError;
   String? _formError;
 
+  bool _passwordFocused = false;
   bool _hasLength = false;
   bool _hasLetter = false;
   bool _hasNumber = false;
 
   @override
+  void initState() {
+    super.initState();
+    _passFocusNode.addListener(() {
+      setState(() => _passwordFocused = _passFocusNode.hasFocus);
+    });
+  }
+
+  @override
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
+    _passFocusNode.dispose();
     super.dispose();
   }
 
@@ -43,17 +57,29 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   bool get _isPasswordValid => _hasLength && _hasLetter && _hasNumber;
 
-  void _validate() {
-    setState(() {
-      _emailError = _emailCtrl.text.isEmpty || !_emailCtrl.text.contains('@')
-          ? 'Enter a valid email'
-          : null;
-    });
+  bool _validateForm() {
+    final email = _emailCtrl.text.trim();
+    String? emailErr;
+    if (email.isEmpty) {
+      emailErr = 'Enter your email';
+    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      emailErr = 'Enter a valid email address';
+    }
+    setState(() => _emailError = emailErr);
+    return emailErr == null;
+  }
+
+  // G3.4 — friendly error mapping
+  String _mapError(Object e) {
+    if (e is RateLimitedFailure) return 'Too many attempts, wait a minute.';
+    if (e is NetworkUnavailableFailure) return 'No connection.';
+    if (e is EmailAlreadyRegisteredFailure) return 'That email is already registered. Try logging in.';
+    if (e is AuthFailure) return e.message;
+    return 'An error occurred. Please try again.';
   }
 
   Future<void> _submit() async {
-    _validate();
-    if (_emailError != null || !_isPasswordValid) return;
+    if (!_validateForm() || !_isPasswordValid) return;
 
     setState(() {
       _isLoading = true;
@@ -69,9 +95,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       }
     } catch (e) {
       if (mounted) {
-        String msg = 'An error occurred';
-        if (e is AuthFailure) msg = e.message;
-        setState(() => _formError = msg);
+        setState(() => _formError = _mapError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -151,33 +175,47 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 keyboardType: TextInputType.emailAddress,
                 errorText: _emailError,
                 onChanged: (_) {
-                  if (_emailError != null) _validate();
+                  if (_emailError != null) _validateForm();
+                  if (_formError != null) setState(() => _formError = null);
                 },
               ),
               const SizedBox(height: 16),
 
+              // G3.2 — password with eye toggle + focus node
               AppTextField(
                 label: 'PASSWORD',
                 controller: _passCtrl,
-                obscureText: true,
+                focusNode: _passFocusNode,
+                obscureText: _obscurePassword,
+                trailing: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    size: 20,
+                    color: theme.textTheme.caption.color,
+                  ),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                ),
                 onChanged: _validatePassword,
               ),
               const SizedBox(height: 12),
 
-              // Checklist
-              _buildChecklistItem(context, 'Minimum 8 characters', _hasLength),
-              _buildChecklistItem(context, 'At least one letter', _hasLetter),
-              _buildChecklistItem(context, 'At least one number', _hasNumber),
-              
+              // G3.2 — checklist shows only when password field is focused or has content
+              if (_passwordFocused || _passCtrl.text.isNotEmpty) ...[
+                _buildChecklistItem(context, 'Minimum 8 characters', _hasLength),
+                _buildChecklistItem(context, 'At least one letter', _hasLetter),
+                _buildChecklistItem(context, 'At least one number', _hasNumber),
+                const SizedBox(height: 8),
+              ],
+
               if (_formError != null) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 Text(
                   _formError!,
                   style: theme.textTheme.caption.copyWith(color: ext.error),
                 ),
               ],
-              
-              const SizedBox(height: 32),
+
+              const SizedBox(height: 24),
               PrimaryButton(
                 label: 'Sign up',
                 onPressed: _submit,
@@ -214,10 +252,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Icon(
-            isMet ? Icons.check_circle : Icons.radio_button_unchecked,
-            size: 16,
-            color: isMet ? ext.success : ext.hairline,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Icon(
+              isMet ? Icons.check_circle : Icons.radio_button_unchecked,
+              key: ValueKey(isMet),
+              size: 16,
+              color: isMet ? ext.success : ext.hairline,
+            ),
           ),
           const SizedBox(width: 8),
           Text(
