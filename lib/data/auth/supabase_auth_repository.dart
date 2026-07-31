@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 import 'package:fitpilot/domain/entities/auth_user.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
@@ -111,8 +113,46 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> signInWithGoogle({required String webClientId, String? webClientSecret}) async {
+    try {
+      if (kIsWeb) {
+        // For web, use OAuth flow
+        await _client.auth.signInWithOAuth(
+          supa.OAuthProvider.google,
+          redirectTo: kIsWeb ? null : 'my-scheme://login-callback', // Web handles redirect automatically if configured
+        );
+      } else {
+        // For native, use google_sign_in plugin
+        final googleSignIn = GoogleSignIn.instance;
+        await googleSignIn.initialize(serverClientId: webClientId);
+        final googleUser = await googleSignIn.authenticate();
+        
+        final googleAuth = googleUser.authentication;
+        final idToken = googleAuth.idToken;
+
+        if (idToken == null) {
+          throw const UnknownAuthFailure('No ID Token found.');
+        }
+
+        await _client.auth.signInWithIdToken(
+          provider: supa.OAuthProvider.google,
+          idToken: idToken,
+        );
+      }
+    } catch (e) {
+      if (e is UnknownAuthFailure) rethrow;
+      throw _mapException(e);
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     try {
+      if (!kIsWeb) {
+        try {
+          await GoogleSignIn.instance.signOut();
+        } catch (_) {}
+      }
       await _client.auth.signOut();
     } catch (e) {
       throw _mapException(e);

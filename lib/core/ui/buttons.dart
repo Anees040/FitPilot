@@ -118,3 +118,72 @@ class TertiaryButton extends StatelessWidget {
     );
   }
 }
+
+class GoogleButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final bool isLoading;
+
+  const GoogleButton({
+    super.key,
+    this.onPressed,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    
+    return SizedBox(
+      height: 52,
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: isLoading ? null : onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.white,
+          disabledBackgroundColor: ext.hairline,
+          disabledForegroundColor: theme.textTheme.caption.color,
+          foregroundColor: const Color(0xFF1F1F1F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: ext.hairline, width: 1),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w500,
+            fontSize: 16,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return theme.colorScheme.shadow.withValues(alpha: 0.08);
+            }
+            return null;
+          }),
+        ),
+        child: isLoading
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/google_logo.png',
+                    height: 24,
+                    width: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Continue with Google'),
+                ],
+              ),
+      ),
+    );
+  }
+}

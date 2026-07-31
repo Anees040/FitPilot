@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
@@ -13,16 +14,18 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
+  Timer? _timer;
+  bool _isInteracting = false;
 
   final List<_SlideData> _slides = [
     _SlideData(
-      headline: 'Honest calorie ranges',
-      support: '350–520 kcal — because nobody really knows it\'s exactly 437.',
-      illustration: 'range_slider.png',
+      headline: 'Log food in seconds',
+      support: 'Scan, snap or search.',
+      illustration: 'range_slider.png', // Or update to match "scan" if you prefer, but sticking to existing assets
     ),
     _SlideData(
-      headline: 'Overeat? Burn it.',
-      support: 'Go over and FitPilot gives you real options: a 34 min walk or 13 min of jump rope.',
+      headline: 'See your day at a glance',
+      support: 'Ate extra? Burn it your way.',
       illustration: 'walker_rope.png',
     ),
     _SlideData(
@@ -33,7 +36,41 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _startTimer();
+    });
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    if (!mounted) return;
+    
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return; // Respect reduced motion
+    }
+
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_isInteracting || !mounted) return;
+      if (_pageController.hasClients) {
+        final nextPage = (_currentIndex + 1) % _slides.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.fastOutSlowIn,
+        );
+      }
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+  }
+
+  @override
   void dispose() {
+    _stopTimer();
     _pageController.dispose();
     super.dispose();
   }
@@ -46,117 +83,96 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
-    
-    // UI_SPEC: Top to bottom: logo 96 dp (radius 24) at ~12% height; "FitPilot" 32/w800; 
-    // "Eat it. Burn it." 15 textSecondary; flexible hero illustration area; 
-    // headline 28/w700 centered; support line 16 textSecondary, max 2 lines; 
-    // page dots (active = 24x6 accent pill); PrimaryButton "Get started"; 
-    // SecondaryButton "I already have an account"; TertiaryButton "Continue without an account".
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            // Top Section (Fixed)
+            // Top Section (Skip button)
             Padding(
-              padding: const EdgeInsets.only(top: 32.0, left: 16, right: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(width: 48), // spacer to balance skip button
-                  Column(
-                    children: [
-                      Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          image: const DecorationImage(
-                            image: AssetImage('assets/images/logo.png'),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        // Fallback if logo not found
-                        child: Image.asset('assets/images/logo.png', errorBuilder: (context, error, stackTrace) => Container(
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Icon(Icons.fitness_center, size: 48, color: theme.colorScheme.primary),
-                        )),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'FitPilot',
-                        style: theme.textTheme.display,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Eat it. Burn it.',
-                        style: theme.textTheme.body.copyWith(color: theme.textTheme.caption.color),
-                      ),
-                    ],
+              padding: const EdgeInsets.only(top: 16.0, right: 16),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _skip,
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.textTheme.caption.color,
+                    textStyle: theme.textTheme.bodyStrong,
                   ),
-                  TextButton(
-                    onPressed: _skip,
-                    style: TextButton.styleFrom(
-                      foregroundColor: theme.textTheme.caption.color,
-                      textStyle: theme.textTheme.bodyStrong,
-                    ),
-                    child: const Text('Skip'),
-                  ),
-                ],
+                  child: const Text('Skip'),
+                ),
               ),
             ),
             
-            const SizedBox(height: 24),
-            
-            // Middle Section (Swipeable)
+            // Middle Section (Swipeable with parallax)
             Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() => _currentIndex = index);
-                },
-                itemCount: _slides.length,
-                itemBuilder: (context, index) {
-                  final slide = _slides[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(minHeight: 200),
-                            child: Image.asset(
-                              'assets/illustrations/${slide.illustration}',
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: 100, color: ext.hairline),
-                            ),
+              child: GestureDetector(
+                onPanDown: (_) => _isInteracting = true,
+                onPanCancel: () => _isInteracting = false,
+                onPanEnd: (_) => _isInteracting = false,
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() => _currentIndex = index);
+                  },
+                  itemCount: _slides.length,
+                  itemBuilder: (context, index) {
+                    final slide = _slides[index];
+                    return AnimatedBuilder(
+                      animation: _pageController,
+                      builder: (context, child) {
+                        double pageOffset = 0.0;
+                        if (_pageController.position.haveDimensions) {
+                          pageOffset = _pageController.page! - index;
+                        }
+                        
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(minHeight: 200),
+                                  child: Transform.translate(
+                                    offset: Offset(pageOffset * 100, 0), // Parallax effect
+                                    child: Image.asset(
+                                      'assets/illustrations/${slide.illustration}',
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: 100, color: ext.hairline),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                              Transform.translate(
+                                offset: Offset(pageOffset * 50, 0),
+                                child: Text(
+                                  slide.headline,
+                                  style: theme.textTheme.displayLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Transform.translate(
+                                offset: Offset(pageOffset * 25, 0),
+                                child: Text(
+                                  slide.support,
+                                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.caption.color, fontSize: 16),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 32),
-                        Text(
-                          slide.headline,
-                          style: theme.textTheme.display.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          slide.support,
-                          style: theme.textTheme.body.copyWith(color: theme.textTheme.caption.color, fontSize: 16),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  );
-                },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
             

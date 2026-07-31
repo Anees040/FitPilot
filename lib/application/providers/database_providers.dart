@@ -1,3 +1,4 @@
+import 'package:fitpilot/application/bootstrap.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:fitpilot/data/local/app_database.dart';
@@ -11,7 +12,10 @@ import 'package:fitpilot/data/repositories/profile_repository.dart';
 /// It is safe to use `AppDatabase.instance()` asynchronously since it's a singleton,
 /// but providing it via a FutureProvider makes it easy for other providers to await it.
 final databaseProvider = FutureProvider<Database>((ref) async {
-  return await AppDatabase.instance();
+  final db = await AppDatabase.instance();
+  // Ensure seed data is always loaded if missing (e.g. after migration)
+  await FitPilotBootstrap.importSeedData();
+  return db;
 });
 
 /// Exposes the FoodRepository.

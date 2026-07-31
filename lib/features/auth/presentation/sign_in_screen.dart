@@ -5,6 +5,7 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/config/env.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 
@@ -101,6 +102,35 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
   }
 
+  // G4 — Google Sign-in flow
+  Future<void> _submitGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _formError = null;
+    });
+
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .signInWithGoogle(webClientId: Env.googleWebClientId);
+
+      final user = ref.read(authRepositoryProvider).currentUser;
+      if (user != null) {
+        final merger = ref.read(guestMergeServiceProvider);
+        await merger?.mergeGuestData(user.id);
+        if (mounted) {
+          context.go('/today');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _formError = _mapError(e));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -167,6 +197,28 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 ),
               ),
               const SizedBox(height: 32),
+
+              // G4: Google Sign-in button
+              GoogleButton(
+                isLoading: _isLoading,
+                onPressed: _submitGoogle,
+              ),
+              
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: ext.hairline)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'or log in with email',
+                      style: theme.textTheme.caption,
+                    ),
+                  ),
+                  Expanded(child: Divider(color: ext.hairline)),
+                ],
+              ),
+              const SizedBox(height: 24),
 
               // G3.1 — email with inline validation
               AppTextField(

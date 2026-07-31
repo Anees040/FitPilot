@@ -95,13 +95,24 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> sendPasswordReset({required String email}) async {
-    await Future.delayed(const Duration(milliseconds: 10));
-    _checkGlobalErrors();
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  @override
+  Future<void> signInWithGoogle({required String webClientId, String? webClientSecret}) async {
+    await Future.delayed(const Duration(seconds: 1));
+    // Simulate successful Google sign in by setting fake user
+    _currentUser = AuthUser(
+      id: 'google_user_123',
+      email: 'google@example.com',
+      emailConfirmed: true,
+    );
+    _controller.add(_currentUser);
   }
 
   @override
   Future<void> signOut() async {
-    await Future.delayed(const Duration(milliseconds: 10));
+    await Future.delayed(const Duration(milliseconds: 500));
     _checkGlobalErrors();
     _emit(null);
   }

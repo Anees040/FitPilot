@@ -23,6 +23,9 @@ abstract class AuthRepository {
   /// Sends a password reset link to the email.
   Future<void> sendPasswordReset({required String email});
 
+  /// Signs in a user with Google OAuth / ID Token.
+  Future<void> signInWithGoogle({required String webClientId});
+
   /// Signs the current user out.
   Future<void> signOut();
 }

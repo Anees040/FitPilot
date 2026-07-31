@@ -79,11 +79,15 @@ class LogRepository {
       59,
       59,
     ).toIso8601String();
-    final rows = await db.query(
-      'food_logs',
-      where: 'logged_at >= ? AND logged_at <= ? AND deleted_at IS NULL',
-      whereArgs: [dayStart, dayEnd],
-      orderBy: 'logged_at ASC',
+    final rows = await db.rawQuery(
+      '''
+      SELECT food_logs.*, food_catalog.name as catalog_name
+      FROM food_logs
+      LEFT JOIN food_catalog ON food_logs.food_id = food_catalog.id
+      WHERE logged_at >= ? AND logged_at <= ? AND deleted_at IS NULL
+      ORDER BY logged_at ASC
+      ''',
+      [dayStart, dayEnd],
     );
     return rows.map(_rowToFoodLog).whereType<FoodLog>().toList();
   }
@@ -102,11 +106,16 @@ class LogRepository {
       59,
       59,
     ).toIso8601String();
-    final rows = await db.query(
-      'food_logs',
-      where: 'logged_at >= ? AND logged_at <= ? AND deleted_at IS NULL',
-      whereArgs: [fromStr, toStr],
-      orderBy: 'logged_at ASC',
+    
+    final rows = await db.rawQuery(
+      '''
+      SELECT food_logs.*, food_catalog.name as catalog_name
+      FROM food_logs
+      LEFT JOIN food_catalog ON food_logs.food_id = food_catalog.id
+      WHERE logged_at >= ? AND logged_at <= ? AND deleted_at IS NULL
+      ORDER BY logged_at ASC
+      ''',
+      [fromStr, toStr],
     );
 
     final map = <DateTime, List<FoodLog>>{};
@@ -125,10 +134,11 @@ class LogRepository {
 
   FoodLog? _rowToFoodLog(Map<String, dynamic> row) {
     try {
+      final foodName = row['food_name'] as String? ?? row['catalog_name'] as String?;
       return FoodLog(
         id: row['id'] as String,
         foodId: row['food_id'] as String?,
-        foodName: row['food_name'] as String?,
+        foodName: foodName,
         customName: row['custom_name'] as String?,
         quantity: (row['quantity'] as num),
         kcal: KcalRange(

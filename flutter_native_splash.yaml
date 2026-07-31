@@ -1,14 +1,10 @@
 flutter_native_splash:
   color: "#FAFAF8"
-  image: "assets/images/logo.png"
-  color_dark: "#121212"
-  image_dark: "assets/images/logo.png"
-
+  image: "assets/images/logo_mark_orange.png"
+  color_dark: "#121110"
+  image_dark: "assets/images/logo_mark_white.png"
   android_12:
     color: "#FAFAF8"
-    image: "assets/images/logo.png"
-    color_dark: "#121212"
-    image_dark: "assets/images/logo.png"
-
-  android: true
-  ios: true
+    image: "assets/images/logo_mark_orange.png"
+    color_dark: "#121110"
+    image_dark: "assets/images/logo_mark_white.png"

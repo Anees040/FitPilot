@@ -196,7 +196,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                     return Center(
                       child: Text(
                         weekdays[index],
-                        style: theme.textTheme.overline,
+                        style: theme.textTheme.overline.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     );
                   }
@@ -212,7 +214,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   if (status.state == DayState.noData) {
                     dot = Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: ext.hairline),
+                        color: ext.hairline.withValues(alpha: 0.5),
+                        border: Border.all(color: ext.hairline, width: 2.0),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -221,6 +224,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                     dot = Container(
                       decoration: BoxDecoration(
                         color: color,
+                        border: Border.all(color: color.withValues(alpha: 0.5), width: 1.0),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -230,7 +234,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                     return Container(
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
-                        border: Border.all(color: theme.colorScheme.primary, width: 1.5),
+                        border: Border.all(color: theme.colorScheme.primary, width: 2.0),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: dot,

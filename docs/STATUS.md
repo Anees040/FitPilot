@@ -29,20 +29,23 @@
 - [x] C3 — Library & Capture UX polish
 - [x] G2 — Critical bug fixes (camera permission, barcode lag, overflow, chip scroll, plan nav, offline images)
 - [x] G3 — Auth UX (inline validation, password live checklist, OTP behavior, error mapping)
+- [x] G4 — Google Sign-in (Auth UI, Supabase integration, routing)
+- [x] G5 — Welcome UX (Native splash, flame animations, auto-carousel)
 
 ## Last completed
 
-- G2 + G3 — Critical bugs + Auth UX polish
-  - G2.1: OCR/AI capture now uses image_picker + permission_handler (no more "failed to capture image")
-  - G2.2: Barcode camera paused immediately on detection, debounced, resumed after sheet closes
-  - G2.3: Plan/Exercise screen overflow fixed (Flexible + mainAxisExtent)
-  - G2.4: Chip rows horizontally scrollable with fade hint (ShaderMask)
-  - G2.5: Whole plan option card is tappable (AppCard onTap)
-  - G2.6: Product images cached locally via ImageCacheService (path_provider)
-  - G3.1: Login shows inline error under each field (no dead button)
-  - G3.2: Signup checklist shows only on focus, animated, + eye toggle
-  - G3.3: OTP shows email + edit link; resend calls API; auto-submit with spinner
-  - G3.4: Friendly error mapping for RateLimit, Network, wrong OTP
+- G4 — Google sign-in via Supabase
+  - Added Google button on Login & Signup screens.
+  - Supabase integration with `google_sign_in` plugin.
+  - Implemented unit tests for routing and mocked auth.
+  - Fixed hardcoded colors in `buttons.dart`.
+- G5 — Splash + Welcome screen animations
+  - Configured native splash using `flutter_native_splash`.
+  - Implemented 1s scale + 1.5s fade-in motto animation on Splash.
+  - Built auto-advancing (4s interval) carousel WelcomeScreen with parallax illustrations.
+- Post-G3 Follow-up
+  - Fixed "Unknown" meal bug (gracefully fallback to catalog name when sync API omits food_name)
+  - Fixed "No burn plan" bug (seed data now guaranteed to load even if SplashScreen is skipped)
 
 ## Known issues / debt
 
