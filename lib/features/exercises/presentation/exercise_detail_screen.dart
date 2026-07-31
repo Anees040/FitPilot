@@ -6,7 +6,7 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/exercise_media.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
-import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
@@ -296,7 +296,7 @@ class _DetailBody extends ConsumerWidget {
                   );
                   ref.read(burnPlanProvider.notifier).markDone(option);
                   ref.invalidate(todayProvider);
-                  confirmSnackbar(
+                  AppSnackbar.success(
                     context,
                     'Marked ${exercise.name} as done! 💪',
                   );

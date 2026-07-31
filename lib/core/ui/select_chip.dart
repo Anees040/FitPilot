@@ -18,6 +18,8 @@ class SelectChip extends StatelessWidget {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
 
+    final isDark = theme.brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onSelected,
       child: AnimatedContainer(
@@ -26,10 +28,14 @@ class SelectChip extends StatelessWidget {
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surface,
+          color: isSelected
+              ? (isDark ? ext.accentSoft : theme.colorScheme.primary)
+              : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: isSelected ? Colors.transparent : ext.hairline,
+            color: isSelected
+                ? (isDark ? theme.colorScheme.primary : Colors.transparent)
+                : ext.hairline,
             width: 1,
           ),
         ),
@@ -39,7 +45,9 @@ class SelectChip extends StatelessWidget {
           style: theme.textTheme.caption.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: isSelected ? theme.colorScheme.onPrimary : theme.textTheme.caption.color,
+            color: isSelected
+                ? (isDark ? theme.colorScheme.primary : theme.colorScheme.onPrimary)
+                : theme.textTheme.caption.color,
           ),
         ),
       ),

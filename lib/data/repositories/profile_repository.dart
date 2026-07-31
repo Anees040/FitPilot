@@ -33,6 +33,9 @@ class ProfileRepository {
       'theme_mode': profile.themeMode.name,
       'plan_category_pref': profile.planCategoryPref,
       'plan_pace_pref': profile.planPacePref,
+      'unit_kg_lb': profile.unitKgLb,
+      'week_starts_mon': profile.weekStartsMon ? 1 : 0,
+      'haptics_on': profile.hapticsOn ? 1 : 0,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
 
@@ -69,6 +72,9 @@ class ProfileRepository {
       themeMode: themeMode,
       planCategoryPref: map['plan_category_pref'] as String? ?? 'recommended',
       planPacePref: map['plan_pace_pref'] as String? ?? 'any',
+      unitKgLb: map['unit_kg_lb'] as String? ?? 'kg',
+      weekStartsMon: (map['week_starts_mon'] as int? ?? 1) == 1,
+      hapticsOn: (map['haptics_on'] as int? ?? 1) == 1,
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
   }

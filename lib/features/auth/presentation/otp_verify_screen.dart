@@ -7,7 +7,7 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
-import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 
 class OtpVerifyScreen extends ConsumerStatefulWidget {
   final String email;
@@ -100,11 +100,11 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
           .resendOtp(email: widget.email);
       _startCooldown();
       if (mounted) {
-        confirmSnackbar(context, 'Verification code resent to ${widget.email}.');
+        AppSnackbar.success(context, 'Verification code resent to ${widget.email}.');
       }
     } catch (e) {
       if (mounted) {
-        confirmSnackbar(context, _mapError(e));
+        AppSnackbar.success(context, _mapError(e));
       }
     }
   }

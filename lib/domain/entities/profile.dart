@@ -28,6 +28,9 @@ class Profile extends Equatable {
   final ThemeModePref themeMode;
   final String planCategoryPref;
   final String planPacePref;
+  final String unitKgLb;
+  final bool weekStartsMon;
+  final bool hapticsOn;
   final DateTime updatedAt;
 
   static const int defaultAllowanceKcal = 300;
@@ -46,6 +49,9 @@ class Profile extends Equatable {
     this.themeMode = ThemeModePref.system,
     this.planCategoryPref = 'recommended',
     this.planPacePref = 'any',
+    this.unitKgLb = 'kg',
+    this.weekStartsMon = true,
+    this.hapticsOn = true,
     required this.updatedAt,
   }) {
     if (weightKg < 25 || weightKg > 300) {
@@ -100,6 +106,9 @@ class Profile extends Equatable {
     ThemeModePref? themeMode,
     String? planCategoryPref,
     String? planPacePref,
+    String? unitKgLb,
+    bool? weekStartsMon,
+    bool? hapticsOn,
     DateTime? updatedAt,
     bool clearOverride = false,
   }) {
@@ -117,6 +126,9 @@ class Profile extends Equatable {
       themeMode: themeMode ?? this.themeMode,
       planCategoryPref: planCategoryPref ?? this.planCategoryPref,
       planPacePref: planPacePref ?? this.planPacePref,
+      unitKgLb: unitKgLb ?? this.unitKgLb,
+      weekStartsMon: weekStartsMon ?? this.weekStartsMon,
+      hapticsOn: hapticsOn ?? this.hapticsOn,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -136,6 +148,9 @@ class Profile extends Equatable {
     themeMode,
     planCategoryPref,
     planPacePref,
+    unitKgLb,
+    weekStartsMon,
+    hapticsOn,
     updatedAt,
   ];
 

@@ -11,7 +11,7 @@ import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
-import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:intl/intl.dart';
 
 class TodayScreen extends ConsumerWidget {
@@ -238,10 +238,11 @@ class _LogListItem extends ConsumerWidget {
       ),
       onDismissed: (_) {
         ref.read(todayProvider.notifier).deleteLog(log.id);
-        confirmSnackbar(
+        AppSnackbar.success(
           context,
           'Meal deleted',
-          onUndo: () {
+          actionLabel: 'UNDO',
+          onAction: () {
             ref.read(todayProvider.notifier).addLog(log.copyWith(deletedAt: null));
           },
         );
@@ -249,7 +250,7 @@ class _LogListItem extends ConsumerWidget {
       child: InkWell(
         onTap: () {
           if (log.source == LogSource.manual) {
-            confirmSnackbar(context, 'Cannot edit manual entry quantity.');
+            AppSnackbar.success(context, 'Cannot edit manual entry quantity.');
             return;
           }
 

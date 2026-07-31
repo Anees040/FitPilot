@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/application/providers/progress_provider.dart';
 import 'package:fitpilot/domain/entities/streak_state.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
@@ -50,19 +51,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
       _hasShownMilestone = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.star, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(width: 8),
-                Text('Amazing! ${state.streak.currentStreak}-day streak!'),
-              ],
-            ),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(milliseconds: 2500),
-            backgroundColor: Theme.of(context).colorScheme.onSurface,
-          ),
+        AppSnackbar.success(
+          context,
+          'Amazing! ${state.streak.currentStreak}-day streak!',
         );
       });
     }
@@ -175,6 +166,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text('HEATMAP', style: theme.textTheme.overline.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

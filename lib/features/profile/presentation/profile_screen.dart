@@ -11,11 +11,13 @@ import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/domain/engines/target_calculator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/core/ui/collapsible_group.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
-import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+
 import 'package:fitpilot/features/settings/presentation/notification_prefs_screen.dart' as fitpilot_settings;
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -117,15 +119,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildComputedTargetDisplay(theme),
           const SizedBox(height: 24),
 
-          _buildSectionTitle('VITALS', theme),
-          AppCard(
+          CollapsibleGroup(
+            title: 'Account',
+            icon: Icons.person_outline,
+            initiallyExpanded: true,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 16),
+                _buildSectionTitle('VITALS', theme),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField('WEIGHT (KG)', _weightCtrl, _validateWeight)),
+                    Expanded(child: _buildTextField('WEIGHT', _weightCtrl, _validateWeight)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildTextField('TARGET WT (OPT)', _goalWeightCtrl, _validateGoalWeight)),
+                    Expanded(child: _buildTextField('TARGET WT', _goalWeightCtrl, _validateGoalWeight)),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -137,10 +144,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('GENDER', style: theme.textTheme.overline),
-                ),
+                Text('GENDER', style: theme.textTheme.overline),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -154,16 +158,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
                   }).toList(),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          _buildSectionTitle('LIFESTYLE', theme),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                const SizedBox(height: 24),
+                
+                _buildSectionTitle('LIFESTYLE', theme),
                 Text('ACTIVITY LEVEL', style: theme.textTheme.overline),
                 const SizedBox(height: 8),
                 Wrap(
@@ -179,7 +176,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
-
                 Text('GOAL', style: theme.textTheme.overline),
                 const SizedBox(height: 8),
                 Wrap(
@@ -195,22 +191,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
-
                 _buildTextField('CHEAT TOLERANCE (KCAL)', _toleranceCtrl, _validateTolerance),
                 const SizedBox(height: 16),
                 _buildTextField('TARGET OVERRIDE (OPT)', _overrideCtrl, _validateOverride),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Manage Equipment', style: theme.textTheme.bodyStrong),
+                  trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
+                  onTap: _showEquipmentSheet,
+                ),
+                const SizedBox(height: 16),
+                PrimaryButton(
+                  label: 'Save Account Settings',
+                  onPressed: _save,
+                  isLoading: _isSaving,
+                ),
+                const SizedBox(height: 16),
+                _buildAuthSection(context, theme),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          _buildSectionTitle('PREFERENCES', theme),
-          AppCard(
+          CollapsibleGroup(
+            title: 'Display',
+            icon: Icons.palette_outlined,
             child: Column(
               children: [
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.palette, color: theme.colorScheme.primary),
                   title: Text('Theme', style: theme.textTheme.bodyStrong),
                   trailing: DropdownButton<ThemeModePref>(
                     value: ref.watch(profileProvider).valueOrNull?.themeMode ?? ThemeModePref.system,
@@ -224,9 +234,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       if (v != null) {
                         final p = ref.read(profileProvider).valueOrNull;
                         if (p != null) {
-                          final newP = p.copyWith(themeMode: v);
-                          final repo = await ref.read(profileRepositoryProvider.future);
-                          await repo.save(newP);
+                          await ref.read(profileRepositoryProvider.future).then((r) => r.save(p.copyWith(themeMode: v)));
                           ref.invalidate(profileProvider);
                         }
                       }
@@ -236,7 +244,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Divider(color: theme.dividerColor, height: 1),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.category, color: theme.colorScheme.primary),
+                  title: Text('Unit', style: theme.textTheme.bodyStrong),
+                  trailing: DropdownButton<String>(
+                    value: ref.watch(profileProvider).valueOrNull?.unitKgLb ?? 'kg',
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(value: 'kg', child: Text('Kilograms (kg)')),
+                      DropdownMenuItem(value: 'lb', child: Text('Pounds (lb)')),
+                    ],
+                    onChanged: (v) async {
+                      if (v != null) {
+                        final p = ref.read(profileProvider).valueOrNull;
+                        if (p != null) {
+                          await ref.read(profileRepositoryProvider.future).then((r) => r.save(p.copyWith(unitKgLb: v)));
+                          ref.invalidate(profileProvider);
+                        }
+                      }
+                    },
+                  ),
+                ),
+                Divider(color: theme.dividerColor, height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Week Starts On', style: theme.textTheme.bodyStrong),
+                  trailing: DropdownButton<bool>(
+                    value: ref.watch(profileProvider).valueOrNull?.weekStartsMon ?? true,
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(value: true, child: Text('Monday')),
+                      DropdownMenuItem(value: false, child: Text('Sunday')),
+                    ],
+                    onChanged: (v) async {
+                      if (v != null) {
+                        final p = ref.read(profileProvider).valueOrNull;
+                        if (p != null) {
+                          await ref.read(profileRepositoryProvider.future).then((r) => r.save(p.copyWith(weekStartsMon: v)));
+                          ref.invalidate(profileProvider);
+                        }
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          CollapsibleGroup(
+            title: 'App',
+            icon: Icons.settings_outlined,
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Notifications', style: theme.textTheme.bodyStrong),
+                  trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const fitpilot_settings.NotificationPrefsScreen()),
+                    );
+                  },
+                ),
+                Divider(color: theme.dividerColor, height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
                   title: Text('Plan Category', style: theme.textTheme.bodyStrong),
                   trailing: DropdownButton<String>(
                     value: ref.watch(profileProvider).valueOrNull?.planCategoryPref ?? 'recommended',
@@ -252,9 +324,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       if (v != null) {
                         final p = ref.read(profileProvider).valueOrNull;
                         if (p != null) {
-                          final newP = p.copyWith(planCategoryPref: v);
-                          final repo = await ref.read(profileRepositoryProvider.future);
-                          await repo.save(newP);
+                          await ref.read(profileRepositoryProvider.future).then((r) => r.save(p.copyWith(planCategoryPref: v)));
                           ref.invalidate(profileProvider);
                         }
                       }
@@ -264,7 +334,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Divider(color: theme.dividerColor, height: 1),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.speed, color: theme.colorScheme.primary),
                   title: Text('Plan Pace', style: theme.textTheme.bodyStrong),
                   trailing: DropdownButton<String>(
                     value: ref.watch(profileProvider).valueOrNull?.planPacePref ?? 'any',
@@ -279,9 +348,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       if (v != null) {
                         final p = ref.read(profileProvider).valueOrNull;
                         if (p != null) {
-                          final newP = p.copyWith(planPacePref: v);
-                          final repo = await ref.read(profileRepositoryProvider.future);
-                          await repo.save(newP);
+                          await ref.read(profileRepositoryProvider.future).then((r) => r.save(p.copyWith(planPacePref: v)));
                           ref.invalidate(profileProvider);
                         }
                       }
@@ -291,28 +358,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Divider(color: theme.dividerColor, height: 1),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.fitness_center, color: theme.colorScheme.primary),
-                  title: Text('Manage Equipment', style: theme.textTheme.bodyStrong),
-                  trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
-                  onTap: _showEquipmentSheet,
+                  title: Text('Haptics', style: theme.textTheme.bodyStrong),
+                  trailing: Switch(
+                    value: ref.watch(profileProvider).valueOrNull?.hapticsOn ?? true,
+                    onChanged: (v) async {
+                      final p = ref.read(profileProvider).valueOrNull;
+                      if (p != null) {
+                        await ref.read(profileRepositoryProvider.future).then((r) => r.save(p.copyWith(hapticsOn: v)));
+                        ref.invalidate(profileProvider);
+                      }
+                    },
+                    activeThumbColor: theme.colorScheme.primary,
+                  ),
                 ),
                 Divider(color: theme.dividerColor, height: 1),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.notifications_active, color: theme.colorScheme.primary),
-                  title: Text('Notifications', style: theme.textTheme.bodyStrong),
-                  trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const fitpilot_settings.NotificationPrefsScreen()),
-                    );
-                  },
-                ),
-                Divider(color: theme.dividerColor, height: 1),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.info_outline, color: theme.colorScheme.primary),
                   title: Text('About & Attributions', style: theme.textTheme.bodyStrong),
                   trailing: Icon(Icons.chevron_right, color: theme.textTheme.caption.color),
                   onTap: () {
@@ -322,7 +383,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       applicationVersion: '1.0.0',
                       children: const [
                         SizedBox(height: 16),
-                        Text('Media assets sourced from SVGRepo and Giphy/Tenor.\nAll rights belong to their respective creators.\n\nFonts by Google Fonts (Inter).'),
+                        Text('''Media assets sourced from SVGRepo and Giphy/Tenor.
+All rights belong to their respective creators.
+
+Fonts by Google Fonts (Inter).'''),
                       ],
                     );
                   },
@@ -331,15 +395,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 32),
-
-          PrimaryButton(
-            label: 'Save Profile',
-            onPressed: _save,
-            isLoading: _isSaving,
-          ),
-          const SizedBox(height: 32),
-
-          _buildAuthSection(context, theme),
         ],
       ),
     );
@@ -353,24 +408,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildSectionTitle('ACCOUNT', theme),
-          AppCard(
-            child: Column(
-              children: [
-                Text(
-                  'Sign in to sync your progress across devices.',
-                  style: theme.textTheme.body,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                SecondaryButton(
-                  label: 'Sign in / Create Account',
-                  onPressed: () => context.push('/signin'),
-                ),
-              ],
-            ),
+          Divider(color: theme.dividerColor),
+          const SizedBox(height: 16),
+          Text(
+            'Sign in to sync your progress across devices.',
+            style: theme.textTheme.body,
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
+          SecondaryButton(
+            label: 'Sign in / Create Account',
+            onPressed: () => context.push('/signin'),
+          ),
         ],
       );
     }
@@ -378,35 +427,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSectionTitle('ACCOUNT', theme),
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Signed in as: ${authUser.email}', style: theme.textTheme.bodyStrong),
-              const SizedBox(height: 8),
-              _buildSyncStatus(context, theme),
-              const SizedBox(height: 24),
-              TertiaryButton(
-                label: 'Sign Out',
-                onPressed: () async {
-                  try {
-                    await ref.read(authRepositoryProvider).signOut();
-                    if (context.mounted) {
-                      confirmSnackbar(context, 'Signed out successfully.');
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      confirmSnackbar(context, 'Error signing out.');
-                    }
-                  }
-                },
-                color: ext.error,
-              ),
-            ],
-          ),
+        Divider(color: theme.dividerColor),
+        const SizedBox(height: 16),
+        Text('Signed in as: ${authUser.email}', style: theme.textTheme.bodyStrong),
+        const SizedBox(height: 8),
+        _buildSyncStatus(context, theme),
+        const SizedBox(height: 16),
+        TertiaryButton(
+          label: 'Sign Out',
+          onPressed: () async {
+            try {
+              await ref.read(authRepositoryProvider).signOut();
+              if (context.mounted) {
+                AppSnackbar.success(context, 'Signed out successfully.');
+              }
+            } catch (e) {
+              if (context.mounted) {
+                AppSnackbar.error(context, 'Error signing out.');
+              }
+            }
+          },
+          color: ext.error,
         ),
-        const SizedBox(height: 32),
       ],
     );
   }
@@ -501,12 +543,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       label: label,
       controller: ctrl,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      // We rely on the form key for validation UI, so AppTextField needs a validator or we just let Form handle it.
-      // Wait, AppTextField doesn't have a validator property out of the box in our F3 UI. Let's use it without for now
-      // and do manual validation on save. Wait, AppTextField handles errorText.
-      // For simplicity, we can just use onChanged to clear errors, but we need to track them.
-      // Since AppTextField is stateless, we will manage errors manually if needed, or modify AppTextField.
-      // Actually, I can just not show inline errors and let the top level error handle it, or modify AppTextField to take an errorText.
     );
   }
 
@@ -597,14 +633,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _save() async {
-    // Validate manually since AppTextField doesn't have validator
     final wErr = _validateWeight(_weightCtrl.text);
     final hErr = _validateHeight(_heightCtrl.text);
     final aErr = _validateAge(_ageCtrl.text);
     final tErr = _validateTolerance(_toleranceCtrl.text);
     
     if (wErr != null || hErr != null || aErr != null || tErr != null) {
-      confirmSnackbar(context, 'Please fix errors before saving.');
+      AppSnackbar.error(context, 'Please fix errors before saving.');
       return;
     }
 
@@ -630,7 +665,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     setState(() => _isSaving = false);
     if (mounted) {
-      confirmSnackbar(context, 'Profile saved successfully!');
+      AppSnackbar.success(context, 'Profile saved successfully!');
     }
   }
 }

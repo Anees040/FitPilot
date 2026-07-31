@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:fitpilot/data/ocr/nutrition_label_parser.dart';
 import 'package:fitpilot/application/providers/capture_provider.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
-import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/data/ai/ai_food_service.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
@@ -65,7 +65,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       return;
     }
     if (kIsWeb && (newMode == CaptureMode.barcode || newMode == CaptureMode.foodLabel)) {
-      confirmSnackbar(context, 'Camera features are not supported on web.');
+      AppSnackbar.success(context, 'Camera features are not supported on web.');
       return;
     }
     if (_mode != newMode && (newMode == CaptureMode.barcode || newMode == CaptureMode.foodLabel)) {
@@ -94,15 +94,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     if (!mounted) return;
 
     if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Product not found or network error.'),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'Enter Manually',
-            onPressed: () => context.go('/log'),
-          ),
-        ),
+      AppSnackbar.error(
+        context,
+        'Product not found or network error.',
+        actionLabel: 'Enter Manually',
+        onAction: () => context.go('/log'),
       );
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
@@ -159,7 +155,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         if (barcode != null && barcode.isNotEmpty) {
           await _processBarcode(barcode);
         } else {
-          if (mounted) confirmSnackbar(context, 'No barcode found in image');
+          if (mounted) AppSnackbar.success(context, 'No barcode found in image');
           if (mounted) setState(() => _isProcessing = false);
         }
         controller.dispose();
@@ -171,7 +167,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        confirmSnackbar(context, _friendlyError(e));
+        AppSnackbar.success(context, _friendlyError(e));
       }
     }
   }
@@ -184,7 +180,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     final hasPermission = await PermissionService.requestCamera();
     if (!hasPermission) {
       if (mounted) {
-        confirmSnackbar(context, 'Camera permission denied. Please enable in Settings.');
+        AppSnackbar.success(context, 'Camera permission denied. Please enable in Settings.');
       }
       return;
     }
@@ -209,7 +205,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       if (kDebugMode) debugPrint('[CaptureScreen] OCR camera error: $e');
       if (mounted) {
         setState(() => _isProcessing = false);
-        confirmSnackbar(context, _friendlyError(e));
+        AppSnackbar.success(context, _friendlyError(e));
       }
     }
   }
@@ -221,7 +217,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     final hasPermission = await PermissionService.requestCamera();
     if (!hasPermission) {
       if (mounted) {
-        confirmSnackbar(context, 'Camera permission denied. Please enable in Settings.');
+        AppSnackbar.success(context, 'Camera permission denied. Please enable in Settings.');
       }
       return;
     }
@@ -246,7 +242,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       if (kDebugMode) debugPrint('[CaptureScreen] AI camera error: $e');
       if (mounted) {
         setState(() => _isProcessing = false);
-        confirmSnackbar(context, _friendlyError(e));
+        AppSnackbar.success(context, _friendlyError(e));
       }
     }
   }
@@ -275,7 +271,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       if (kDebugMode) debugPrint('[CaptureScreen] OCR error: $e');
       if (mounted) {
         setState(() => _isProcessing = false);
-        confirmSnackbar(context, 'Error analyzing label');
+        AppSnackbar.success(context, 'Error analyzing label');
       }
     }
   }
@@ -291,7 +287,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         setState(() => _isProcessing = false);
 
         if (result == null) {
-          confirmSnackbar(context, 'Failed to estimate food from AI.');
+          AppSnackbar.success(context, 'Failed to estimate food from AI.');
           return;
         }
 
@@ -319,7 +315,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       if (kDebugMode) debugPrint('[CaptureScreen] AI error: $e');
       if (mounted) {
         setState(() => _isProcessing = false);
-        confirmSnackbar(context, _friendlyError(e));
+        AppSnackbar.success(context, _friendlyError(e));
       }
     }
   }

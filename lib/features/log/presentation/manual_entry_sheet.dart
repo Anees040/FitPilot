@@ -7,7 +7,7 @@ import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
-import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 
 class ManualEntrySheet extends ConsumerStatefulWidget {
   const ManualEntrySheet({super.key});
@@ -55,7 +55,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
 
     ref.read(todayProvider.notifier).addLog(log);
     Navigator.pop(context);
-    confirmSnackbar(context, 'Meal logged');
+    AppSnackbar.success(context, 'Meal logged');
   }
 
   @override

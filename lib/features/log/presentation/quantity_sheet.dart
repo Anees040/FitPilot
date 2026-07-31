@@ -6,7 +6,7 @@ import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
-import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'widgets/quantity_stepper.dart';
 import 'widgets/kcal_range_text.dart';
 
@@ -85,7 +85,7 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
                 );
                 ref.read(todayProvider.notifier).addLog(log);
                 Navigator.pop(context);
-                confirmSnackbar(context, 'Meal logged');
+                AppSnackbar.success(context, 'Meal logged');
               },
             ),
           ],

@@ -30,7 +30,9 @@
 - [x] G2 — Critical bug fixes (camera permission, barcode lag, overflow, chip scroll, plan nav, offline images)
 - [x] G3 — Auth UX (inline validation, password live checklist, OTP behavior, error mapping)
 - [x] G4 — Google Sign-in (Auth UI, Supabase integration, routing)
-- [x] G5 — Welcome UX (Native splash, flame animations, auto-carousel)
+- [x] G5
+- [x] G6 � Dark theme overhaul
+- [x] G8 � Profile & Settings refactor — Welcome UX (Native splash, flame animations, auto-carousel)
 
 ## Last completed
 

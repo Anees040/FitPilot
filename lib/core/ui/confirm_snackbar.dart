@@ -1,29 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 
+@Deprecated('Use AppSnackbar.success directly')
 void confirmSnackbar(BuildContext context, String message, {VoidCallback? onUndo}) {
-  final theme = Theme.of(context);
-
-  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        message,
-        style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.surface),
-      ),
-      backgroundColor: theme.colorScheme.onSurface,
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(milliseconds: 1500),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      action: onUndo != null
-          ? SnackBarAction(
-              label: 'Undo',
-              textColor: theme.colorScheme.primary,
-              onPressed: onUndo,
-            )
-          : null,
-    ),
+  AppSnackbar.success(
+    context,
+    message,
+    actionLabel: onUndo != null ? 'Undo' : null,
+    onAction: onUndo,
   );
 }

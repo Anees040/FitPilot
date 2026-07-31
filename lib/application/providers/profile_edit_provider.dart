@@ -27,6 +27,9 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
     ThemeModePref? themeMode,
     String? planCategoryPref,
     String? planPacePref,
+    String? unitKgLb,
+    bool? weekStartsMon,
+    bool? hapticsOn,
   }) async {
     final repo = await ref.read(profileRepositoryProvider.future);
     final currentProfile = await ref.read(profileProvider.future);
@@ -47,6 +50,9 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       themeMode: themeMode,
       planCategoryPref: planCategoryPref,
       planPacePref: planPacePref,
+      unitKgLb: unitKgLb,
+      weekStartsMon: weekStartsMon,
+      hapticsOn: hapticsOn,
       updatedAt: DateTime.now(),
     );
 

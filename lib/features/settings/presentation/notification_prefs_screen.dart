@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/notification_prefs_provider.dart';
 import 'package:fitpilot/domain/entities/notification_preferences.dart';
@@ -44,9 +45,7 @@ class NotificationPrefsScreen extends ConsumerWidget {
                 await ref.read(notificationPrefsProvider.notifier).updatePrefs(prefs.copyWith(globalMute: false));
               } else {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Permission denied by OS.')),
-                  );
+                  AppSnackbar.warning(context, 'Permission denied by OS.');
                 }
               }
             }

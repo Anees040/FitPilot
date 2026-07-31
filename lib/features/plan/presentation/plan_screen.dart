@@ -7,7 +7,7 @@ import 'package:fitpilot/domain/entities/burn_option.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
-import 'package:fitpilot/core/ui/confirm_snackbar.dart';
+import 'package:fitpilot/core/ui/app_snackbar.dart';
 
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
@@ -262,7 +262,7 @@ class PlanScreen extends ConsumerWidget {
             GestureDetector(
               onTap: () {
                 ref.read(burnPlanProvider.notifier).markDone(option);
-                confirmSnackbar(context, 'Marked ${option.activity} as done!');
+                AppSnackbar.success(context, 'Marked ${option.activity} as done!');
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

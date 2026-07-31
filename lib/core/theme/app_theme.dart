@@ -11,21 +11,23 @@ class AppTheme {
   static const Color lightAccent = Color(0xFFD9531E);
   static const Color lightAccentSoft = Color(0xFFFBEDE6);
   static const Color lightSuccess = Color(0xFF3A7D44);
-  static const Color lightWarning = Color(0xFFB7791F);
+  static const Color lightWarning = Color(0xFFA6680E); // Darkened to pass WCAG 4.5:1 on white
   static const Color lightError = Color(0xFFA63232);
+  static const Color lightHighlight = Color(0xFFD4A017);
 
   // Dark Theme Colors
-  static const Color darkBg = Color(0xFF151311);
-  static const Color darkSurface = Color(0xFF1F1C19);
-  static const Color darkSurfaceRaised = Color(0xFF262220);
-  static const Color darkText = Color(0xFFEDEAE4);
-  static const Color darkTextSecondary = Color(0xFFA29D95);
-  static const Color darkHairline = Color(0xFF33302B);
-  static const Color darkAccent = Color(0xFFE8794A);
-  static const Color darkAccentSoft = Color(0xFF3A251C);
-  static const Color darkSuccess = Color(0xFF7CB88A);
-  static const Color darkWarning = Color(0xFFD2A056);
-  static const Color darkError = Color(0xFFD07C7C);
+  static const Color darkBg = Color(0xFF121110);
+  static const Color darkSurface = Color(0xFF1C1A18);
+  static const Color darkSurfaceRaised = Color(0xFF272420);
+  static const Color darkText = Color(0xFFF2EFE9);
+  static const Color darkTextSecondary = Color(0xFFBDB6AA);
+  static const Color darkHairline = Color(0xFF3A362F);
+  static const Color darkAccent = Color(0xFFDF7949); // Darkened to pass WCAG 3:1 for white text
+  static const Color darkAccentSoft = Color(0xFF42291D);
+  static const Color darkSuccess = Color(0xFF7CC98B);
+  static const Color darkWarning = Color(0xFFE8B24A);
+  static const Color darkError = Color(0xFFE5807D);
+  static const Color darkHighlight = Color(0xFFE9C46A);
 
   static ThemeData get lightTheme {
     return _buildTheme(
@@ -40,6 +42,7 @@ class AppTheme {
       success: lightSuccess,
       warning: lightWarning,
       error: lightError,
+      highlight: lightHighlight,
       isDark: false,
     );
   }
@@ -57,6 +60,7 @@ class AppTheme {
       success: darkSuccess,
       warning: darkWarning,
       error: darkError,
+      highlight: darkHighlight,
       isDark: true,
     );
   }
@@ -73,6 +77,7 @@ class AppTheme {
     required Color success,
     required Color warning,
     required Color error,
+    required Color highlight,
     required bool isDark,
   }) {
     return ThemeData(
@@ -87,6 +92,7 @@ class AppTheme {
           hairline: hairline,
           accentSoft: accentSoft,
           surfaceRaised: surfaceRaised,
+          highlight: highlight,
         ),
       ],
       colorScheme: ColorScheme(
@@ -141,6 +147,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color hairline;
   final Color accentSoft;
   final Color surfaceRaised;
+  final Color highlight;
 
   const AppColors({
     required this.success,
@@ -149,6 +156,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.hairline,
     required this.accentSoft,
     required this.surfaceRaised,
+    required this.highlight,
   });
 
   @override
@@ -159,6 +167,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? hairline,
     Color? accentSoft,
     Color? surfaceRaised,
+    Color? highlight,
   }) {
     return AppColors(
       success: success ?? this.success,
@@ -167,6 +176,7 @@ class AppColors extends ThemeExtension<AppColors> {
       hairline: hairline ?? this.hairline,
       accentSoft: accentSoft ?? this.accentSoft,
       surfaceRaised: surfaceRaised ?? this.surfaceRaised,
+      highlight: highlight ?? this.highlight,
     );
   }
 
@@ -182,6 +192,7 @@ class AppColors extends ThemeExtension<AppColors> {
       hairline: Color.lerp(hairline, other.hairline, t) ?? hairline,
       accentSoft: Color.lerp(accentSoft, other.accentSoft, t) ?? accentSoft,
       surfaceRaised: Color.lerp(surfaceRaised, other.surfaceRaised, t) ?? surfaceRaised,
+      highlight: Color.lerp(highlight, other.highlight, t) ?? highlight,
     );
   }
 }
