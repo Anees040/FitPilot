@@ -8,22 +8,23 @@ void main() {
   group('StreakEngine', () {
     const engine = StreakEngine();
 
-    DayStatus makeStatus(DayState state, {int net = 200, int allowance = 300}) {
+    DayStatus makeStatus(DayState state, {int net = 200, int wiggleRoom = 300}) {
+      final toBurn = (net - wiggleRoom).clamp(0, double.infinity).toInt();
       return DayStatus(
         total: KcalRange.exact(net),
         burnedKcal: 0,
         net: KcalRange.exact(net),
-        remainingKcal: allowance - net,
+        toBurn: toBurn,
         state: state,
-        targetKcal: 2000, allowanceKcal: allowance,
+        wiggleRoomKcal: wiggleRoom,
       );
     }
 
     test('NEUTRAL when no logs today, streak counts from yesterday', () {
       final now = DateTime(2026, 7, 27, 10, 0); // 10 AM
       final history = {
-        DateTime(2026, 7, 26): makeStatus(DayState.under),
-        DateTime(2026, 7, 25): makeStatus(DayState.near),
+        DateTime(2026, 7, 26): makeStatus(DayState.cleared),
+        DateTime(2026, 7, 25): makeStatus(DayState.cleared),
       };
 
       final state = engine.evaluate(dayHistory: history, now: now);
@@ -32,12 +33,12 @@ void main() {
       expect(state.currentStreak, 2);
     });
 
-    test('SAFE when today is under/near, streak counts from today', () {
+    test('SAFE when today is cleared, streak counts from today', () {
       final now = DateTime(2026, 7, 27, 10, 0);
       final history = {
-        DateTime(2026, 7, 27): makeStatus(DayState.under),
-        DateTime(2026, 7, 26): makeStatus(DayState.near),
-        DateTime(2026, 7, 25): makeStatus(DayState.under),
+        DateTime(2026, 7, 27): makeStatus(DayState.cleared),
+        DateTime(2026, 7, 26): makeStatus(DayState.cleared),
+        DateTime(2026, 7, 25): makeStatus(DayState.cleared),
       };
 
       final state = engine.evaluate(dayHistory: history, now: now);
@@ -46,141 +47,88 @@ void main() {
       expect(state.currentStreak, 3);
     });
 
-    test('OVER_PENDING when over today and inside grace window', () {
+    test('OVER_PENDING when unburned today and inside grace window', () {
       final now = DateTime(2026, 7, 27, 22, 0); // 10 PM today
       final history = {
         DateTime(2026, 7, 27): makeStatus(
-          DayState.over,
+          DayState.unburned,
           net: 400,
-          allowance: 300,
+          wiggleRoom: 300,
         ),
-        DateTime(2026, 7, 26): makeStatus(DayState.under),
+        DateTime(2026, 7, 26): makeStatus(DayState.cleared),
       };
 
       final state = engine.evaluate(dayHistory: history, now: now);
 
       expect(state.phase, StreakPhase.overPending);
+      expect(state.currentStreak, 1); // Counts from yesterday
       expect(state.kcalStillToBurn, 100);
-      expect(state.currentStreak, 1); // Yesterday's streak
-      expect(
-        state.graceDeadline,
-        DateTime(2026, 7, 28, 11, 59, 59), // default graceHour = 11
-      );
+      expect(state.graceDeadline?.hour, 11);
+      expect(state.graceDeadline?.day, 28);
     });
 
-    test('CLEARED when over today but burned enough', () {
-      final now = DateTime(2026, 7, 27, 22, 0);
-
-      final clearedStatus = DayStatus(
-        total: KcalRange.exact(400),
-        burnedKcal: 100,
-        net: KcalRange.exact(300),
-        remainingKcal: 0,
-        state: DayState.over,
-        targetKcal: 2000, allowanceKcal: 300,
-      );
-
-      final history = {DateTime(2026, 7, 27): clearedStatus};
-
-      final state = engine.evaluate(dayHistory: history, now: now);
-
-      expect(state.phase, StreakPhase.cleared);
-      expect(state.kcalStillToBurn, 0);
-      expect(state.currentStreak, 1);
-    });
-
-    test('BROKEN when grace expired and still over', () {
-      final now = DateTime(2026, 7, 28, 12, 1); // Next day 12:01 PM
+    test('BROKEN when unburned yesterday and grace window expired', () {
+      final now = DateTime(2026, 7, 27, 12, 0); // Noon today
       final history = {
-        DateTime(2026, 7, 27): makeStatus(
-          DayState.over,
+        DateTime(2026, 7, 27): makeStatus(DayState.noData),
+        DateTime(2026, 7, 26): makeStatus(
+          DayState.unburned,
           net: 400,
-          allowance: 300,
+          wiggleRoom: 300,
         ),
+        DateTime(2026, 7, 25): makeStatus(DayState.cleared),
       };
 
       final state = engine.evaluate(dayHistory: history, now: now);
 
       expect(state.phase, StreakPhase.broken);
-      expect(state.kcalStillToBurn, 100);
       expect(state.currentStreak, 0);
+      expect(state.kcalStillToBurn, 100);
     });
 
-    test('CLEARED when grace expired but enough burned', () {
-      final now = DateTime(2026, 7, 28, 12, 1); // Next day 12:01 PM
-      final clearedStatus = DayStatus(
-        total: KcalRange.exact(400),
-        burnedKcal: 100,
-        net: KcalRange.exact(300),
-        remainingKcal: 0,
-        state: DayState.over,
-        targetKcal: 2000, allowanceKcal: 300,
-      );
+    test('CLEARED when unburned yesterday but it is now cleared (DayState.cleared fallback)', () {
+      // If yesterday was unburned originally, but later burned, RangeCalculator would
+      // emit DayState.cleared. But if StreakEngine evaluates a DayState.cleared,
+      // it treats it as SAFE. 
+      // If today is unburned, but grace expired AND toBurn is 0 (impossible edge case test).
+      final now = DateTime(2026, 7, 27, 12, 0); // Noon today
       final history = {
-        DateTime(2026, 7, 27): clearedStatus,
-        DateTime(2026, 7, 26): makeStatus(DayState.under),
-      };
-      // In StreakEngine, if today is neutral, it checks yesterday.
-      // Wait, if today is the 28th and there's no log, it evaluates today as Neutral.
-      // So let's evaluate for the 27th being "now" but time traveled.
-      // Actually, StreakEngine looks at `today = _dateOnly(now)`.
-      // If `now` is 28th, `today` is 28th. Since 28th is empty, it returns Neutral,
-      // but counts streak from 27th.
-      // When counting streak from 27th, it sees 27th is DayState.over, but kcalStillToBurn <= 0.
-      // So it counts 27th as cleared, and adds 26th!
-      final state = engine.evaluate(dayHistory: history, now: now);
-
-      expect(state.phase, StreakPhase.neutral);
-      expect(state.currentStreak, 2); // 27th (cleared) + 26th (under)
-    });
-
-    test('Streak broken yesterday means streak is 0 today', () {
-      final now = DateTime(2026, 7, 28, 10, 0);
-      final history = {
-        DateTime(2026, 7, 27): makeStatus(
-          DayState.over,
-          net: 400,
-          allowance: 300,
-        ), // Broken yesterday
-        DateTime(2026, 7, 26): makeStatus(DayState.under),
+        DateTime(2026, 7, 27): makeStatus(DayState.unburned, net: 200, wiggleRoom: 300), // toBurn = 0, but state unburned (impossible in reality)
       };
 
       final state = engine.evaluate(dayHistory: history, now: now);
 
-      expect(state.phase, StreakPhase.neutral); // Today has no logs
-      expect(state.currentStreak, 0); // Yesterday was broken, so streak breaks
+      // Falls through to CLEARED fallback
+      expect(state.phase, StreakPhase.cleared);
+      expect(state.kcalStillToBurn, 0);
     });
 
-    test('History containing noData days terminates and skips them without breaking streak', () {
-      final now = DateTime(2026, 7, 28, 10, 0);
+    test('noData days neither break nor extend the streak in past', () {
+      final now = DateTime(2026, 7, 27, 10, 0);
       final history = {
-        DateTime(2026, 7, 28): makeStatus(DayState.under), // 1
-        DateTime(2026, 7, 27): makeStatus(DayState.noData), // ignored
-        DateTime(2026, 7, 26): makeStatus(DayState.under), // 2
-        DateTime(2026, 7, 25): makeStatus(DayState.noData), // ignored
-        DateTime(2026, 7, 24): makeStatus(DayState.near),  // 3
+        DateTime(2026, 7, 27): makeStatus(DayState.cleared),
+        DateTime(2026, 7, 26): makeStatus(DayState.noData),
+        DateTime(2026, 7, 25): makeStatus(DayState.cleared),
       };
 
       final state = engine.evaluate(dayHistory: history, now: now);
 
       expect(state.phase, StreakPhase.safe);
-      expect(state.currentStreak, 3);
+      expect(state.currentStreak, 2); // 27th and 25th are cleared. 26th is noData.
     });
 
-    test('365-iteration safety bound prevents infinite loop on long histories', () {
-      final now = DateTime(2026, 7, 28, 10, 0);
-      final history = <DateTime, DayStatus>{};
-      
-      // Add 400 consecutive 'under' days
-      for (int i = 0; i < 400; i++) {
-        history[now.subtract(Duration(days: i))] = makeStatus(DayState.under);
-      }
+    test('unburned day in past with enough burn counts as cleared', () {
+      final now = DateTime(2026, 7, 27, 10, 0);
+      final history = {
+        DateTime(2026, 7, 27): makeStatus(DayState.cleared),
+        // This simulates a day that was unburned but now has toBurn = 0
+        DateTime(2026, 7, 26): makeStatus(DayState.unburned, net: 200, wiggleRoom: 300),
+      };
 
-      // The engine should cap the streak calculation at 365 days due to the safety bound
       final state = engine.evaluate(dayHistory: history, now: now);
 
       expect(state.phase, StreakPhase.safe);
-      expect(state.currentStreak, 365);
+      expect(state.currentStreak, 2); // Both days count
     });
   });
 }

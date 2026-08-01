@@ -12,14 +12,32 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> {
+class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
   Timer? _timer;
+  
+  late AnimationController _logoController;
+  late Animation<double> _logoScale;
+  late Animation<double> _logoOpacity;
 
   @override
   void initState() {
     super.initState();
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    
+    _logoScale = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack)
+    );
+    
+    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: const Interval(0.0, 0.6, curve: Curves.easeIn))
+    );
+    
+    _logoController.forward();
     _startTimer();
   }
 
@@ -40,6 +58,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void dispose() {
     _timer?.cancel();
     _pageController.dispose();
+    _logoController.dispose();
     super.dispose();
   }
 
@@ -53,50 +72,89 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
+          // Premium Background Gradient
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.05),
+                    theme.colorScheme.primary.withValues(alpha: 0.08),
                     theme.scaffoldBackgroundColor,
-                    theme.colorScheme.primary.withValues(alpha: 0.02),
+                    theme.scaffoldBackgroundColor,
+                    theme.colorScheme.primary.withValues(alpha: 0.03),
                   ],
+                  stops: const [0.0, 0.4, 0.8, 1.0],
                 ),
               ),
             ),
           ),
+          
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      isDark ? 'assets/images/logo_mark_white.png' : 'assets/images/logo_mark_orange.png',
-                      width: 32,
-                      height: 32,
-                      errorBuilder: (c, e, s) => Icon(Icons.local_fire_department, color: theme.colorScheme.primary),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'FitPilot',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
+                const SizedBox(height: 40),
+                
+                // Animated Logo Section
+                AnimatedBuilder(
+                  animation: _logoController,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _logoOpacity.value,
+                      child: Transform.scale(
+                        scale: _logoScale.value,
+                        child: child,
                       ),
-                    ),
-                  ],
-                ),
-                Text(
-                  'Eat it. Burn it.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.shadowColor.withValues(alpha: 0.08),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          isDark ? 'assets/images/logo_mark_white.png' : 'assets/images/logo_mark_orange.png',
+                          width: 80,
+                          height: 80,
+                          errorBuilder: (c, e, s) => Icon(Icons.local_fire_department, color: theme.colorScheme.primary, size: 80),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'FitPilot',
+                        style: theme.textTheme.display.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                          fontSize: 40,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Eat it. Burn it.',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                
+                const SizedBox(height: 24),
+                
+                // Carousel
                 Expanded(
                   child: PageView(
                     controller: _pageController,
@@ -108,7 +166,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         theme,
                         ext,
                         title: 'Honest calorie ranges',
-                        subtitle: '350-520 kcal — because nobody\nreally knows it''s exactly 437.',
+                        subtitle: '350-520 kcal — because nobody\nreally knows it\'s exactly 437.',
                         graphic: const _CalorieRangeGraphic(),
                       ),
                       _buildSlide(
@@ -128,15 +186,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ],
                   ),
                 ),
+                
+                // Page Indicator
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(3, (index) {
                     final isActive = _currentIndex == index;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutQuint,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       height: 8,
-                      width: isActive ? 24 : 8,
+                      width: isActive ? 32 : 8,
                       decoration: BoxDecoration(
                         color: isActive ? theme.colorScheme.primary : ext.hairline,
                         borderRadius: BorderRadius.circular(4),
@@ -144,23 +205,26 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     );
                   }),
                 ),
-                const SizedBox(height: 32),
+                
+                const SizedBox(height: 48),
+                
+                // Actions
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: PrimaryButton(
                     label: 'Get started',
                     onPressed: () {
-                      context.push('/auth');
+                      context.push('/auth?mode=signup');
                     },
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: SecondaryButton(
                     label: 'I already have an account',
                     onPressed: () {
-                      context.push('/auth');
+                      context.push('/auth?mode=login');
                     },
                   ),
                 ),
@@ -172,11 +236,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: Text(
                     'Continue without an account',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -191,16 +256,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Spacer(),
+          const Spacer(flex: 2),
           SizedBox(
-            height: 200,
+            height: 180,
             child: graphic,
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 40),
           Text(
             title,
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
               color: theme.colorScheme.onSurface,
             ),
@@ -211,11 +276,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             subtitle,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              height: 1.4,
+              height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),
-          const Spacer(),
+          const Spacer(flex: 3),
         ],
       ),
     );
@@ -249,53 +314,61 @@ class _CalorieRangeGraphicState extends State<_CalorieRangeGraphic> with SingleT
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     final isDark = theme.brightness == Brightness.dark;
 
     return AnimatedBuilder(
       animation: _slideAnimation,
       builder: (context, child) {
+        final val = (435 + _slideAnimation.value).toInt();
         return Stack(
           alignment: Alignment.center,
           children: [
             Container(
-              width: 160,
-              height: 6,
+              width: 200,
+              height: 8,
               decoration: BoxDecoration(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
             Container(
-              width: 80,
-              height: 6,
+              width: 100,
+              height: 8,
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
             Transform.translate(
-              offset: Offset(_slideAnimation.value, -30),
+              offset: Offset(_slideAnimation.value, -40),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
-                    BoxShadow(color: theme.shadowColor.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(color: theme.shadowColor.withValues(alpha: 0.15), blurRadius: 16, offset: const Offset(0, 6)),
                   ],
                 ),
                 child: Text(
-                  '\${(435 + _slideAnimation.value).toInt()}',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  '$val',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ),
             ),
             Transform.translate(
-              offset: Offset(_slideAnimation.value, -10),
+              offset: Offset(_slideAnimation.value, -14),
               child: Container(
-                width: 2,
-                height: 20,
-                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
           ],
@@ -318,7 +391,7 @@ class _BurnPlanGraphicState extends State<_BurnPlanGraphic> with SingleTickerPro
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
   }
 
   @override
@@ -331,6 +404,7 @@ class _BurnPlanGraphicState extends State<_BurnPlanGraphic> with SingleTickerPro
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
+    
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -338,16 +412,24 @@ class _BurnPlanGraphicState extends State<_BurnPlanGraphic> with SingleTickerPro
           alignment: Alignment.center,
           children: [
             SizedBox(
-              width: 120,
-              height: 120,
+              width: 140,
+              height: 140,
               child: CircularProgressIndicator(
                 value: _controller.value,
-                strokeWidth: 8,
+                strokeWidth: 12,
                 backgroundColor: ext.hairline,
                 color: theme.colorScheme.primary,
+                strokeCap: StrokeCap.round,
               ),
             ),
-            Icon(Icons.directions_run_rounded, size: 48, color: theme.colorScheme.primary),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.directions_run_rounded, size: 56, color: theme.colorScheme.primary),
+            ),
           ],
         );
       },
@@ -367,18 +449,20 @@ class _DesiFoodGraphic extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildFoodBadge(theme, ext, isDark, 'Biryani', Icons.rice_bowl, -15),
-            const SizedBox(width: 16),
-            _buildFoodBadge(theme, ext, isDark, 'Samosa', Icons.change_history, 10),
-          ],
+        Positioned(
+          top: 0,
+          left: 20,
+          child: _buildFoodBadge(theme, ext, isDark, 'Biryani', Icons.rice_bowl, -15),
+        ),
+        Positioned(
+          top: 30,
+          right: 20,
+          child: _buildFoodBadge(theme, ext, isDark, 'Samosa', Icons.change_history, 10),
         ),
         Positioned(
           bottom: 20,
-          child: _buildFoodBadge(theme, ext, isDark, 'Gulab Jamun', Icons.cookie, 0),
-        )
+          child: _buildFoodBadge(theme, ext, isDark, 'Gulab Jamun', Icons.cookie, -5),
+        ),
       ],
     );
   }
@@ -387,24 +471,25 @@ class _DesiFoodGraphic extends StatelessWidget {
     return Transform.rotate(
       angle: angle * pi / 180,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ext.hairline),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: ext.hairline, width: 1.5),
           boxShadow: [
-            BoxShadow(color: theme.shadowColor.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(color: theme.shadowColor.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 8)),
           ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 20),
-            const SizedBox(width: 8),
-            Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+            Icon(icon, color: theme.colorScheme.primary, size: 24),
+            const SizedBox(width: 12),
+            Text(name, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
           ],
         ),
       ),
     );
   }
 }
+

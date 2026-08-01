@@ -91,10 +91,11 @@ class _DetailBody extends ConsumerWidget {
     int minutesToBurn = 0;
     bool hasSurplus = false;
     final burnState = burnStateAsync.valueOrNull;
+    final isBurnPlan = burnState != null &&
+        (burnState.frame == BurnPlanFrame.burnToday ||
+         burnState.frame == BurnPlanFrame.yesterdayDebt);
     
-    if (burnState != null &&
-        (burnState.frame == BurnPlanFrame.surplusToday ||
-            burnState.frame == BurnPlanFrame.surplusYesterday)) {
+    if (isBurnPlan) {
       hasSurplus = true;
       kcalToBurn = burnState.kcalToBurnOrEat;
       minutesToBurn = exercise.minutesToBurn(weightKg, kcalToBurn);

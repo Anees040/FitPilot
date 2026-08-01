@@ -181,14 +181,21 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
                 ),
-                itemCount: 35,
+                itemCount: 42, // 7 headers + 35 days
                 itemBuilder: (context, index) {
                   if (index < 7) {
-                    // Weekday headers
-                    final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                    // Weekday headers aligned with the first 7 days of the data
+                    final first7Days = sortedDates.take(7).toList();
+                    final String headerText;
+                    if (index < first7Days.length) {
+                      const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                      headerText = labels[first7Days[index].weekday - 1];
+                    } else {
+                      headerText = '';
+                    }
                     return Center(
                       child: Text(
-                        weekdays[index],
+                        headerText,
                         style: theme.textTheme.overline.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -213,7 +220,21 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                       ),
                     );
                   } else {
-                    final color = (status.state == DayState.over) ? ext.error : ext.success;
+                    Color color;
+                    switch (status.state) {
+                      case DayState.cleared:
+                        color = ext.success;
+                        break;
+                      case DayState.inProgress:
+                        color = theme.colorScheme.primary;
+                        break;
+                      case DayState.unburned:
+                        color = ext.error;
+                        break;
+                      case DayState.noData: // Handled above
+                        color = ext.hairline;
+                        break;
+                    }
                     dot = Container(
                       decoration: BoxDecoration(
                         color: color,
@@ -242,11 +263,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildLegendItem(context, 'Safe', ext.success, isOutline: false),
-                  const SizedBox(width: 16),
-                  _buildLegendItem(context, 'Over', ext.error, isOutline: false),
-                  const SizedBox(width: 16),
-                  _buildLegendItem(context, 'No logs', ext.hairline, isOutline: true),
+                  _buildLegendItem(context, 'Cleared', ext.success, isOutline: false),
+                  const SizedBox(width: 8),
+                  _buildLegendItem(context, 'Burning', theme.colorScheme.primary, isOutline: false),
+                  const SizedBox(width: 8),
+                  _buildLegendItem(context, 'Unburned', ext.error, isOutline: false),
+                  const SizedBox(width: 8),
+                  _buildLegendItem(context, 'Clean', ext.hairline, isOutline: true),
                 ],
               ),
             ],
@@ -302,14 +325,14 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               Widget pill;
               if (status.state == DayState.noData) {
                 pill = Text('-', style: theme.textTheme.bodyStrong.copyWith(color: theme.textTheme.caption.color));
-              } else if (status.state == DayState.over) {
+              } else if (status.state == DayState.unburned) {
                 pill = Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: ext.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text('Over', style: theme.textTheme.caption.copyWith(color: ext.error, fontWeight: FontWeight.w600)),
+                  child: Text('Unburned', style: theme.textTheme.caption.copyWith(color: ext.error, fontWeight: FontWeight.w600)),
                 );
               } else {
                 pill = Container(

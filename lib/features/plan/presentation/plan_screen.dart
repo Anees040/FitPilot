@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
+import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/domain/entities/burn_option.dart';
+
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
@@ -41,7 +43,7 @@ class PlanScreen extends ConsumerWidget {
   }
 
   Widget _buildBody(BuildContext context, WidgetRef ref, BurnPlanState state) {
-    if (state.frame == BurnPlanFrame.noSurplus) {
+    if (state.frame == BurnPlanFrame.allClear) {
       return EmptyState(
         message: 'No burn plan needed today. You have a cheat tolerance if you go a bit over.',
         buttonLabel: 'Looking good!',
@@ -50,51 +52,49 @@ class PlanScreen extends ConsumerWidget {
       );
     }
 
-    if (state.frame == BurnPlanFrame.buildDeficit) {
+    if (state.frame == BurnPlanFrame.cleanDay) {
       return EmptyState(
-        message: 'Your goal is to build, so keep eating to hit your target!',
-        buttonLabel: 'Keep it up!',
+        message: 'A perfect clean day with no logged meals. Keep it up!',
+        buttonLabel: 'Great job!',
         illustration: 'empty_plan',
         onAction: () => context.go('/today'),
       );
     }
 
     // Surplus Today or Yesterday
-    final isYesterday = state.frame == BurnPlanFrame.surplusYesterday;
+    final isYesterday = state.frame == BurnPlanFrame.yesterdayDebt;
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
 
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        AppCard(
-          color: ext.warning.withValues(alpha: 0.1),
-          child: Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: ext.warning, size: 32),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isYesterday
-                          ? 'You were ${state.kcalToBurnOrEat} kcal over yesterday.'
-                          : 'You are ${state.kcalToBurnOrEat} kcal over today.',
-                      style: theme.textTheme.bodyStrong.copyWith(color: ext.warning),
-                    ),
-                    Text(
-                      isYesterday
-                          ? 'Burn it now to save your streak.'
-                          : 'Pick an activity to clear your surplus.',
-                      style: theme.textTheme.caption.copyWith(color: ext.warning),
-                    ),
-                  ],
+        if (!isYesterday) _buildTargetSelector(context, ref, state),
+        if (isYesterday)
+          AppCard(
+            color: ext.warning.withValues(alpha: 0.1),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: ext.warning, size: 32),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'You were ${state.kcalToBurnOrEat} kcal over yesterday.',
+                        style: theme.textTheme.bodyStrong.copyWith(color: ext.warning),
+                      ),
+                      Text(
+                        'Burn it now to save your streak.',
+                        style: theme.textTheme.caption.copyWith(color: ext.warning),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         const SizedBox(height: 24),
         Text('AVAILABLE ACTIVITIES', style: theme.textTheme.overline),
         const SizedBox(height: 12),
@@ -117,6 +117,68 @@ class PlanScreen extends ConsumerWidget {
           (option) => _buildOptionCard(context, ref, option),
         ),
       ],
+    );
+  }
+
+  Widget _buildTargetSelector(BuildContext context, WidgetRef ref, BurnPlanState state) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    final todayState = ref.watch(todayProvider).valueOrNull;
+    final logs = todayState?.logs ?? [];
+    
+    // Total debt
+    final totalToBurn = todayState?.dayStatus.toBurn ?? 0;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('TARGET', style: theme.textTheme.overline),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String?>(
+            initialValue: state.selectedMealId,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: ext.surfaceRaised,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            dropdownColor: ext.surfaceRaised,
+            style: theme.textTheme.bodyStrong,
+            icon: Icon(Icons.arrow_drop_down, color: theme.colorScheme.primary),
+            items: [
+              DropdownMenuItem(
+                value: null,
+                child: Text('All of today ($totalToBurn kcal)'),
+              ),
+              if (logs.isNotEmpty)
+                const DropdownMenuItem(
+                  enabled: false,
+                  child: Divider(),
+                ),
+              ...logs.map((log) {
+                return DropdownMenuItem(
+                  value: log.id,
+                  child: Text('${log.customName} (${log.kcal.midpoint} kcal)'),
+                );
+              }),
+            ],
+            onChanged: (value) {
+              ref.read(burnPlanMealIdProvider.notifier).state = value;
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            state.selectedMealId == null
+                ? 'Pick an activity to clear your total debt.'
+                : 'Pick an activity to clear this specific meal.',
+            style: theme.textTheme.caption,
+          ),
+        ],
+      ),
     );
   }
 

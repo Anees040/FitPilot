@@ -23,24 +23,28 @@ void main() {
 
   testWidgets('Google sign-in routes away from AuthScreen', (tester) async {
     final repo = FakeAuthRepository();
-    
+
     await tester.pumpWidget(buildTestApp(repo));
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    // Use pump(Duration) instead of pumpAndSettle — the SplashScreen has an
+    // infinite pulse animation that causes pumpAndSettle to time out.
+    await tester.pump(const Duration(milliseconds: 100));
     appRouter.go('/auth');
-    await tester.pumpAndSettle();
-    
+    // Pump fixed durations to allow route animation to complete.
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+
     expect(find.byType(AuthScreen), findsOneWidget);
-    
+
     final googleBtn = find.byType(GoogleButton);
     expect(googleBtn, findsOneWidget);
-    
+
     await tester.tap(googleBtn);
     await tester.pump();
-    
-    // Give it time to fake delay
+
+    // Give it time for the fake 1s delay in FakeAuthRepository.signInWithGoogle.
     await tester.pump(const Duration(seconds: 1));
-    await tester.pumpAndSettle();
-    
+    await tester.pump(const Duration(milliseconds: 500));
+
     expect(find.byType(AuthScreen), findsNothing);
   });
 }

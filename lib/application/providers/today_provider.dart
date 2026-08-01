@@ -35,8 +35,7 @@ class TodayNotifier extends AsyncNotifier<TodayState> {
     final dayStatus = calculator.dayStatus(
       logs: logs,
       burnedKcal: burnedKcal,
-      allowanceKcal: profile.effectiveDailyLimit,
-      targetKcal: profile.effectiveDailyTarget,
+      wiggleRoomKcal: profile.allowanceKcal,
     );
 
     return TodayState(logs: logs, dayStatus: dayStatus);

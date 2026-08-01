@@ -48,7 +48,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/auth',
       parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) => const AuthScreen(),
+      builder: (context, state) => AuthScreen(
+        initialMode: state.uri.queryParameters['mode'],
+      ),
     ),
     GoRoute(
       path: '/otp',

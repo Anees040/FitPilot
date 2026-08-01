@@ -44,16 +44,15 @@ class StreakEngine {
     final todayStatus = history[today];
     final yesterdayStatus = history[today.subtract(const Duration(days: 1))];
 
-    // First check if yesterday was OVER and grace expired without clearing.
-    if (yesterdayStatus != null && yesterdayStatus.state == DayState.over) {
+    // First check if yesterday was pending unburned/inProgress and grace expired without clearing.
+    if (yesterdayStatus != null &&
+        (yesterdayStatus.state == DayState.unburned ||
+         yesterdayStatus.state == DayState.inProgress)) {
       final yesterdayDeadline = graceDeadlineFor(
         today.subtract(const Duration(days: 1)),
         graceHour,
       );
-      final kcalStillToBurn =
-          (yesterdayStatus.net.midpoint - yesterdayStatus.allowanceKcal)
-              .clamp(0, double.infinity)
-              .toInt();
+      final kcalStillToBurn = yesterdayStatus.toBurn;
 
       if (kcalStillToBurn > 0) {
         if (now.isAfter(yesterdayDeadline)) {
@@ -67,7 +66,7 @@ class StreakEngine {
       }
     }
 
-    // NEUTRAL: no logs today (or no data).
+    // NEUTRAL: no logs today (noData).
     if (todayStatus == null || todayStatus.state == DayState.noData) {
       final streak = _countStreak(history, today, lookFromYesterday: true);
       return StreakState(
@@ -77,9 +76,8 @@ class StreakEngine {
       );
     }
 
-    // SAFE: today's state is under or near.
-    if (todayStatus.state == DayState.under ||
-        todayStatus.state == DayState.near) {
+    // SAFE: today's state is cleared.
+    if (todayStatus.state == DayState.cleared) {
       final streak = _countStreak(history, today, lookFromYesterday: false);
       return StreakState(
         phase: StreakPhase.safe,
@@ -88,12 +86,9 @@ class StreakEngine {
       );
     }
 
-    // Today is OVER — check grace window.
+    // Today has unburned debt — check grace window.
     final deadline = graceDeadlineFor(today, graceHour);
-    final kcalStillToBurn =
-        (todayStatus.net.midpoint - todayStatus.allowanceKcal)
-            .clamp(0, double.infinity)
-            .toInt();
+    final kcalStillToBurn = todayStatus.toBurn;
 
     if (now.isAfter(deadline)) {
       // Grace expired.
@@ -105,7 +100,7 @@ class StreakEngine {
           kcalStillToBurn: kcalStillToBurn,
         );
       } else {
-        // Was over but burned enough — CLEARED.
+        // Was over but burned enough — CLEARED. (Should be DayState.cleared anyway, but fallback).
         final streak = _countStreak(history, today, lookFromYesterday: false);
         return StreakState(
           phase: StreakPhase.cleared,
@@ -135,7 +130,7 @@ class StreakEngine {
     }
   }
 
-  /// Counts consecutive safe/cleared/under/near days ending at
+  /// Counts consecutive safe/cleared days ending at
   /// [referenceDate] (or yesterday if [lookFromYesterday] is true).
   int _countStreak(
     Map<DateTime, DayStatus> history,
@@ -151,17 +146,15 @@ class StreakEngine {
       final status = history[_dateOnly(day)];
       if (status == null) break;
 
-      if (status.state == DayState.under || status.state == DayState.near) {
+      if (status.state == DayState.cleared) {
         count++;
       } else if (status.state == DayState.noData) {
         // noData days neither break nor extend the streak
         // keep counting through them
         // the loop update step will decrement day
-      } else if (status.state == DayState.over) {
-        // Over but has enough burn = cleared → counts.
-        final kcalStillToBurn = (status.net.midpoint - status.allowanceKcal)
-            .clamp(0, double.infinity)
-            .toInt();
+      } else if (status.state == DayState.unburned || status.state == DayState.inProgress) {
+        // Unburned but has enough burn = cleared → counts.
+        final kcalStillToBurn = status.toBurn;
         if (kcalStillToBurn <= 0) {
           count++;
         } else {
@@ -175,7 +168,7 @@ class StreakEngine {
     }
 
     // If not looking from yesterday, include today in count only if
-    // today was safe/near or cleared.
+    // today was cleared.
     if (!lookFromYesterday) {
       // Today is already included in the loop above.
       return count;

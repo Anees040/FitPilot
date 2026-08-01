@@ -158,12 +158,12 @@ class MockTodayNotifier extends AsyncNotifier<TodayState>
     return TodayState(
       logs: [],
       dayStatus: DayStatus(
-        total: KcalRange.exact(0),
-        burnedKcal: 0,
-        net: KcalRange.exact(0),
-        remainingKcal: 300,
-        state: DayState.under,
-        targetKcal: 2000, allowanceKcal: 300,
+        total: KcalRange(1500, 1600),
+        burnedKcal: 200,
+        net: KcalRange(1300, 1400),
+        toBurn: 0,
+        state: DayState.cleared,
+        wiggleRoomKcal: 300,
       ),
     );
   }

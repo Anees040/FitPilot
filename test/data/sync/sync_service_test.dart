@@ -25,7 +25,7 @@ class FakeRemoteDataSource extends RemoteDataSource {
     String table,
     String since,
   ) async {
-    if (table == 'profile') return toPull;
+    if (table == 'profiles' || table == 'profile') return toPull;
     return [];
   }
 }

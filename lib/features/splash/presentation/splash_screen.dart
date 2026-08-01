@@ -14,6 +14,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _mottoFadeAnimation;
+  late Animation<Offset> _mottoSlideAnimation;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -37,6 +38,14 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.3, 1.0, curve: Curves.easeIn),
+      ),
+    );
+
+    // Slide motto starting at 300ms
+    _mottoSlideAnimation = Tween<Offset>(begin: const Offset(0.0, 0.5), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
       ),
     );
 
@@ -144,13 +153,16 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
             bottom: MediaQuery.of(context).size.height * 0.5 - 120, // positioned nicely below center
             child: FadeTransition(
               opacity: _mottoFadeAnimation,
-              child: Text(
-                'Eat it. Burn it.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  letterSpacing: 1.2,
+              child: SlideTransition(
+                position: _mottoSlideAnimation,
+                child: Text(
+                  'Eat it. Burn it.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ),

@@ -3,7 +3,20 @@ import 'package:sqflite/sqflite.dart';
 
 /// Opens (or creates) the FitPilot SQLite database.
 ///
-/// Version 1 — tables mirror the Supabase schema with local-only additions.
+/// Version history:
+///  1 — initial schema
+///  2 — added activity_level, target_override to profile
+///  3 — added attempts, last_error to sync_queue
+///  4 — added saved_products table
+///  5 — added goal_weight_kg to profile; added notification_prefs table
+///  6 — added theme_mode to profile
+///  7 — added food_name to food_logs
+///  8 — migrated exercises table (new columns + cleared old seed data)
+///  9 — added plan_category_pref, plan_pace_pref to profile
+/// 10 — added image_url to food_catalog
+/// 11 — added unit_kg_lb, week_starts_mon, haptics_on to profile
+/// 12 — added updated_at to burn_completions; added theme_color + goal_weight_kg guards
+/// 13 — added name to profile
 class AppDatabase {
   static Database? _db;
 
@@ -13,7 +26,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 12,
+      version: 13,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -25,7 +38,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 12,
+      version: 13,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -73,7 +86,8 @@ class AppDatabase {
         activity TEXT NOT NULL,
         minutes INTEGER NOT NULL,
         kcal INTEGER NOT NULL,
-        completed_at TEXT NOT NULL
+        completed_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
       )
     ''');
 
@@ -108,6 +122,7 @@ class AppDatabase {
     batch.execute('''
       CREATE TABLE profile (
         id INTEGER PRIMARY KEY CHECK (id = 1),
+        name TEXT,
         weight_kg REAL,
         goal_weight_kg REAL,
         height_cm INTEGER,
@@ -161,6 +176,13 @@ class AppDatabase {
       )
     ''');
 
+    batch.execute('''
+      CREATE TABLE sync_metadata (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      )
+    ''');
+
     // Indexes.
     batch.execute(
       'CREATE INDEX idx_food_logs_logged_at ON food_logs (logged_at)',
@@ -207,9 +229,11 @@ class AppDatabase {
       ''');
     }
     if (oldVersion < 5) {
-      await db.execute("ALTER TABLE profile ADD COLUMN goal_weight_kg REAL");
+      try {
+        await db.execute("ALTER TABLE profile ADD COLUMN goal_weight_kg REAL");
+      } catch (_) {}
       await db.execute('''
-        CREATE TABLE notification_prefs (
+        CREATE TABLE IF NOT EXISTS notification_prefs (
           id INTEGER PRIMARY KEY CHECK (id = 1),
           meal_reminders_enabled INTEGER NOT NULL DEFAULT 0,
           meal_times TEXT NOT NULL DEFAULT '["08:00", "13:00", "19:00"]',
@@ -220,12 +244,16 @@ class AppDatabase {
       ''');
     }
     if (oldVersion < 6) {
-      await db.execute(
-        "ALTER TABLE profile ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'system'",
-      );
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'system'",
+        );
+      } catch (_) {}
     }
     if (oldVersion < 7) {
-      await db.execute("ALTER TABLE food_logs ADD COLUMN food_name TEXT");
+      try {
+        await db.execute("ALTER TABLE food_logs ADD COLUMN food_name TEXT");
+      } catch (_) {}
       await db.execute('''
         UPDATE food_logs
         SET food_name = (
@@ -235,11 +263,7 @@ class AppDatabase {
       ''');
     }
     if (oldVersion < 8) {
-      // Migrate exercises table from old v7 schema (columns: id, name,
-      // category, equipment, difficulty, muscles, steps, mistakes, met)
-      // to v8 schema with new columns.
-      // SQLite ALTER TABLE only supports ADD COLUMN, so we add new columns
-      // and migrate data.
+      // Migrate exercises table from old v7 schema to v8 schema with new columns.
       try {
         await db.execute(
           "ALTER TABLE exercises ADD COLUMN subcategory TEXT",
@@ -271,13 +295,13 @@ class AppDatabase {
         );
       } catch (_) {}
 
-      // Copy old muscles column into primary_muscles for existing rows
+      // Copy old muscles column into primary_muscles for existing rows.
       await db.execute('''
         UPDATE exercises SET primary_muscles = muscles
         WHERE primary_muscles = '[]' AND muscles IS NOT NULL AND muscles != '[]'
       ''');
 
-      // Compute pace_tier from met for existing rows
+      // Compute pace_tier from met for existing rows.
       await db.execute('''
         UPDATE exercises SET pace_tier = 'quick'
         WHERE met >= 8.0 AND pace_tier = 'moderate'
@@ -287,10 +311,10 @@ class AppDatabase {
         WHERE met < 5.0 AND pace_tier = 'moderate'
       ''');
 
-      // Clear old exercises so seed importer will re-import the new 60
+      // Clear old exercises so seed importer will re-import the new 60.
       await db.execute('DELETE FROM exercises');
 
-      // Add index on category for faster filtering
+      // Add index on category for faster filtering.
       try {
         await db.execute(
           'CREATE INDEX idx_exercises_category ON exercises (category)',
@@ -298,33 +322,81 @@ class AppDatabase {
       } catch (_) {}
     }
     if (oldVersion < 9) {
-      await db.execute(
-        "ALTER TABLE profile ADD COLUMN plan_category_pref TEXT NOT NULL DEFAULT 'recommended'",
-      );
-      await db.execute(
-        "ALTER TABLE profile ADD COLUMN plan_pace_pref TEXT NOT NULL DEFAULT 'any'",
-      );
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN plan_category_pref TEXT NOT NULL DEFAULT 'recommended'",
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN plan_pace_pref TEXT NOT NULL DEFAULT 'any'",
+        );
+      } catch (_) {}
     }
     if (oldVersion < 10) {
-      await db.execute(
-        "ALTER TABLE food_catalog ADD COLUMN image_url TEXT",
-      );
+      try {
+        await db.execute(
+          "ALTER TABLE food_catalog ADD COLUMN image_url TEXT",
+        );
+      } catch (_) {}
     }
     if (oldVersion < 11) {
-      await db.execute(
-        "ALTER TABLE profile ADD COLUMN unit_kg_lb TEXT NOT NULL DEFAULT 'kg'",
-      );
-      await db.execute(
-        "ALTER TABLE profile ADD COLUMN week_starts_mon INTEGER NOT NULL DEFAULT 1",
-      );
-      await db.execute(
-        "ALTER TABLE profile ADD COLUMN haptics_on INTEGER NOT NULL DEFAULT 1",
-      );
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN unit_kg_lb TEXT NOT NULL DEFAULT 'kg'",
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN week_starts_mon INTEGER NOT NULL DEFAULT 1",
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN haptics_on INTEGER NOT NULL DEFAULT 1",
+        );
+      } catch (_) {}
+    }
+    if (oldVersion < 12) {
+      // Add updated_at to burn_completions (required for sync pull/push).
+      try {
+        await db.execute(
+          "ALTER TABLE burn_completions ADD COLUMN updated_at TEXT NOT NULL DEFAULT '2020-01-01T00:00:00.000Z'",
+        );
+      } catch (_) {}
+      // Add theme_color to profile for users upgrading from older versions.
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN theme_color TEXT NOT NULL DEFAULT 'orange'",
+        );
+      } catch (_) {}
+      // goal_weight_kg might already exist from v5 migration.
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN goal_weight_kg REAL",
+        );
+      } catch (_) {}
+      // Create sync_metadata if missing (previously created on-the-fly).
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS sync_metadata (
+            key TEXT PRIMARY KEY,
+            value TEXT
+          )
+        ''');
+      } catch (_) {}
+    }
+    if (oldVersion < 13) {
+      try {
+        await db.execute(
+          "ALTER TABLE profile ADD COLUMN name TEXT",
+        );
+      } catch (_) {}
     }
   }
 
   static Future<void> _repairLogs(Database db) async {
-    // Delete logs with impossible states to prevent breaking UI
+    // Delete logs with impossible states to prevent breaking UI.
     await db.delete(
       'food_logs',
       where:

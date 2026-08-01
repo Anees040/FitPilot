@@ -35,6 +35,14 @@ class SyncService {
     _emitStatus();
   }
 
+  /// Maps local SQLite table names to their Supabase counterparts.
+  /// The local table is named 'profile' (singleton row) but Supabase
+  /// uses 'profiles' (multi-user table).
+  String _remoteTable(String localTable) {
+    if (localTable == 'profile') return 'profiles';
+    return localTable;
+  }
+
   void _emitStatus({SyncState? state, String? error}) async {
     final countRes = await db.rawQuery(
       'SELECT COUNT(*) as c FROM sync_queue WHERE attempts < 10',
@@ -133,28 +141,28 @@ class SyncService {
       if (op == 'delete') {
         // We push a tombstone instead of actual delete
         rowsToUpsert.add({
-          'id': table == 'profile' ? userId : rowId, // profile pk is user_id
+          'id': table == 'profile' ? userId : rowId, // profiles pk is user_id
           'user_id': userId,
           'deleted': true,
           'updated_at': DateTime.now().toIso8601String(),
         });
       } else {
-        // Query the local table
-        // For profile, row_id is '1', but in db it's integer 1
-        final pkColumn = table == 'profile' ? 'id' : 'id';
+        // Query the local table.
+        // For profile, row_id is '1', but in the local DB it's integer 1.
         final pkVal = table == 'profile' ? 1 : rowId;
 
         final localData = await db.query(
           table,
-          where: '$pkColumn = ?',
+          where: 'id = ?',
           whereArgs: [pkVal],
         );
         if (localData.isNotEmpty) {
           final data = Map<String, dynamic>.from(localData.first);
 
           if (table == 'profile') {
+            // Supabase 'profiles' table uses a UUID id (the user's auth id).
             data.remove('id');
-            data['id'] = userId; // profile table uses id as uuid PK in Supabase
+            data['id'] = userId;
           } else {
             data['user_id'] = userId;
           }
@@ -179,12 +187,8 @@ class SyncService {
     }
 
     try {
-      if (table == 'profile') {
-        // RemoteDataSource upsertRows can handle profile if we pass the right table
-        await remote.upsertRows(table, rowsToUpsert);
-      } else {
-        await remote.upsertRows(table, rowsToUpsert);
-      }
+      // Use the remote table name (e.g. 'profiles' instead of 'profile').
+      await remote.upsertRows(_remoteTable(table), rowsToUpsert);
       // On success, delete these from queue
       await _removeFromQueue(queueIds);
     } catch (e) {
@@ -195,6 +199,7 @@ class SyncService {
   }
 
   Future<void> _pullPhase() async {
+    // Local SQLite table names — _remoteTable() maps them to Supabase names.
     final tables = [
       'profile',
       'food_logs',
@@ -206,7 +211,8 @@ class SyncService {
     for (final table in tables) {
       final lastPull = await _getLastPull(table);
       try {
-        final remoteRows = await remote.pullSince(table, lastPull);
+        // Pull from the Supabase table (which may have a different name).
+        final remoteRows = await remote.pullSince(_remoteTable(table), lastPull);
         if (remoteRows.isEmpty) continue;
 
         DateTime maxUpdated = DateTime.parse(lastPull);

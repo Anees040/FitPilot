@@ -8,26 +8,29 @@ import 'package:fitpilot/domain/engines/range_calculator.dart';
 import 'package:fitpilot/domain/engines/streak_engine.dart';
 import 'package:fitpilot/domain/entities/burn_option.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
-import 'package:fitpilot/domain/entities/profile.dart';
 
-enum BurnPlanFrame { surplusToday, surplusYesterday, noSurplus, buildDeficit }
+
+enum BurnPlanFrame { burnToday, yesterdayDebt, allClear, cleanDay }
 
 class BurnPlanState {
   final BurnPlanFrame frame;
   final int kcalToBurnOrEat;
   final List<BurnOption> options;
   final DateTime targetDate;
+  final String? selectedMealId;
 
   const BurnPlanState({
     required this.frame,
     required this.kcalToBurnOrEat,
     this.options = const [],
     required this.targetDate,
+    this.selectedMealId,
   });
 }
 
 final burnCategoryFilterProvider = StateProvider<String?>((ref) => null);
 final burnPaceFilterProvider = StateProvider<String?>((ref) => null);
+final burnPlanMealIdProvider = StateProvider<String?>((ref) => null);
 
 final burnPlanProvider = AsyncNotifierProvider<BurnPlanNotifier, BurnPlanState>(
   BurnPlanNotifier.new,
@@ -39,6 +42,7 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     final now = DateTime.now();
     final categoryFilter = ref.watch(burnCategoryFilterProvider);
     final paceFilter = ref.watch(burnPaceFilterProvider);
+    final selectedMealId = ref.watch(burnPlanMealIdProvider);
     final profile = await ref.watch(profileProvider.future);
     final logRepo = await ref.watch(logRepositoryProvider.future);
     final burnRepo = await ref.watch(burnRepositoryProvider.future);
@@ -59,8 +63,7 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     final yesterdayStatus = calculator.dayStatus(
       logs: yesterdayLogs,
       burnedKcal: yesterdayBurns,
-      allowanceKcal: profile.effectiveDailyLimit,
-      targetKcal: profile.effectiveDailyTarget,
+      wiggleRoomKcal: profile.allowanceKcal,
     );
 
     final history = {today: todayStatus, yesterday: yesterdayStatus};
@@ -68,25 +71,11 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     const streakEngine = StreakEngine();
     final streakState = streakEngine.evaluate(dayHistory: history, now: now);
 
-    // Goal: build & intake below target
-    if (profile.goal == Goal.build) {
-      final target = profile.effectiveDailyLimit - profile.allowanceKcal;
-      final remainingToTarget = target - todayStatus.net.midpoint;
-      if (remainingToTarget > 0) {
-        return BurnPlanState(
-          frame: BurnPlanFrame.buildDeficit,
-          kcalToBurnOrEat: remainingToTarget.toInt(),
-          options: [],
-          targetDate: today,
-        );
-      }
-    }
-
     final allExercises = await exerciseRepo.all();
     final profileEq = profile.equipment;
     // Filter candidates by equipment
     final candidates = allExercises.where((e) {
-      if (e.equipment == null) return true; // Needs no equipment
+      if (e.equipment == null) return true;
       if (e.equipment == 'none') return true;
       return profileEq.contains(e.equipment);
     }).toList();
@@ -96,8 +85,8 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
 
     // Is there a surplus yesterday (grace window)?
     if (streakState.kcalStillToBurn > 0 &&
-        yesterdayStatus.state == DayState.over) {
-      // It must be yesterday's surplus inside grace window
+        (yesterdayStatus.state == DayState.inProgress ||
+         yesterdayStatus.state == DayState.unburned)) {
       final kcalOver = streakState.kcalStillToBurn;
       final options = const BurnPlanner().planFor(
         kcalOver: kcalOver,
@@ -107,7 +96,7 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
         pacePref: activePacePref,
       );
       return BurnPlanState(
-        frame: BurnPlanFrame.surplusYesterday,
+        frame: BurnPlanFrame.yesterdayDebt,
         kcalToBurnOrEat: kcalOver,
         options: options,
         targetDate: yesterday,
@@ -115,30 +104,44 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     }
 
     // Is there a surplus today?
-    if (todayStatus.state == DayState.over) {
-      final kcalOver = (todayStatus.net.midpoint - profile.effectiveDailyLimit)
-          .clamp(0, double.infinity)
-          .toInt();
-      if (kcalOver > 0) {
-        final options = const BurnPlanner().planFor(
-          kcalOver: kcalOver,
-          weightKg: profile.weightKg,
-          candidates: candidates,
-          categoryPref: activeCategoryPref,
-          pacePref: activePacePref,
-        );
-        return BurnPlanState(
-          frame: BurnPlanFrame.surplusToday,
-          kcalToBurnOrEat: kcalOver,
-          options: options,
-          targetDate: today,
-        );
+    if (todayStatus.toBurn > 0) {
+      int targetKcal = todayStatus.toBurn;
+      
+      // If a specific meal is selected, target is that meal's midpoint
+      if (selectedMealId != null) {
+        final meal = todayState.logs.where((l) => l.id == selectedMealId).firstOrNull;
+        if (meal != null) {
+          targetKcal = meal.kcal.midpoint;
+        }
       }
+
+      final options = const BurnPlanner().planFor(
+        kcalOver: targetKcal,
+        weightKg: profile.weightKg,
+        candidates: candidates,
+        categoryPref: activeCategoryPref,
+        pacePref: activePacePref,
+      );
+      return BurnPlanState(
+        frame: BurnPlanFrame.burnToday,
+        kcalToBurnOrEat: targetKcal,
+        options: options,
+        targetDate: today,
+        selectedMealId: selectedMealId,
+      );
     }
 
-    // No surplus
+    if (todayStatus.state == DayState.noData) {
+      return BurnPlanState(
+        frame: BurnPlanFrame.cleanDay,
+        kcalToBurnOrEat: 0,
+        options: [],
+        targetDate: today,
+      );
+    }
+
     return BurnPlanState(
-      frame: BurnPlanFrame.noSurplus,
+      frame: BurnPlanFrame.allClear,
       kcalToBurnOrEat: 0,
       options: [],
       targetDate: today,

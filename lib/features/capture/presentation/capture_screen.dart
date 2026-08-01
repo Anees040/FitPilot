@@ -44,14 +44,20 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   void initState() {
     super.initState();
     if (!kIsWeb) {
-      _cameraController = MobileScannerController(
-        returnImage: false, // We use image_picker for OCR/AI — no need for frame images
-        formats: const [BarcodeFormat.all],
-        autoStart: true,
-      );
+      try {
+        _cameraController = MobileScannerController(
+          returnImage: false, // We use image_picker for OCR/AI — no need for frame images
+          formats: const [BarcodeFormat.all],
+          autoStart: true,
+        );
+      } catch (_) {
+        // Camera not available (e.g., in test environments).
+        _cameraController = null;
+      }
       _textRecognizer = TextRecognizer();
     }
   }
+
 
   @override
   void dispose() {
@@ -69,21 +75,26 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       AppSnackbar.success(context, 'Camera features are not supported on web.');
       return;
     }
-    
+
     if (_mode != newMode) {
-      if (newMode == CaptureMode.barcode) {
-        _cameraController?.start();
-      } else {
-        _cameraController?.stop();
+      try {
+        if (newMode == CaptureMode.barcode) {
+          _cameraController?.start();
+        } else {
+          _cameraController?.stop();
+        }
+      } catch (_) {
+        // Ignore camera platform errors (e.g., in test environments).
       }
     }
-    
+
     setState(() {
       _mode = newMode;
       _isProcessing = false;
       _lastScannedBarcode = null;
     });
   }
+
 
   // ── G2.1: Barcode processing with camera pause/resume ─────────────────────
   Future<void> _processBarcode(String barcode) async {
@@ -328,7 +339,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                         ],
                       ),
                     )
-                  else if (_mode == CaptureMode.barcode) ...[
+                  else if (_mode == CaptureMode.barcode && _cameraController != null) ...[
                     MobileScanner(
                       controller: _cameraController!,
                       errorBuilder: (context, error, child) {
@@ -351,12 +362,28 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                       onDetect: _handleBarcode,
                     ),
                     _buildBarcodeOverlay(),
+                  ] else if (_mode == CaptureMode.barcode) ...[
+                    // Camera not available (e.g., in test/web environment).
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.qr_code_scanner, color: theme.colorScheme.surface, size: 48),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Camera not available.',
+                            style: TextStyle(color: theme.colorScheme.surface),
+                          ),
+                        ],
+                      ),
+                    ),
                   ] else ...[
                     InAppCameraView(
                       onCapture: (path) => _mode == CaptureMode.foodLabel ? _runOcrOnFile(path) : _runAiOnFile(path),
                       onGallery: _pickFromGallery,
                     ),
                   ],
+
                   if (_isProcessing)
                     Center(
                       child: CircularProgressIndicator(color: theme.colorScheme.primary),

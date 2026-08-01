@@ -31,6 +31,7 @@ class BurnRepository {
       'minutes': option.minutes,
       'kcal': option.kcal,
       'completed_at': completedAt.toIso8601String(),
+      'updated_at': completedAt.toUtc().toIso8601String(),
     });
     await _enqueue('burn_completions', id, 'insert');
   }

@@ -7,7 +7,7 @@ class RemoteDataSource {
 
   Future<void> upsertProfile(Map<String, dynamic> data) async {
     if (_client == null) return;
-    await _client.from('profile').upsert(data);
+    await _client.from('profiles').upsert(data);
   }
 
   Future<void> upsertRows(String table, List<Map<String, dynamic>> rows) async {

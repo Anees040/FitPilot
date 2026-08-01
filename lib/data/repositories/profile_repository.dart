@@ -21,7 +21,9 @@ class ProfileRepository {
   Future<void> save(Profile profile) async {
     final data = {
       'id': 1,
+      'name': profile.name,
       'weight_kg': profile.weightKg,
+      'goal_weight_kg': profile.goalWeightKg,
       'height_cm': profile.heightCm,
       'age': profile.age,
       'gender': profile.gender.name,
@@ -31,6 +33,7 @@ class ProfileRepository {
       'target_override': profile.targetOverride,
       'equipment': jsonEncode(profile.equipment),
       'theme_mode': profile.themeMode.name,
+      'theme_color': profile.themeColor,
       'plan_category_pref': profile.planCategoryPref,
       'plan_pace_pref': profile.planPacePref,
       'unit_kg_lb': profile.unitKgLb,
@@ -58,7 +61,9 @@ class ProfileRepository {
     );
 
     return Profile(
+      name: map['name'] as String?,
       weightKg: (map['weight_kg'] as num?)?.toDouble() ?? 70.0,
+      goalWeightKg: (map['goal_weight_kg'] as num?)?.toDouble(),
       heightCm: (map['height_cm'] as num?)?.round() ?? 170,
       age: (map['age'] as num?)?.round() ?? 30,
       gender: Gender.values.byName(map['gender'] as String? ?? 'unspecified'),
@@ -70,6 +75,7 @@ class ProfileRepository {
       targetOverride: (map['target_override'] as num?)?.round(),
       equipment: equipmentList.map((e) => e.toString()).toList(),
       themeMode: themeMode,
+      themeColor: map['theme_color'] as String? ?? 'orange',
       planCategoryPref: map['plan_category_pref'] as String? ?? 'recommended',
       planPacePref: map['plan_pace_pref'] as String? ?? 'any',
       unitKgLb: map['unit_kg_lb'] as String? ?? 'kg',

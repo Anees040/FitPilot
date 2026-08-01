@@ -291,7 +291,7 @@ void main() {
       );
 
       final state = await container.read(todayProvider.future);
-      expect(state.dayStatus.state, DayState.over);
+      expect(state.dayStatus.state, DayState.unburned);
     });
   });
 }

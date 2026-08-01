@@ -3,25 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
+import 'package:fitpilot/application/providers/profile_provider.dart';
+import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/config/env.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
-import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/application/providers/demo_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({super.key});
+  final String? initialMode;
+  
+  const AuthScreen({super.key, this.initialMode});
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  bool _isLogin = true;
+  late bool _isLogin;
 
   final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _passFocusNode = FocusNode();
@@ -38,6 +42,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   void initState() {
     super.initState();
+    _isLogin = widget.initialMode != 'signup';
     _passFocusNode.addListener(() {
       setState(() => _passwordFocused = _passFocusNode.hasFocus);
     });
@@ -45,6 +50,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   void dispose() {
+    _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
     _passFocusNode.dispose();
@@ -88,9 +94,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         await ref
             .read(authRepositoryProvider)
             .signUp(email: _emailCtrl.text.trim(), password: _passCtrl.text);
+            
+        final profile = ref.read(profileProvider).value;
+        if (profile != null) {
+          final repo = await ref.read(profileRepositoryProvider.future);
+          await repo.save(
+            profile.copyWith(name: _nameCtrl.text.trim()),
+          );
+        }
       }
 
-      // Check if we need to verify email
       if (!_isLogin) {
         if (mounted) context.push('/otp', extra: _emailCtrl.text.trim());
         return;
@@ -135,6 +148,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  void _toggleMode() {
+    setState(() {
+      _isLogin = !_isLogin;
+      _formError = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -142,172 +162,262 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final isDemo = ref.watch(demoProvider);
 
     return Scaffold(
-      appBar: AppBar(elevation: 0, backgroundColor: Colors.transparent),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Column(
+        children: [
+          // Hero Top
+          Expanded(
+            flex: 2,
+            child: Stack(
               children: [
-                if (isDemo) _buildDemoBanner(theme, ext),
-                
-                // Logo
-                Center(
-                  child: Image.asset(
-                    theme.brightness == Brightness.dark ? 'assets/images/logo_mark_white.png' : 'assets/images/logo_mark_orange.png',
-                    height: 48,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Title with fade transition
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    _isLogin ? 'Welcome back' : 'Create your account',
-                    key: ValueKey(_isLogin),
-                    style: theme.textTheme.h2,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                
-                // Segmented Control
-                _buildSegmentedControl(theme, ext),
-                const SizedBox(height: 32),
-
-                // Google Button
-                GoogleButton(
-                  isLoading: _isLoading,
-                  onPressed: _submitGoogle,
-                ),
-                const SizedBox(height: 24),
-                
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: ext.hairline)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: Text(
-                          _isLogin ? 'or log in with email' : 'or sign up with email',
-                          key: ValueKey(_isLogin),
-                          style: theme.textTheme.caption,
-                        ),
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.15),
+                          theme.scaffoldBackgroundColor,
+                        ],
                       ),
                     ),
-                    Expanded(child: Divider(color: ext.hairline)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                AppTextField(
-                  label: 'EMAIL',
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Enter your email';
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val)) return 'Enter a valid email address';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                AppTextField(
-                  label: 'PASSWORD',
-                  controller: _passCtrl,
-                  focusNode: _passFocusNode,
-                  obscureText: _obscurePassword,
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Enter your password';
-                    return _formError;
-                  },
-                  trailing: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      size: 20,
-                      color: theme.textTheme.caption.color,
-                    ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
-                  onChanged: _validatePassword,
                 ),
-                
-                // Animated space for SignUp extras or Login extras
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: Column(
-                    children: [
-                      if (!_isLogin && (_passwordFocused || _passCtrl.text.isNotEmpty)) ...[
-                        const SizedBox(height: 12),
-                        _buildChecklistItem(context, 'Minimum 8 characters', _hasLength),
-                        _buildChecklistItem(context, 'At least one letter', _hasLetter),
-                        _buildChecklistItem(context, 'At least one number', _hasNumber),
-                        const SizedBox(height: 8),
-                      ],
-                      if (_isLogin) ...[
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TertiaryButton(
-                            label: 'Forgot password?',
-                            onPressed: () => context.push('/forgot-password'),
-                            color: theme.colorScheme.primary,
+                SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => context.pop(),
+                        ),
+                        const Spacer(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0.0, 0.2),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: Text(
+                              _isLogin ? 'Welcome\nback' : 'Create\naccount',
+                              key: ValueKey(_isLogin),
+                              style: theme.textTheme.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -1,
+                                height: 1.1,
+                              ),
+                            ),
                           ),
                         ),
+                        const SizedBox(height: 32),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-
-                if (_formError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _formError!,
-                    style: theme.textTheme.caption.copyWith(color: ext.error),
-                  ),
-                ],
-
-                const SizedBox(height: 24),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: PrimaryButton(
-                    key: ValueKey(_isLogin),
-                    label: _isLogin ? 'Log in' : 'Sign up',
-                    onPressed: _submit,
-                    isLoading: _isLoading,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: !_isLogin
-                      ? AppCard(
-                          color: theme.scaffoldBackgroundColor,
-                          child: Row(
-                            children: [
-                              Icon(Icons.shield_outlined, color: ext.success, size: 24),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  'We use this for auth and sync. No spam ever.',
-                                  style: theme.textTheme.caption,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : const SizedBox.shrink(),
                 ),
               ],
             ),
           ),
-        ),
+          
+          // Bottom Card
+          Expanded(
+            flex: 5,
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (isDemo) _buildDemoBanner(theme, ext),
+                        
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          child: !_isLogin
+                              ? Column(
+                                  children: [
+                                    AppTextField(
+                                      label: 'NAME',
+                                      controller: _nameCtrl,
+                                      keyboardType: TextInputType.name,
+                                      validator: (val) {
+                                        if (!_isLogin && (val == null || val.isEmpty)) {
+                                          return 'Enter your name';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+
+                        AppTextField(
+                          label: 'EMAIL',
+                          controller: _emailCtrl,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (val) {
+                            if (val == null || val.isEmpty) return 'Enter your email';
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val)) return 'Enter a valid email address';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        AppTextField(
+                          label: 'PASSWORD',
+                          controller: _passCtrl,
+                          focusNode: _passFocusNode,
+                          obscureText: _obscurePassword,
+                          validator: (val) {
+                            if (val == null || val.isEmpty) return 'Enter your password';
+                            return _formError;
+                          },
+                          trailing: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              size: 20,
+                              color: theme.textTheme.caption.color,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                          onChanged: _validatePassword,
+                        ),
+                        
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          child: Column(
+                            children: [
+                              if (!_isLogin && (_passwordFocused || _passCtrl.text.isNotEmpty)) ...[
+                                const SizedBox(height: 12),
+                                _buildChecklistItem(context, 'Minimum 8 characters', _hasLength),
+                                _buildChecklistItem(context, 'At least one letter', _hasLetter),
+                                _buildChecklistItem(context, 'At least one number', _hasNumber),
+                                const SizedBox(height: 8),
+                              ],
+                              if (_isLogin) ...[
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TertiaryButton(
+                                    label: 'Forgot password?',
+                                    onPressed: () => context.push('/forgot-password'),
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+
+                        if (_formError != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            _formError!,
+                            style: theme.textTheme.caption.copyWith(color: ext.error),
+                          ),
+                        ],
+
+                        const SizedBox(height: 32),
+                        
+                        PrimaryButton(
+                          label: _isLogin ? 'Log in' : 'Sign up',
+                          onPressed: _submit,
+                          isLoading: _isLoading,
+                        ),
+
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: ext.hairline)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'OR',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.textTheme.caption.color,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Expanded(child: Divider(color: ext.hairline)),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        GoogleButton(
+                          isLoading: _isLoading,
+                          onPressed: _submitGoogle,
+                        ),
+
+                        const SizedBox(height: 32),
+                        
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _isLogin ? "Don't have an account? " : "Already have an account? ",
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _toggleMode,
+                              child: Text(
+                                _isLogin ? 'Sign up' : 'Log in',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 32),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -340,92 +450,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 
-  Widget _buildSegmentedControl(ThemeData theme, AppColors ext) {
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: ext.hairline,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Stack(
-        children: [
-          // Animated Selection Box
-          AnimatedAlign(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            alignment: _isLogin ? Alignment.centerLeft : Alignment.centerRight,
-            child: FractionallySizedBox(
-              widthFactor: 0.5,
-              child: Container(
-                margin: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Text Labels
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    if (!_isLogin) {
-                      setState(() {
-                        _isLogin = true;
-                        _formError = null;
-                      });
-                    }
-                  },
-                  child: Center(
-                    child: AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 300),
-                      style: theme.textTheme.bodyStrong.copyWith(
-                        color: _isLogin ? theme.textTheme.body.color : theme.textTheme.caption.color,
-                      ),
-                      child: const Text('Log in'),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    if (_isLogin) {
-                      setState(() {
-                        _isLogin = false;
-                        _formError = null;
-                      });
-                    }
-                  },
-                  child: Center(
-                    child: AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 300),
-                      style: theme.textTheme.bodyStrong.copyWith(
-                        color: !_isLogin ? theme.textTheme.body.color : theme.textTheme.caption.color,
-                      ),
-                      child: const Text('Sign up'),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDemoBanner(ThemeData theme, AppColors ext) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -450,3 +474,4 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 }
+

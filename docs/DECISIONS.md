@@ -18,3 +18,4 @@ Format: `YYYY-MM-DD — decision — why`
 - 2026-07-29 — Neutral days (noData): Days with no logs and no burn plan completions are now assigned `DayState.noData` to pause streaks cleanly rather than breaking them.
 - 2026-07-29 — SQLite for theme_mode: Persisted ThemeMode setting in `profile` table to avoid introducing a `shared_preferences` dependency.
 - 2026-07-29 — Global TextScaler: Clamped typography scaling between 0.85 and 1.15 in `main.dart` to prevent system accessibility settings from destroying layout.
+- 2026-08-01 � Logic Pivot: Migrated from allowance-based budgeting to a strict 'debt' model where users only log guilt meals (toBurn = max(0, net - wiggleRoom)).

@@ -9,16 +9,16 @@ void main() {
     const calc = RangeCalculator();
     final now = DateTime(2026, 7, 27);
 
-    test('empty logs returns zero total and net, state under', () {
+    test('empty logs returns zero total and net, state noData', () {
       final status = calc.dayStatus(
         logs: [],
         burnedKcal: 0,
-        targetKcal: 2000, allowanceKcal: 300,
+        wiggleRoomKcal: 300,
       );
 
       expect(status.total, KcalRange(0, 0));
       expect(status.net, KcalRange(0, 0));
-      expect(status.remainingKcal, 300);
+      expect(status.toBurn, 0);
       expect(status.state, DayState.noData);
     });
 
@@ -46,7 +46,7 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 0,
-        targetKcal: 2000, allowanceKcal: 300,
+        wiggleRoomKcal: 300,
       );
 
       expect(status.total, KcalRange(100, 200));
@@ -58,7 +58,7 @@ void main() {
           id: '1',
           customName: 'A',
           quantity: 1,
-          kcal: KcalRange(200, 300),
+          kcal: KcalRange(100, 200),
           source: LogSource.manual,
           loggedAt: now,
         ),
@@ -66,24 +66,22 @@ void main() {
 
       final status = calc.dayStatus(
         logs: logs,
-        burnedKcal: 250,
-        targetKcal: 2000, allowanceKcal: 300,
+        burnedKcal: 150,
+        wiggleRoomKcal: 300,
       );
 
-      expect(status.total, KcalRange(200, 300));
-      // 200 - 250 = 0 (clamped), 300 - 250 = 50
+      expect(status.total, KcalRange(100, 200));
+      // 100-150 -> 0, 200-150 -> 50
       expect(status.net, KcalRange(0, 50));
-      // Midpoint of 0-50 is 25. Remaining = 300 - 25 = 275.
-      expect(status.remainingKcal, 275);
     });
 
-    test('state is under when net midpoint <= allowance * 0.8', () {
+    test('cleared state when toBurn is 0 (within wiggle room)', () {
       final logs = [
         FoodLog(
           id: '1',
           customName: 'A',
           quantity: 1,
-          kcal: KcalRange(200, 200),
+          kcal: KcalRange(200, 250), // midpoint 225
           source: LogSource.manual,
           loggedAt: now,
         ),
@@ -92,20 +90,20 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 0,
-        targetKcal: 2000, allowanceKcal: 300,
+        wiggleRoomKcal: 300,
       );
 
-      // Midpoint 200. Allowance * 0.8 = 240. Under.
-      expect(status.state, DayState.under);
+      expect(status.state, DayState.cleared);
+      expect(status.toBurn, 0);
     });
 
-    test('state is near when allowance * 0.8 < net midpoint <= allowance', () {
+    test('unburned state when toBurn > 0 and no burnedKcal', () {
       final logs = [
         FoodLog(
           id: '1',
           customName: 'A',
           quantity: 1,
-          kcal: KcalRange(250, 250),
+          kcal: KcalRange(300, 500), // midpoint 400
           source: LogSource.manual,
           loggedAt: now,
         ),
@@ -114,20 +112,21 @@ void main() {
       final status = calc.dayStatus(
         logs: logs,
         burnedKcal: 0,
-        targetKcal: 2000, allowanceKcal: 300,
+        wiggleRoomKcal: 300,
       );
 
-      // Midpoint 250. Allowance * 0.8 = 240. Near.
-      expect(status.state, DayState.near);
+      // net midpoint is 400, wiggle room is 300 -> toBurn 100
+      expect(status.state, DayState.unburned);
+      expect(status.toBurn, 100);
     });
 
-    test('state is over when net midpoint > allowance', () {
+    test('inProgress state when toBurn > 0 and burnedKcal > 0', () {
       final logs = [
         FoodLog(
           id: '1',
           customName: 'A',
           quantity: 1,
-          kcal: KcalRange(350, 350),
+          kcal: KcalRange(600, 600), // midpoint 600
           source: LogSource.manual,
           loggedAt: now,
         ),
@@ -135,21 +134,22 @@ void main() {
 
       final status = calc.dayStatus(
         logs: logs,
-        burnedKcal: 0,
-        targetKcal: 2000, allowanceKcal: 300,
+        burnedKcal: 100, // burns 100, net midpoint 500
+        wiggleRoomKcal: 300,
       );
 
-      // Midpoint 350 > 300. Over.
-      expect(status.state, DayState.over);
+      // net midpoint 500 - wiggle 300 = 200 toBurn
+      expect(status.state, DayState.inProgress);
+      expect(status.toBurn, 200);
     });
 
-    test('remainingKcal is negative when over allowance', () {
+    test('cleared state when toBurn becomes 0 after burning', () {
       final logs = [
         FoodLog(
           id: '1',
           customName: 'A',
           quantity: 1,
-          kcal: KcalRange(400, 500),
+          kcal: KcalRange(600, 600), // midpoint 600
           source: LogSource.manual,
           loggedAt: now,
         ),
@@ -157,12 +157,13 @@ void main() {
 
       final status = calc.dayStatus(
         logs: logs,
-        burnedKcal: 0,
-        targetKcal: 2000, allowanceKcal: 300,
+        burnedKcal: 400, // net midpoint 200
+        wiggleRoomKcal: 300,
       );
 
-      // Midpoint 450. Remaining = 300 - 450 = -150.
-      expect(status.remainingKcal, -150);
+      // net midpoint 200 - wiggle 300 = -100 -> 0 toBurn
+      expect(status.state, DayState.cleared);
+      expect(status.toBurn, 0);
     });
   });
 }

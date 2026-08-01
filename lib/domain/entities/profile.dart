@@ -15,6 +15,7 @@ enum ThemeModePref { system, light, dark }
 
 /// User profile — single-row entity.
 class Profile extends Equatable {
+  final String? name;
   final double weightKg;
   final double? goalWeightKg;
   final int heightCm;
@@ -37,6 +38,7 @@ class Profile extends Equatable {
   static const int defaultAllowanceKcal = 300;
 
   Profile({
+    this.name,
     required this.weightKg,
     this.goalWeightKg,
     required this.heightCm,
@@ -92,9 +94,21 @@ class Profile extends Equatable {
     return calc.dailyTarget(tdeeValue: tdee, goal: goal, gender: gender);
   }
 
+  int get tdee {
+    const calc = TargetCalculator();
+    final bmr = calc.bmr(
+      weightKg: weightKg,
+      heightCm: heightCm.toDouble(),
+      age: age,
+      gender: gender,
+    );
+    return calc.tdee(bmr, activityLevel).toInt();
+  }
+
   int get effectiveDailyLimit => effectiveDailyTarget + allowanceKcal;
 
   Profile copyWith({
+    String? name,
     double? weightKg,
     double? goalWeightKg,
     int? heightCm,
@@ -116,6 +130,7 @@ class Profile extends Equatable {
     bool clearOverride = false,
   }) {
     return Profile(
+      name: name ?? this.name,
       weightKg: weightKg ?? this.weightKg,
       goalWeightKg: goalWeightKg ?? this.goalWeightKg,
       heightCm: heightCm ?? this.heightCm,
@@ -139,6 +154,7 @@ class Profile extends Equatable {
 
   @override
   List<Object?> get props => [
+    name,
     weightKg,
     goalWeightKg,
     heightCm,

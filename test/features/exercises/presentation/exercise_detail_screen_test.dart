@@ -75,8 +75,8 @@ class _FakeBurnPlanNotifier extends AsyncNotifier<BurnPlanState> implements Burn
   @override
   Future<BurnPlanState> build() async {
     return BurnPlanState(
-      frame: BurnPlanFrame.surplusToday,
-      kcalToBurnOrEat: 200,
+      frame: BurnPlanFrame.burnToday,
+      kcalToBurnOrEat: 500,
       targetDate: DateTime.now(),
     );
   }

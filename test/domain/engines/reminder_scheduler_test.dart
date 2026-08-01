@@ -20,9 +20,9 @@ void main() {
     total: KcalRange(0, 0),
     burnedKcal: 0,
     net: KcalRange(0, 0),
-    remainingKcal: 2000,
-    state: DayState.under,
-    targetKcal: 2000, allowanceKcal: 2000,
+    toBurn: 0,
+    state: DayState.cleared,
+    wiggleRoomKcal: 2000,
   );
 
   test('Scheduler returns empty if globally muted', () {

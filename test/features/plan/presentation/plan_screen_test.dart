@@ -16,8 +16,8 @@ void main() {
     );
 
     final mockState = BurnPlanState(
-      frame: BurnPlanFrame.surplusToday,
-      kcalToBurnOrEat: 100,
+      frame: BurnPlanFrame.burnToday,
+      kcalToBurnOrEat: 500,
       options: const [testOption],
       targetDate: DateTime.now(),
     );

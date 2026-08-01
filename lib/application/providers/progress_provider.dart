@@ -40,7 +40,8 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     final profile = await ref.watch(profileProvider.future);
     
     // Watch todayProvider so that progress chart updates when food is logged today
-    await ref.watch(todayProvider.future);
+    // We watch the async value to ensure rebuilds happen when state changes
+    ref.watch(todayProvider);
 
     final logRepo = await ref.watch(logRepositoryProvider.future);
     final burnRepo = await ref.watch(burnRepositoryProvider.future);
@@ -71,8 +72,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       final status = calculator.dayStatus(
         logs: logs,
         burnedKcal: burns,
-        allowanceKcal: profile.effectiveDailyLimit,
-        targetKcal: profile.effectiveDailyTarget,
+        wiggleRoomKcal: profile.allowanceKcal,
       );
       history[date] = status;
     }

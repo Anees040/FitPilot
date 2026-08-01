@@ -116,7 +116,14 @@ class _InAppCameraViewState extends State<InAppCameraView> with WidgetsBindingOb
       return Container(
         color: const Color(0xFF000000),
         child: const Center(
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.camera_alt, color: Colors.white54, size: 48),
+              SizedBox(height: 16),
+              Text('Initializing camera...', style: TextStyle(color: Colors.white54)),
+            ],
+          ),
         ),
       );
     }

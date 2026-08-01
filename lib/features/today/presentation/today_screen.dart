@@ -38,7 +38,7 @@ class TodayScreen extends ConsumerWidget {
                   child: _HeroSection(status: state.dayStatus),
                 ),
               ),
-              if (state.dayStatus.state == DayState.over)
+              if (state.dayStatus.toBurn > 0)
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   sliver: SliverToBoxAdapter(
@@ -54,7 +54,7 @@ class TodayScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Over your limit',
+                                  'You have a debt to burn',
                                   style: theme.textTheme.bodyStrong.copyWith(color: ext.error),
                                 ),
                                 Text(
@@ -128,91 +128,107 @@ class _HeroSection extends StatelessWidget {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
 
-    Color statusColor;
-    switch (status.state) {
-      case DayState.under:
-        statusColor = ext.success;
-        break;
-      case DayState.near:
-        statusColor = ext.warning;
-        break;
-      case DayState.over:
-        statusColor = ext.error;
-        break;
-      case DayState.noData:
-        statusColor = theme.textTheme.caption.color!;
-        break;
+    if (status.state == DayState.cleared) {
+      return AppCard(
+        color: ext.success.withValues(alpha: 0.1),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.local_fire_department, size: 48, color: ext.success),
+            const SizedBox(height: 16),
+            Text(
+              'All burned off 🔥',
+              style: theme.textTheme.h1.copyWith(color: ext.success),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You\'ve cleared today\'s debt. Great job!',
+              style: theme.textTheme.bodyMedium?.copyWith(color: ext.success),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            _buildSecondaryStats(context),
+          ],
+        ),
+      );
     }
 
-    final midpoint = status.net.midpoint;
-    final ratio = (midpoint / status.allowanceKcal).clamp(0.0, 1.0);
+    Color statusColor = status.toBurn > 0 ? ext.error : theme.textTheme.caption.color!;
 
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Text('EATEN TODAY', style: theme.textTheme.overline),
-              ),
-              if (status.state == DayState.over)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: ext.error,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'OVER TARGET',
-                    style: theme.textTheme.overline.copyWith(color: theme.colorScheme.onPrimary),
-                  ),
-                )
-              else
-                Flexible(
-                  child: Text(
-                    'Target: ${status.targetKcal}',
-                    style: theme.textTheme.caption,
-                    textAlign: TextAlign.end,
-                  ),
-                ),
-            ],
-          ),
+          Text('TO BURN', style: theme.textTheme.overline),
           const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: KcalRangeText(
-                  range: status.net,
-                  style: theme.textTheme.display,
+                child: Text(
+                  '${status.toBurn}',
+                  style: theme.textTheme.display.copyWith(color: statusColor),
                 ),
               ),
-              if (status.state != DayState.over) ...[
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text(
-                    '${(status.allowanceKcal - status.net.max).clamp(0, 9999)} left',
-                    style: theme.textTheme.bodyStrong.copyWith(color: statusColor),
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6.0),
+                child: Text(
+                  'kcal',
+                  style: theme.textTheme.bodyStrong.copyWith(color: statusColor),
                 ),
-              ],
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: ratio,
-              backgroundColor: ext.hairline,
-              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-              minHeight: 8,
-            ),
-          ),
+          const SizedBox(height: 24),
+          _buildSecondaryStats(context),
         ],
       ),
+    );
+  }
+
+  Widget _buildSecondaryStats(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('EATEN', style: theme.textTheme.overline),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: KcalRangeText(
+                  range: status.total,
+                  style: theme.textTheme.bodyStrong,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('BURNED', style: theme.textTheme.overline),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${status.burnedKcal} kcal',
+                  style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.primary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

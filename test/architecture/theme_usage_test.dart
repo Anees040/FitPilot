@@ -13,7 +13,7 @@ void main() {
     final issues = <String>[];
 
     final colorRegex = RegExp(r'\b(Colors\.[a-zA-Z0-9_]+|Color\(0x[A-Fa-f0-9]+\))\b');
-    final appThemeRegex = RegExp(r'\bAppTheme\.(?!lightTheme|darkTheme)[a-zA-Z0-9_]+\b');
+    final appThemeRegex = RegExp(r'\bAppTheme\.(?!lightTheme|darkTheme|getLightTheme|getDarkTheme)[a-zA-Z0-9_]+\b');
 
     for (final file in files) {
       if (allowedFiles.any((allowed) => file.path.endsWith(allowed))) {

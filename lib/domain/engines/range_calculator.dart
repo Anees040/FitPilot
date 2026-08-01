@@ -9,39 +9,39 @@ class RangeCalculator {
   const RangeCalculator();
 
   /// Calculates the [DayStatus] for a given set of logs, burned kcal,
-  /// and allowance.
+  /// and wiggle room.
   ///
   /// Logs with a non-null [FoodLog.deletedAt] are excluded.
   DayStatus dayStatus({
     required List<FoodLog> logs,
     required int burnedKcal,
-    required int allowanceKcal,
-    required int targetKcal,
+    required int wiggleRoomKcal,
   }) {
     final activeLogs = logs.where((l) => l.deletedAt == null);
     final total = KcalRange.sum(activeLogs.map((l) => l.kcal));
     final net = total.minus(burnedKcal);
-    final remainingKcal = allowanceKcal - net.midpoint;
+    
+    // toBurn = max(0, net.midpoint - wiggleRoomKcal)
+    final toBurn = (net.midpoint - wiggleRoomKcal).clamp(0, double.infinity).toInt();
 
     final DayState state;
-    if (activeLogs.isEmpty && burnedKcal == 0) {
+    if (activeLogs.isEmpty) {
       state = DayState.noData;
-    } else if (net.midpoint > allowanceKcal) {
-      state = DayState.over;
-    } else if (net.midpoint > allowanceKcal * 0.8) {
-      state = DayState.near;
+    } else if (toBurn == 0) {
+      state = DayState.cleared;
+    } else if (burnedKcal > 0) {
+      state = DayState.inProgress;
     } else {
-      state = DayState.under;
+      state = DayState.unburned;
     }
 
     return DayStatus(
       total: total,
       burnedKcal: burnedKcal,
       net: net,
-      remainingKcal: remainingKcal,
+      toBurn: toBurn,
       state: state,
-      allowanceKcal: allowanceKcal,
-      targetKcal: targetKcal,
+      wiggleRoomKcal: wiggleRoomKcal,
     );
   }
 }

@@ -176,7 +176,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           }).toList(),
                         ),
                         const SizedBox(height: 16),
-                        _buildTextField('CHEAT TOLERANCE (KCAL)', _toleranceCtrl, _validateTolerance),
+                        _buildTextField('WIGGLE ROOM (KCAL)', _toleranceCtrl, _validateTolerance),
                         const SizedBox(height: 16),
                         _buildTextField('TARGET OVERRIDE (OPT)', _overrideCtrl, _validateOverride),
                         const SizedBox(height: 16),
@@ -348,34 +348,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('DAILY TARGET', style: theme.textTheme.labelSmall),
-              if (profile.targetOverride != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'OVERRIDE',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          Text('METABOLIC REFERENCE', style: theme.textTheme.labelSmall),
           const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '',
+                '${profile.tdee}',
                 style: theme.textTheme.displayMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.primary,
@@ -384,7 +364,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(width: 4),
               Text(
-                'kcal',
+                'kcal TDEE',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -393,7 +373,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            '+  kcal cheat allowance',
+            'Your app operates on a "debt" model. Every meal you log is debt you have to burn off. However, your first ${profile.allowanceKcal} kcal each day are "wiggle room" and won\'t trigger a burn plan.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
