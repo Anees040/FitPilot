@@ -114,7 +114,7 @@ class _InAppCameraViewState extends State<InAppCameraView> with WidgetsBindingOb
 
     if (!_isInitialized || _controller == null) {
       return Container(
-        color: Colors.black,
+        color: const Color(0xFF000000),
         child: const Center(
           child: CircularProgressIndicator(),
         ),

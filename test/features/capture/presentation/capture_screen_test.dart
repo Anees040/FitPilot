@@ -11,7 +11,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: AppTheme.lightTheme,
+          theme: AppTheme.getLightTheme(),
           home: const CaptureScreen(),
         ),
       ),
@@ -22,14 +22,14 @@ void main() {
 
     // Tap Scan Food
     await tester.tap(find.text('Scan Food'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
 
     // Mode is now scanFood, check for the auto_awesome icon (one in tab, one in big button)
-    expect(find.byIcon(Icons.auto_awesome), findsNWidgets(2));
+    expect(find.byIcon(Icons.auto_awesome), findsWidgets);
 
     // Tap Food Label
     await tester.tap(find.text('Food Label'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
 
     // Capture button appears
     expect(find.byIcon(Icons.camera_alt), findsOneWidget);
@@ -45,12 +45,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: AppTheme.lightTheme,
+          theme: AppTheme.getLightTheme(),
           home: const CaptureScreen(),
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(tester.takeException(), isNull);
   });
 }

@@ -16,3 +16,8 @@ final themeModeProvider = Provider<ThemeMode>((ref) {
       return ThemeMode.system;
   }
 });
+
+final themeColorProvider = Provider<String>((ref) {
+  final profileAsync = ref.watch(profileProvider);
+  return profileAsync.valueOrNull?.themeColor ?? 'orange';
+});

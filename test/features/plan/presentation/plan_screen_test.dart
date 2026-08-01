@@ -28,7 +28,7 @@ void main() {
           burnPlanProvider.overrideWith(() => _MockBurnPlanNotifier(mockState)),
         ],
         child: MaterialApp(
-          theme: AppTheme.lightTheme,
+          theme: AppTheme.getLightTheme(),
           home: const PlanScreen(),
         ),
       ),

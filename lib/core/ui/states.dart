@@ -32,7 +32,13 @@ class EmptyState extends StatelessWidget {
             width: 160,
             height: 160,
             child: illustration.isNotEmpty
-                ? Image.asset('assets/illustrations/$illustration.png', errorBuilder: (context, error, stackTrace) => Icon(Icons.inbox, size: 80, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)))
+                ? ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      theme.brightness == Brightness.dark ? Colors.white70 : Colors.black87,
+                      BlendMode.srcIn,
+                    ),
+                    child: Image.asset('assets/illustrations/$illustration.png', errorBuilder: (context, error, stackTrace) => Icon(Icons.inbox, size: 80, color: theme.colorScheme.onSurface.withValues(alpha: 0.2))),
+                  )
                 : Icon(Icons.inbox, size: 80, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
           ),
           const SizedBox(height: 24),

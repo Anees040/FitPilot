@@ -58,7 +58,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
+            theme: AppTheme.getLightTheme(),
             home: const Scaffold(
               body: SingleChildScrollView(child: ManualEntrySheet()),
             ),
@@ -67,17 +67,17 @@ void main() {
       );
 
       // Enter name
-      await tester.enterText(find.byType(TextFormField).first, 'Test Food');
+      await tester.enterText(find.byType(TextField).first, 'Test Food');
 
       // Enter 0
-      await tester.enterText(find.byType(TextFormField).last, '0');
+      await tester.enterText(find.byType(TextField).last, '0');
       await tester.tap(find.text('Add'));
       await tester.pump();
 
       expect(find.text('Calories must be between 1 and 5000'), findsOneWidget);
 
       // Enter 5001
-      await tester.enterText(find.byType(TextFormField).last, '5001');
+      await tester.enterText(find.byType(TextField).last, '5001');
       await tester.tap(find.text('Add'));
       await tester.pump();
 
@@ -103,7 +103,7 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
+            theme: AppTheme.getLightTheme(),
             home: const LogScreen(),
           ),
         ),
@@ -134,7 +134,7 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
+            theme: AppTheme.getLightTheme(),
             home: const TodayScreen(),
           ),
         ),

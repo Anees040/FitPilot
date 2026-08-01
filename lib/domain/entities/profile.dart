@@ -26,6 +26,7 @@ class Profile extends Equatable {
   final int? targetOverride;
   final List<String> equipment;
   final ThemeModePref themeMode;
+  final String themeColor;
   final String planCategoryPref;
   final String planPacePref;
   final String unitKgLb;
@@ -47,6 +48,7 @@ class Profile extends Equatable {
     this.targetOverride,
     this.equipment = const [],
     this.themeMode = ThemeModePref.system,
+    this.themeColor = 'orange',
     this.planCategoryPref = 'recommended',
     this.planPacePref = 'any',
     this.unitKgLb = 'kg',
@@ -104,6 +106,7 @@ class Profile extends Equatable {
     int? targetOverride,
     List<String>? equipment,
     ThemeModePref? themeMode,
+    String? themeColor,
     String? planCategoryPref,
     String? planPacePref,
     String? unitKgLb,
@@ -124,6 +127,7 @@ class Profile extends Equatable {
       targetOverride: clearOverride ? null : (targetOverride ?? this.targetOverride),
       equipment: equipment ?? this.equipment,
       themeMode: themeMode ?? this.themeMode,
+      themeColor: themeColor ?? this.themeColor,
       planCategoryPref: planCategoryPref ?? this.planCategoryPref,
       planPacePref: planPacePref ?? this.planPacePref,
       unitKgLb: unitKgLb ?? this.unitKgLb,
@@ -146,6 +150,7 @@ class Profile extends Equatable {
     targetOverride,
     equipment,
     themeMode,
+    themeColor,
     planCategoryPref,
     planPacePref,
     unitKgLb,

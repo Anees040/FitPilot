@@ -23,7 +23,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.getLightTheme(),
         home: MediaQuery(
           data: const MediaQueryData(
             size: Size(320, 600),

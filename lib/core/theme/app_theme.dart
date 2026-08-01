@@ -29,7 +29,12 @@ class AppTheme {
   static const Color darkError = Color(0xFFE5807D);
   static const Color darkHighlight = Color(0xFFE9C46A);
 
-  static ThemeData get lightTheme {
+  static ThemeData getLightTheme([String colorKey = 'orange']) {
+    Color accent = lightAccent;
+    Color accentSoft = lightAccentSoft;
+    if (colorKey == 'purple') { accent = const Color(0xFF673AB7); accentSoft = const Color(0xFFEDE7F6); }
+    else if (colorKey == 'green') { accent = const Color(0xFF388E3C); accentSoft = const Color(0xFFE8F5E9); }
+    else if (colorKey == 'blue') { accent = const Color(0xFF1976D2); accentSoft = const Color(0xFFE3F2FD); }
     return _buildTheme(
       bg: lightBg,
       surface: lightSurface,
@@ -37,8 +42,8 @@ class AppTheme {
       text: lightText,
       textSecondary: lightTextSecondary,
       hairline: lightHairline,
-      accent: lightAccent,
-      accentSoft: lightAccentSoft,
+      accent: accent,
+      accentSoft: accentSoft,
       success: lightSuccess,
       warning: lightWarning,
       error: lightError,
@@ -47,7 +52,12 @@ class AppTheme {
     );
   }
 
-  static ThemeData get darkTheme {
+  static ThemeData getDarkTheme([String colorKey = 'orange']) {
+    Color accent = darkAccent;
+    Color accentSoft = darkAccentSoft;
+    if (colorKey == 'purple') { accent = const Color(0xFF9575CD); accentSoft = const Color(0xFF311B92); }
+    else if (colorKey == 'green') { accent = const Color(0xFF81C784); accentSoft = const Color(0xFF1B5E20); }
+    else if (colorKey == 'blue') { accent = const Color(0xFF64B5F6); accentSoft = const Color(0xFF0D47A1); }
     return _buildTheme(
       bg: darkBg,
       surface: darkSurface,
@@ -55,8 +65,8 @@ class AppTheme {
       text: darkText,
       textSecondary: darkTextSecondary,
       hairline: darkHairline,
-      accent: darkAccent,
-      accentSoft: darkAccentSoft,
+      accent: accent,
+      accentSoft: accentSoft,
       success: darkSuccess,
       warning: darkWarning,
       error: darkError,

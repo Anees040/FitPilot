@@ -17,11 +17,12 @@ class FitPilotApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final themeColor = ref.watch(themeColorProvider);
 
     return MaterialApp.router(
       title: 'FitPilot',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppTheme.getLightTheme(themeColor),
+      darkTheme: AppTheme.getDarkTheme(themeColor),
       themeMode: themeMode,
       routerConfig: appRouter,
       builder: (context, child) {

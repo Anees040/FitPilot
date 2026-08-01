@@ -6,11 +6,12 @@ import 'package:fitpilot/features/log/presentation/log_screen.dart';
 import 'package:fitpilot/features/plan/presentation/plan_screen.dart';
 import 'package:fitpilot/features/progress/presentation/progress_screen.dart';
 import 'package:fitpilot/features/profile/presentation/profile_screen.dart';
-import 'package:fitpilot/features/profile/presentation/profile_edit_screen.dart';
+
 
 import 'package:fitpilot/features/splash/presentation/splash_screen.dart';
-import 'package:fitpilot/features/auth/presentation/sign_up_screen.dart';
-import 'package:fitpilot/features/auth/presentation/sign_in_screen.dart';
+
+import 'package:fitpilot/features/auth/presentation/auth_screen.dart';
+import 'package:fitpilot/features/auth/presentation/welcome_screen.dart';
 import 'package:fitpilot/features/auth/presentation/otp_verify_screen.dart';
 import 'package:fitpilot/features/auth/presentation/forgot_password_screen.dart';
 import 'package:fitpilot/features/profile/presentation/profile_setup_screen.dart';
@@ -40,14 +41,14 @@ final appRouter = GoRouter(
       builder: (context, state) => const SplashScreen(),
     ),
     GoRoute(
-      path: '/signup',
+      path: '/welcome',
       parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) => const SignUpScreen(),
+      builder: (context, state) => const WelcomeScreen(),
     ),
     GoRoute(
-      path: '/signin',
+      path: '/auth',
       parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) => const SignInScreen(),
+      builder: (context, state) => const AuthScreen(),
     ),
     GoRoute(
       path: '/otp',
@@ -137,12 +138,7 @@ final appRouter = GoRouter(
             GoRoute(
               path: '/profile',
               builder: (context, state) => const ProfileScreen(),
-              routes: [
-                GoRoute(
-                  path: 'edit',
-                  builder: (context, state) => const ProfileEditScreen(),
-                ),
-              ],
+
             ),
           ],
         ),

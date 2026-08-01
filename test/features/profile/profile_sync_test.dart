@@ -44,7 +44,7 @@ void main() {
           profileProvider.overrideWith(() => mockNotifier),
         ],
         child: MaterialApp(
-          theme: AppTheme.lightTheme,
+          theme: AppTheme.getLightTheme(),
           home: const ProfileScreen(),
         ),
       ),

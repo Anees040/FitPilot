@@ -61,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   Future<void> _initializeApp() async {
     // Wait for the animation to finish
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 2500));
 
     try {
       final db = await AppDatabase.instance();
@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
       if (mounted) {
         if (isFirstLaunch) {
-          context.go('/signin');
+          context.go('/welcome');
         } else {
           context.go('/today');
         }
@@ -79,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     } catch (e) {
       if (mounted) {
         // Fallback on error
-        context.go('/signin');
+        context.go('/welcome');
       }
     }
   }
@@ -105,20 +105,34 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       body: Stack(
         alignment: Alignment.center,
         children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.1),
+                  theme.scaffoldBackgroundColor,
+                ],
+                radius: 1.5,
+              ),
+            ),
+          ),
           // Logo in the center
           Center(
-            child: ScaleTransition(
-              scale: _scaleAnimation,
+            child: FadeTransition(
+              opacity: _scaleAnimation,
               child: ScaleTransition(
-                scale: _pulseAnimation,
-                child: Image.asset(
-                  logoPath,
-                  width: 144, // Make it big enough to match the generated native splash
-                  height: 144,
-                  errorBuilder: (c, e, s) => Icon(
-                    Icons.local_fire_department,
-                    size: 64,
-                    color: Theme.of(c).colorScheme.primary,
+                scale: _scaleAnimation,
+                child: ScaleTransition(
+                  scale: _pulseAnimation,
+                  child: Image.asset(
+                    logoPath,
+                    width: 144, // Make it big enough to match the generated native splash
+                    height: 144,
+                    errorBuilder: (c, e, s) => Icon(
+                      Icons.local_fire_department,
+                      size: 64,
+                      color: Theme.of(c).colorScheme.primary,
+                    ),
                   ),
                 ),
               ),

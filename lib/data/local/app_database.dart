@@ -13,7 +13,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -25,7 +25,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 11,
+      version: 12,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -119,6 +119,7 @@ class AppDatabase {
         target_override INTEGER,
         equipment TEXT NOT NULL DEFAULT '[]',
         theme_mode TEXT NOT NULL DEFAULT 'system',
+        theme_color TEXT NOT NULL DEFAULT 'orange',
         plan_category_pref TEXT NOT NULL DEFAULT 'recommended',
         plan_pace_pref TEXT NOT NULL DEFAULT 'any',
         unit_kg_lb TEXT NOT NULL DEFAULT 'kg',

@@ -6,7 +6,7 @@ import 'package:fitpilot/data/auth/fake_auth_repository.dart';
 import 'package:fitpilot/core/navigation/app_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
-import 'package:fitpilot/features/auth/presentation/sign_in_screen.dart';
+import 'package:fitpilot/features/auth/presentation/auth_screen.dart';
 
 void main() {
   Widget buildTestApp(FakeAuthRepository authRepo) {
@@ -15,20 +15,21 @@ void main() {
         authRepositoryProvider.overrideWithValue(authRepo),
       ],
       child: MaterialApp.router(
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.getLightTheme(),
         routerConfig: appRouter,
       ),
     );
   }
 
-  testWidgets('Google sign-in routes away from SignInScreen', (tester) async {
+  testWidgets('Google sign-in routes away from AuthScreen', (tester) async {
     final repo = FakeAuthRepository();
     
     await tester.pumpWidget(buildTestApp(repo));
-    appRouter.go('/signin');
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+    appRouter.go('/auth');
     await tester.pumpAndSettle();
     
-    expect(find.byType(SignInScreen), findsOneWidget);
+    expect(find.byType(AuthScreen), findsOneWidget);
     
     final googleBtn = find.byType(GoogleButton);
     expect(googleBtn, findsOneWidget);
@@ -40,6 +41,6 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
     
-    expect(find.byType(SignInScreen), findsNothing);
+    expect(find.byType(AuthScreen), findsNothing);
   });
 }

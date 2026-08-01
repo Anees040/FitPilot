@@ -11,7 +11,7 @@ void main() {
     return UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.getLightTheme(),
         home: const ExerciseLibraryScreen(),
       ),
     );
