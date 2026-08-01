@@ -164,6 +164,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Hero Top
           Expanded(

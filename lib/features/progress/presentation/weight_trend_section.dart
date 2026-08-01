@@ -154,8 +154,25 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
       spots.add(FlSpot(spots.first.x + 1, spots.first.y));
     }
 
+    double minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    if (goalWeightKg != null) {
+      minY = minY < goalWeightKg ? minY : goalWeightKg;
+      maxY = maxY > goalWeightKg ? maxY : goalWeightKg;
+    }
+    if (minY == maxY) {
+      minY -= 5.0;
+      maxY += 5.0;
+    } else {
+      final padding = (maxY - minY) * 0.1;
+      minY -= padding;
+      maxY += padding;
+    }
+
     return LineChart(
       LineChartData(
+        minY: minY,
+        maxY: maxY,
         gridData: const FlGridData(show: false),
         titlesData: const FlTitlesData(
           bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -252,8 +269,7 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     final controller = TextEditingController(text: entry.weightKg.toString());
     _showWeightDialog(context, ref, 'Edit Weight', controller, () async {
       final val = double.tryParse(controller.text);
-      if (val != null && val >= 25 && val <= 300) {
-        // Pop dialog immediately to prevent UI freeze, then do async work
+      if (val != null) {
         Navigator.pop(context);
         await ref.read(progressProvider.notifier).editWeight(entry.id, val);
       }
@@ -264,8 +280,7 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     final controller = TextEditingController();
     _showWeightDialog(context, ref, 'Add Weight', controller, () async {
       final val = double.tryParse(controller.text);
-      if (val != null && val >= 25 && val <= 300) {
-        // Pop dialog immediately to prevent UI freeze, then do async work
+      if (val != null) {
         Navigator.pop(context);
         await ref.read(progressProvider.notifier).addWeight(val);
       }
