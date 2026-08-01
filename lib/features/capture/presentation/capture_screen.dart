@@ -13,11 +13,12 @@ import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/data/ai/ai_food_service.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
-import 'package:fitpilot/core/services/permission_service.dart';
+
 import 'package:image_picker/image_picker.dart';
 
 import 'widgets/barcode_quantity_sheet.dart';
 import 'widgets/ocr_review_sheet.dart';
+import 'widgets/in_app_camera_view.dart';
 
 enum CaptureMode { scanFood, barcode, foodLabel, library }
 
@@ -64,19 +65,23 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       context.go('/log');
       return;
     }
-    if (kIsWeb && (newMode == CaptureMode.barcode || newMode == CaptureMode.foodLabel)) {
+    if (kIsWeb && (newMode == CaptureMode.barcode || newMode == CaptureMode.foodLabel || newMode == CaptureMode.scanFood)) {
       AppSnackbar.success(context, 'Camera features are not supported on web.');
       return;
     }
-    if (_mode != newMode && (newMode == CaptureMode.barcode || newMode == CaptureMode.foodLabel)) {
-      _cameraController?.stop().then((_) {
-        if (mounted) _cameraController?.start();
-      });
+    
+    if (_mode != newMode) {
+      if (newMode == CaptureMode.barcode) {
+        _cameraController?.start();
+      } else {
+        _cameraController?.stop();
+      }
     }
+    
     setState(() {
       _mode = newMode;
       _isProcessing = false;
-      _lastScannedBarcode = null; // reset debounce on mode switch
+      _lastScannedBarcode = null;
     });
   }
 
@@ -172,80 +177,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     }
   }
 
-  // ── G2.1: OCR capture via image_picker camera (fixes "failed to capture") ──
-  Future<void> _processOcrCapture() async {
-    if (_isProcessing) return;
 
-    // G2.1: Request camera permission before opening image_picker
-    final hasPermission = await PermissionService.requestCamera();
-    if (!hasPermission) {
-      if (mounted) {
-        AppSnackbar.success(context, 'Camera permission denied. Please enable in Settings.');
-      }
-      return;
-    }
 
-    setState(() => _isProcessing = true);
 
-    try {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.rear,
-        imageQuality: 90,
-      );
-
-      if (pickedFile == null) {
-        if (mounted) setState(() => _isProcessing = false);
-        return;
-      }
-
-      await _runOcrOnFile(pickedFile.path);
-    } catch (e) {
-      if (kDebugMode) debugPrint('[CaptureScreen] OCR camera error: $e');
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        AppSnackbar.success(context, _friendlyError(e));
-      }
-    }
-  }
-
-  // ── G2.1: AI food scan via image_picker camera ────────────────────────────
-  Future<void> _processAiCapture() async {
-    if (_isProcessing) return;
-
-    final hasPermission = await PermissionService.requestCamera();
-    if (!hasPermission) {
-      if (mounted) {
-        AppSnackbar.success(context, 'Camera permission denied. Please enable in Settings.');
-      }
-      return;
-    }
-
-    setState(() => _isProcessing = true);
-
-    try {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.rear,
-        imageQuality: 85,
-      );
-
-      if (pickedFile == null) {
-        if (mounted) setState(() => _isProcessing = false);
-        return;
-      }
-
-      await _runAiOnFile(pickedFile.path);
-    } catch (e) {
-      if (kDebugMode) debugPrint('[CaptureScreen] AI camera error: $e');
-      if (mounted) {
-        setState(() => _isProcessing = false);
-        AppSnackbar.success(context, _friendlyError(e));
-      }
-    }
-  }
 
   // ── Shared helpers ─────────────────────────────────────────────────────────
   Future<void> _runOcrOnFile(String filePath) async {
@@ -353,7 +287,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const Spacer(),
-                  if (!kIsWeb && _mode != CaptureMode.library)
+                  if (!kIsWeb && _mode == CaptureMode.barcode)
                     IconButton(
                       icon: Icon(
                         Icons.photo_library,
@@ -361,7 +295,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                       ),
                       onPressed: _pickFromGallery,
                     ),
-                  if (!kIsWeb)
+                  if (!kIsWeb && _mode == CaptureMode.barcode)
                     IconButton(
                       icon: Icon(
                         _isTorchOn ? Icons.flash_on : Icons.flash_off,
@@ -394,36 +328,17 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                         ],
                       ),
                     )
-                  else
+                  else if (_mode == CaptureMode.barcode) ...[
                     MobileScanner(
                       controller: _cameraController!,
                       errorBuilder: (context, error, child) {
-                        String message;
-                        switch (error.errorCode.name) {
-                          case 'permissionDenied':
-                            message = 'Camera permission denied. Enable it in Settings.';
-                            break;
-                          case 'unsupported':
-                            message = 'Camera not supported on this device.';
-                            break;
-                          default:
-                            if (kDebugMode) debugPrint('[MobileScanner] error: ${error.errorCode} — ${error.errorDetails}');
-                            message = 'Camera unavailable. Tap Retry.';
-                        }
                         return Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.camera_alt, color: theme.colorScheme.error, size: 48),
                               const SizedBox(height: 16),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 32),
-                                child: Text(
-                                  message,
-                                  style: TextStyle(color: theme.colorScheme.surface),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
+                              Text('Camera error', style: TextStyle(color: theme.colorScheme.surface)),
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: () => _cameraController?.start(),
@@ -433,19 +348,15 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                           ),
                         );
                       },
-                      onDetect: (capture) {
-                        if (_mode == CaptureMode.barcode) {
-                          _handleBarcode(capture);
-                        }
-                        // foodLabel and scanFood use image_picker — no onDetect needed
-                      },
+                      onDetect: _handleBarcode,
                     ),
-                  if (_mode == CaptureMode.barcode)
-                    _buildBarcodeOverlay()
-                  else if (_mode == CaptureMode.foodLabel)
-                    _buildOcrOverlay()
-                  else if (_mode == CaptureMode.scanFood)
-                    _buildAiOverlay(),
+                    _buildBarcodeOverlay(),
+                  ] else ...[
+                    InAppCameraView(
+                      onCapture: (path) => _mode == CaptureMode.foodLabel ? _runOcrOnFile(path) : _runAiOnFile(path),
+                      onGallery: _pickFromGallery,
+                    ),
+                  ],
                   if (_isProcessing)
                     Center(
                       child: CircularProgressIndicator(color: theme.colorScheme.primary),
@@ -460,27 +371,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_mode == CaptureMode.foodLabel || _mode == CaptureMode.scanFood)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 24.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.surface,
-                          foregroundColor: theme.colorScheme.onSurface,
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(24),
-                        ),
-                        onPressed: _isProcessing
-                            ? null
-                            : (_mode == CaptureMode.foodLabel
-                                ? _processOcrCapture
-                                : _processAiCapture),
-                        child: Icon(
-                          _mode == CaptureMode.scanFood ? Icons.auto_awesome : Icons.camera_alt,
-                          size: 32,
-                        ),
-                      ),
-                    ),
                   Container(
                     height: 56,
                     decoration: BoxDecoration(
@@ -550,58 +440,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         decoration: BoxDecoration(
           border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
           borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOcrOverlay() {
-    final theme = Theme.of(context);
-    return Center(
-      child: Container(
-        width: 300,
-        height: 400,
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.primary, width: 2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
-            padding: const EdgeInsets.all(8),
-            child: Text(
-              'Tap the camera button to capture — or use the gallery icon',
-              style: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAiOverlay() {
-    final theme = Theme.of(context);
-    return Center(
-      child: Container(
-        width: 300,
-        height: 300,
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.primary, width: 2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
-            padding: const EdgeInsets.all(8),
-            child: Text(
-              'Tap the camera button to capture — or use the gallery icon',
-              style: TextStyle(color: theme.colorScheme.surface, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ),
         ),
       ),
     );

@@ -57,13 +57,23 @@ class _FoodResultCardState extends State<FoodResultCard> {
       onTap: widget.onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Media area
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: _buildImage(context, ext),
+            child: AspectRatio(
+              aspectRatio: 1.6,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: ext.surfaceRaised,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: _buildImage(context, ext),
+                ),
+              ),
             ),
           ),
           Padding(
@@ -78,7 +88,7 @@ class _FoodResultCardState extends State<FoodResultCard> {
                       child: Text(
                         widget.food.name,
                         style: theme.textTheme.bodyStrong,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -119,7 +129,7 @@ class _FoodResultCardState extends State<FoodResultCard> {
       return Image.file(
         File(_localImagePath!),
         width: double.infinity,
-        height: 100,
+        height: double.infinity,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stack) => _fallbackIcon(context, ext),
       );
@@ -130,7 +140,7 @@ class _FoodResultCardState extends State<FoodResultCard> {
       return Image.network(
         url,
         width: double.infinity,
-        height: 100,
+        height: double.infinity,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stack) => _fallbackIcon(context, ext),
       );
@@ -142,15 +152,15 @@ class _FoodResultCardState extends State<FoodResultCard> {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      height: 100,
+      height: double.infinity,
       decoration: BoxDecoration(
-        color: ext.accentSoft.withValues(alpha: 0.5),
+        color: ext.surfaceRaised,
       ),
       child: Center(
         child: Icon(
           Icons.restaurant,
-          size: 40,
-          color: theme.colorScheme.primary.withValues(alpha: 0.6),
+          size: 24,
+          color: theme.textTheme.caption.color,
         ),
       ),
     );

@@ -2,96 +2,124 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
-class AppTextField extends StatelessWidget {
-  final String label;
+class AppTextField extends FormField<String> {
   final TextEditingController? controller;
-  final String? errorText;
-  final Widget? trailing;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final List<TextInputFormatter>? inputFormatters;
-  final void Function(String)? onChanged;
-  final String? Function(String?)? validator;
-  final TextInputAction? textInputAction;
-  final void Function(String)? onSubmitted;
-  final FocusNode? focusNode;
 
-  const AppTextField({
+  AppTextField({
     super.key,
-    required this.label,
+    required String label,
     this.controller,
-    this.errorText,
-    this.trailing,
-    this.obscureText = false,
-    this.keyboardType,
-    this.inputFormatters,
-    this.onChanged,
-    this.validator,
-    this.textInputAction,
-    this.onSubmitted,
-    this.focusNode,
-  });
+    String? errorText,
+    Widget? trailing,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    void Function(String)? onChanged,
+    super.validator,
+    TextInputAction? textInputAction,
+    void Function(String)? onSubmitted,
+    FocusNode? focusNode,
+  }) : super(
+          initialValue: controller?.text ?? '',
+          builder: (FormFieldState<String> state) {
+            final theme = Theme.of(state.context);
+            final ext = theme.extension<AppColors>()!;
+            final displayErrorText = errorText ?? state.errorText;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 56,
+                  child: TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    obscureText: obscureText,
+                    keyboardType: keyboardType,
+                    inputFormatters: inputFormatters,
+                    onChanged: (val) {
+                      state.didChange(val);
+                      if (onChanged != null) onChanged(val);
+                    },
+                    textInputAction: textInputAction,
+                    onSubmitted: onSubmitted,
+                    style: theme.textTheme.bodyStrong,
+                    decoration: InputDecoration(
+                      labelText: label,
+                      labelStyle: theme.textTheme.overline,
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      filled: true,
+                      fillColor: theme.colorScheme.surface,
+                      suffixIcon: trailing,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: ext.hairline, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: ext.error, width: 1.5),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: ext.error, width: 1.5),
+                      ),
+                      // Trigger error styling without displaying the default text
+                      errorText: displayErrorText != null && displayErrorText.isNotEmpty ? '' : null,
+                      errorStyle: const TextStyle(height: 0, color: Colors.transparent),
+                    ),
+                  ),
+                ),
+                if (displayErrorText != null && displayErrorText.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, left: 16),
+                    child: Text(
+                      displayErrorText,
+                      style: theme.textTheme.caption.copyWith(color: ext.error),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
+  FormFieldState<String> createState() => _AppTextFieldState();
+}
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          height: 56,
-          child: TextFormField(
-            controller: controller,
-            focusNode: focusNode,
-            obscureText: obscureText,
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            onChanged: onChanged,
-            validator: validator,
-            textInputAction: textInputAction,
-            onFieldSubmitted: onSubmitted,
-            style: theme.textTheme.bodyStrong,
-            decoration: InputDecoration(
-              labelText: label,
-              labelStyle: theme.textTheme.overline,
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              filled: true,
-              fillColor: theme.colorScheme.surface,
-              suffixIcon: trailing,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: ext.hairline, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: ext.error, width: 1.5),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: ext.error, width: 1.5),
-              ),
-              // We hide the default error text so we can show it below outside the 56dp box.
-              errorStyle: const TextStyle(height: 0, color: Colors.transparent),
-            ),
-          ),
-        ),
-        if (errorText != null && errorText!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, left: 16),
-            child: Text(
-              errorText!,
-              style: theme.textTheme.caption.copyWith(color: ext.error),
-            ),
-          ),
-      ],
-    );
+class _AppTextFieldState extends FormFieldState<String> {
+  @override
+  AppTextField get widget => super.widget as AppTextField;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller?.addListener(_handleControllerChanged);
+  }
+
+  @override
+  void didUpdateWidget(AppTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller?.removeListener(_handleControllerChanged);
+      widget.controller?.addListener(_handleControllerChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller?.removeListener(_handleControllerChanged);
+    super.dispose();
+  }
+
+  void _handleControllerChanged() {
+    if (widget.controller != null && widget.controller!.text != value) {
+      didChange(widget.controller!.text);
+    }
   }
 }

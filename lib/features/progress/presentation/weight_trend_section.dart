@@ -250,22 +250,24 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
 
   void _showEditWeightDialog(BuildContext context, WidgetRef ref, WeightEntry entry) {
     final controller = TextEditingController(text: entry.weightKg.toString());
-    _showWeightDialog(context, ref, 'Edit Weight', controller, () {
+    _showWeightDialog(context, ref, 'Edit Weight', controller, () async {
       final val = double.tryParse(controller.text);
       if (val != null && val >= 25 && val <= 300) {
-        ref.read(progressProvider.notifier).editWeight(entry.id, val);
+        // Pop dialog immediately to prevent UI freeze, then do async work
         Navigator.pop(context);
+        await ref.read(progressProvider.notifier).editWeight(entry.id, val);
       }
     });
   }
 
   void _showAddWeightDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
-    _showWeightDialog(context, ref, 'Add Weight', controller, () {
+    _showWeightDialog(context, ref, 'Add Weight', controller, () async {
       final val = double.tryParse(controller.text);
       if (val != null && val >= 25 && val <= 300) {
-        ref.read(progressProvider.notifier).addWeight(val);
+        // Pop dialog immediately to prevent UI freeze, then do async work
         Navigator.pop(context);
+        await ref.read(progressProvider.notifier).addWeight(val);
       }
     });
   }

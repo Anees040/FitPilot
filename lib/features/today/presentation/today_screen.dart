@@ -111,7 +111,7 @@ class TodayScreen extends ConsumerWidget {
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.qr_code_scanner),
         onPressed: () => context.push('/capture'),
       ),
     );

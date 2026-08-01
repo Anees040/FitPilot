@@ -51,6 +51,7 @@ class AppSnackbar {
         ),
         backgroundColor: ext.surfaceRaised,
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
         duration: const Duration(milliseconds: 3500),
         dismissDirection: DismissDirection.horizontal,
         shape: RoundedRectangleBorder(

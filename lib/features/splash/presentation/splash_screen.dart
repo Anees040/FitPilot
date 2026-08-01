@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
       if (mounted) {
         if (isFirstLaunch) {
-          context.go('/welcome');
+          context.go('/signin');
         } else {
           context.go('/today');
         }
@@ -79,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     } catch (e) {
       if (mounted) {
         // Fallback on error
-        context.go('/welcome');
+        context.go('/signin');
       }
     }
   }

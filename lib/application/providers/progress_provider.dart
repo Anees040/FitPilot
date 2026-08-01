@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
+import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/domain/engines/range_calculator.dart';
 import 'package:fitpilot/domain/engines/streak_engine.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
@@ -37,6 +38,10 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
   Future<ProgressState> build() async {
     final now = DateTime.now();
     final profile = await ref.watch(profileProvider.future);
+    
+    // Watch todayProvider so that progress chart updates when food is logged today
+    await ref.watch(todayProvider.future);
+
     final logRepo = await ref.watch(logRepositoryProvider.future);
     final burnRepo = await ref.watch(burnRepositoryProvider.future);
 

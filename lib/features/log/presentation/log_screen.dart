@@ -63,11 +63,11 @@ class LogScreen extends ConsumerWidget {
                       Expanded(
                         child: GridView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 200,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio: 0.8,
+                            mainAxisExtent: 220,
                           ),
                           itemCount: results.length,
                           itemBuilder: (context, index) {

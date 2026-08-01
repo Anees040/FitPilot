@@ -9,6 +9,7 @@ import 'package:fitpilot/core/config/env.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/application/providers/demo_provider.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -18,6 +19,7 @@ class SignUpScreen extends ConsumerStatefulWidget {
 }
 
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   // G3.2 — focus node to show checklist only when password field is focused
@@ -25,7 +27,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-  String? _emailError;
   String? _formError;
 
   bool _passwordFocused = false;
@@ -58,19 +59,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   bool get _isPasswordValid => _hasLength && _hasLetter && _hasNumber;
-
-  bool _validateForm() {
-    final email = _emailCtrl.text.trim();
-    String? emailErr;
-    if (email.isEmpty) {
-      emailErr = 'Enter your email';
-    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
-      emailErr = 'Enter a valid email address';
-    }
-    setState(() => _emailError = emailErr);
-    return emailErr == null;
-  }
-
   // G3.4 — friendly error mapping
   String _mapError(Object e) {
     if (e is RateLimitedFailure) return 'Too many attempts, wait a minute.';
@@ -81,7 +69,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_validateForm() || !_isPasswordValid) return;
+    if (!_formKey.currentState!.validate() || !_isPasswordValid) return;
 
     setState(() {
       _isLoading = true;
@@ -137,20 +125,53 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
+    final isDemo = ref.watch(demoProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Create your account', style: theme.textTheme.h2),
-        centerTitle: true,
-      ),
+      appBar: AppBar(elevation: 0, backgroundColor: Colors.transparent),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Segmented Control
-              Container(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (isDemo)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: ext.warning.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: ext.warning, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: ext.warning),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Demo Mode — Data will not be saved',
+                            style: theme.textTheme.caption.copyWith(color: ext.warning, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                // Logo
+                Center(
+                  child: Image.asset(
+                    'assets/images/logo_mark_orange.png',
+                    height: 48,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Title
+                Text('Create your account', style: theme.textTheme.h2, textAlign: TextAlign.center),
+                const SizedBox(height: 32),
+                // Segmented Control
+                Container(
                 height: 44,
                 decoration: BoxDecoration(
                   color: ext.hairline,
@@ -226,10 +247,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 label: 'EMAIL',
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
-                errorText: _emailError,
-                onChanged: (_) {
-                  if (_emailError != null) _validateForm();
-                  if (_formError != null) setState(() => _formError = null);
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Enter your email';
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val)) return 'Enter a valid email address';
+                  return null;
                 },
               ),
               const SizedBox(height: 16),
@@ -240,6 +261,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 controller: _passCtrl,
                 focusNode: _passFocusNode,
                 obscureText: _obscurePassword,
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Enter your password';
+                  return _formError;
+                },
                 trailing: IconButton(
                   icon: Icon(
                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -292,6 +317,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
               ),
             ],
+          ),
           ),
         ),
       ),

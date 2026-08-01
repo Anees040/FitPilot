@@ -9,7 +9,7 @@ import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 import '../../../core/ui/exercise_media.dart';
-import '../../../domain/entities/exercise.dart';
+
 
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
@@ -233,20 +233,8 @@ class PlanScreen extends ConsumerWidget {
                 width: 48,
                 height: 48,
                 margin: const EdgeInsets.only(right: 12),
-                child: ExerciseMedia(
-                  exercise: Exercise(
-                    id: option.exerciseId ?? '',
-                    name: option.activity,
-                    category: ExerciseCategory.indoor,
-                    met: 0.0,
-                    primaryMuscles: const [],
-                    secondaryMuscles: const [],
-                    difficulty: option.difficulty ?? 1,
-                    paceTier: 'any',
-                    steps: const [],
-                    mistakes: const [],
-                    mediaAsset: option.mediaAsset,
-                  ),
+                child: ExerciseMedia.asset(
+                  mediaAsset: option.mediaAsset!,
                   borderRadius: 8,
                 ),
               ),

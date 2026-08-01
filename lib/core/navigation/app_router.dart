@@ -6,9 +6,9 @@ import 'package:fitpilot/features/log/presentation/log_screen.dart';
 import 'package:fitpilot/features/plan/presentation/plan_screen.dart';
 import 'package:fitpilot/features/progress/presentation/progress_screen.dart';
 import 'package:fitpilot/features/profile/presentation/profile_screen.dart';
+import 'package:fitpilot/features/profile/presentation/profile_edit_screen.dart';
 
 import 'package:fitpilot/features/splash/presentation/splash_screen.dart';
-import 'package:fitpilot/features/auth/presentation/welcome_screen.dart';
 import 'package:fitpilot/features/auth/presentation/sign_up_screen.dart';
 import 'package:fitpilot/features/auth/presentation/sign_in_screen.dart';
 import 'package:fitpilot/features/auth/presentation/otp_verify_screen.dart';
@@ -38,11 +38,6 @@ final appRouter = GoRouter(
       path: '/splash',
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: '/welcome',
-      parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) => const WelcomeScreen(),
     ),
     GoRoute(
       path: '/signup',
@@ -142,6 +137,12 @@ final appRouter = GoRouter(
             GoRoute(
               path: '/profile',
               builder: (context, state) => const ProfileScreen(),
+              routes: [
+                GoRoute(
+                  path: 'edit',
+                  builder: (context, state) => const ProfileEditScreen(),
+                ),
+              ],
             ),
           ],
         ),
