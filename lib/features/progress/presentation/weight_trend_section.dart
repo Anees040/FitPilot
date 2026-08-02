@@ -152,10 +152,29 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
       minX = minX - 86400000; // - 1 day
     }
 
+    double minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    
+    if (goalWeightKg != null) {
+      if (goalWeightKg < minY) minY = goalWeightKg;
+      if (goalWeightKg > maxY) maxY = goalWeightKg;
+    }
+
+    if (minY == maxY) {
+      minY -= 5;
+      maxY += 5;
+    } else {
+      final padding = (maxY - minY) * 0.2;
+      minY -= padding;
+      maxY += padding;
+    }
+
     return LineChart(
       LineChartData(
         minX: minX,
         maxX: maxX,
+        minY: minY,
+        maxY: maxY,
         gridData: const FlGridData(show: false),
         titlesData: const FlTitlesData(
           bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),

@@ -86,32 +86,36 @@ class SeedImporter {
     final List<dynamic> programs = json.decode(jsonStr) as List<dynamic>;
 
     final batch = db.batch();
-    for (final prog in programs) {
-      final p = prog as Map<String, dynamic>;
-      final programId = p['id'] as String;
+    for (final p in programs) {
+      final prog = p as Map<String, dynamic>;
       batch.insert('programs', {
-        'id': programId,
-        'name': p['name'] as String,
-        'icon': p['icon'] as String,
-        'goal': p['goal'] as String,
+        'id': prog['id'] as String,
+        'name': prog['name'] as String,
+        'icon': prog['icon'] as String,
+        'goal': prog['goal'] as String,
       });
 
-      final weeks = p['weeks'] as List<dynamic>;
-      for (final week in weeks) {
-        final w = week as Map<String, dynamic>;
-        final weekNum = w['week_number'] as int;
-        final sessions = w['sessions'] as List<dynamic>;
+      final weeks = prog['weeks'] as List<dynamic>;
+      for (final w in weeks) {
+        final week = w as Map<String, dynamic>;
+        final weekNumber = week['week_number'] as int;
+        final sessions = week['sessions'] as List<dynamic>;
         
-        for (final session in sessions) {
-          final s = session as Map<String, dynamic>;
-          final dayNum = s['day_number'] as int;
+        for (final s in sessions) {
+          final session = s as Map<String, dynamic>;
+          final dayNumber = session['day_number'] as int;
+          final exerciseId = session['exercise_id'] as String;
+          final minutes = session['minutes'] as int;
+          
+          final sessionId = '${prog['id']}-w$weekNumber-d$dayNumber';
+          
           batch.insert('program_sessions', {
-            'id': '${programId}_w${weekNum}_d$dayNum',
-            'program_id': programId,
-            'week_number': weekNum,
-            'day_number': dayNum,
-            'exercise_id': s['exercise_id'] as String,
-            'minutes': s['minutes'] as int,
+            'id': sessionId,
+            'program_id': prog['id'] as String,
+            'week_number': weekNumber,
+            'day_number': dayNumber,
+            'exercise_id': exerciseId,
+            'minutes': minutes,
           });
         }
       }

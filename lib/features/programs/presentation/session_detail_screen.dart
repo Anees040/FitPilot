@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
@@ -22,7 +22,7 @@ final exerciseByIdProvider = FutureProvider.family<Exercise, String>((ref, id) a
   return Exercise(
     id: map['id'] as String,
     name: map['name'] as String,
-    category: map['category'] as String,
+    category: ExerciseCategory.values.byName(map['category'] as String),
     subcategory: map['subcategory'] as String?,
     met: (map['met'] as num).toDouble(),
     equipment: map['equipment'] as String?,
@@ -52,7 +52,7 @@ class SessionDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Week \, Day \'),
+        title: Text('Week ${session.weekNumber}, Day ${session.dayNumber}'),
         backgroundColor: Colors.transparent,
       ),
       body: exerciseAsync.when(
@@ -70,7 +70,7 @@ class SessionDetailScreen extends ConsumerWidget {
                     children: [
                       Text(exercise.name, style: theme.textTheme.h1),
                       const SizedBox(height: 8),
-                      Text('\ minutes', style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.primary)),
+                      Text('${session.minutes} minutes', style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.primary)),
                       const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -83,15 +83,15 @@ class SessionDetailScreen extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Estimated burn', style: theme.textTheme.body),
-                            Text('~\ kcal', style: theme.textTheme.h2.copyWith(color: ext.energy)),
+                            Text('~$estKcal kcal', style: theme.textTheme.h2.copyWith(color: ext.energy)),
                           ],
                         ),
                       ),
                       const SizedBox(height: 32),
-                      Text('Intensity (MET): \', style: theme.textTheme.body),
+                      Text('Intensity (MET): ${exercise.met}', style: theme.textTheme.body),
                       if (exercise.equipment != null) ...[
                         const SizedBox(height: 8),
-                        Text('Equipment: \', style: theme.textTheme.body),
+                        Text('Equipment: ${exercise.equipmentLabel}', style: theme.textTheme.body),
                       ]
                     ],
                   ),

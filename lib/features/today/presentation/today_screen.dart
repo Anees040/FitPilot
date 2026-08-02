@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
@@ -6,7 +6,7 @@ import 'package:fitpilot/domain/entities/day_status.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
-import 'package:fitpilot/application/providers/programs_provider.dart';
+
 import 'package:fitpilot/features/log/presentation/widgets/kcal_range_text.dart';
 import 'package:fitpilot/features/log/presentation/quantity_sheet.dart';
 import 'package:fitpilot/domain/entities/food_item.dart';
@@ -51,8 +51,6 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                
-                const SliverToBoxAdapter(child: _ActiveProgramCard()),
                 
                 if (state.logs.isNotEmpty) ...[
                   SliverPadding(
@@ -145,15 +143,6 @@ class TodayScreen extends ConsumerWidget {
                       ),
                       _FeatureTile(
                         index: 5,
-                        icon: Icons.assignment,
-                        title: 'Programs',
-                        subtitle: 'Curated plans',
-                        color: ext.surfaceRaised,
-                        iconColor: theme.colorScheme.primary,
-                        onTap: () => context.push('/programs'),
-                      ),
-                      _FeatureTile(
-                        index: 6,
                         icon: Icons.precision_manufacturing,
                         title: 'Machine scanner',
                         subtitle: 'Coming soon',
@@ -178,88 +167,6 @@ class TodayScreen extends ConsumerWidget {
             reason: 'Failed to load today\'s data.\n$error',
             onRetry: () => ref.invalidate(todayProvider),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActiveProgramCard extends ConsumerWidget {
-  const _ActiveProgramCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final activeProgram = ref.watch(activeProgramProvider);
-    if (activeProgram == null) return const SizedBox.shrink();
-
-    final profile = ref.watch(profileProvider).valueOrNull;
-    if (profile == null) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
-
-    final week = profile.activeProgramWeek;
-    final day = profile.activeProgramDay;
-    
-    // Check if finished
-    if (week > activeProgram.totalWeeks) return const SizedBox.shrink();
-
-    final sessions = activeProgram.getSessionsForWeek(week);
-    if (sessions.isEmpty || day > sessions.length) return const SizedBox.shrink();
-
-    final session = sessions[day - 1];
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      child: AppCard(
-        variant: AppCardVariant.raised,
-        padding: const EdgeInsets.all(16),
-        onTap: () {
-          context.push('/programs/session', extra: session);
-        },
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  activeProgram.program.icon,
-                  style: const TextStyle(fontSize: 24),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Today\\'s session',
-                    style: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Week $week, Day $day',
-                    style: theme.textTheme.bodyStrong,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${session.minutes} min â€¢ ${activeProgram.program.name}',
-                    style: theme.textTheme.caption,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: ext.textDisabled),
-          ],
         ),
       ),
     );
@@ -550,7 +457,7 @@ class _LogListItem extends ConsumerWidget {
                         range: log.kcal,
                         style: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700),
                       ),
-                      Text(' Ã¢â‚¬Â¢ ${DateFormat.jm().format(log.loggedAt)}', style: theme.textTheme.caption),
+                      Text(' â€¢ ${DateFormat.jm().format(log.loggedAt)}', style: theme.textTheme.caption),
                     ],
                   ),
                 ],
@@ -558,7 +465,7 @@ class _LogListItem extends ConsumerWidget {
             ),
             const SizedBox(width: 12),
             TertiaryButton(
-              label: 'Burn it Ã¢â€ â€™\n~$minWalk min',
+              label: 'Burn it â†’\n~$minWalk min',
               color: ext.energy,
               onPressed: () {
                 ref.read(burnPlanMealIdProvider.notifier).state = log.id;

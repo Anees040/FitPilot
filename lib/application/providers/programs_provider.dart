@@ -1,27 +1,15 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
-import 'package:fitpilot/application/providers/burn_provider.dart';
+import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/domain/entities/program.dart';
-import 'package:fitpilot/domain/entities/burn_completion.dart';
-import 'package:fitpilot/domain/entities/exercise.dart';
-import 'package:uuid/uuid.dart';
+import 'package:fitpilot/domain/entities/burn_option.dart';
 
 final programsProvider = FutureProvider<List<ProgramWithSessions>>((ref) async {
   final db = await ref.watch(databaseProvider.future);
   
   final programsResult = await db.query('programs');
   final sessionsResult = await db.query('program_sessions');
-  final exercisesResult = await db.query('exercises');
-  
-  // Load exercises to map properly
-  final exercises = <String, Exercise>{};
-  for (final row in exercisesResult) {
-    // simplified exercise entity just enough to compute kcal
-    // actually, let's just get the MET value
-    // But we don't necessarily need Exercise here unless we want to return it.
-    // Actually, ProgramWithSessions just has ProgramSession.
-  }
   
   final programs = <Program>[];
   for (final row in programsResult) {
@@ -93,8 +81,8 @@ class ProgramsController {
     final repo = await ref.read(profileRepositoryProvider.future);
     final newProfile = profile.copyWith(
       clearProgram: true,
-      activeProgramWeek: 1,
-      activeProgramDay: 1,
+      activeProgramWeek: null,
+      activeProgramDay: null,
     );
     await repo.save(newProfile);
     ref.invalidate(profileProvider);
@@ -106,31 +94,27 @@ class ProgramsController {
 
     // 1. Insert burn completion
     final burnRepo = await ref.read(burnRepositoryProvider.future);
-    final todayStr = DateTime.now().toUtc().toIso8601String().substring(0, 10);
     
     // Fetch exercise name for activity string
     final db = await ref.read(databaseProvider.future);
     final exRow = await db.query('exercises', where: 'id = ?', whereArgs: [session.exerciseId]);
     final exName = exRow.isNotEmpty ? exRow.first['name'] as String : 'Exercise';
 
-    final burn = BurnCompletion(
-      id: const Uuid().v4(),
-      forDate: todayStr,
-      activity: 'Program: \',
+    final burn = BurnOption(
+      exerciseId: session.exerciseId,
+      activity: 'Program: $exName',
       minutes: session.minutes,
       kcal: burnedKcal,
-      completedAt: DateTime.now().toUtc(),
-      updatedAt: DateTime.now().toUtc(),
     );
-    await burnRepo.save(burn);
-    ref.invalidate(burnCompletionsProvider);
-    ref.invalidate(todayProvider); // Also invalidate Today screen!
+    
+    await burnRepo.add(burn, DateTime.now().toUtc(), DateTime.now().toUtc());
+    ref.invalidate(todayProvider);
     
     // 2. Advance program progress
     final program = ref.read(activeProgramProvider);
-    if (program != null) {
-      int nextWeek = profile.activeProgramWeek;
-      int nextDay = profile.activeProgramDay + 1;
+    if (program != null && profile.activeProgramWeek != null && profile.activeProgramDay != null) {
+      int nextWeek = profile.activeProgramWeek!;
+      int nextDay = profile.activeProgramDay! + 1;
       
       final currentWeekSessions = program.getSessionsForWeek(nextWeek);
       if (nextDay > currentWeekSessions.length) {

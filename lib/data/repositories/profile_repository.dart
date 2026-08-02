@@ -85,8 +85,8 @@ class ProfileRepository {
       weekStartsMon: (map['week_starts_mon'] as int? ?? 1) == 1,
       hapticsOn: (map['haptics_on'] as int? ?? 1) == 1,
       activeProgramId: map['active_program_id'] as String?,
-      activeProgramWeek: map['active_program_week'] as int? ?? 1,
-      activeProgramDay: map['active_program_day'] as int? ?? 1,
+      activeProgramWeek: map['active_program_week'] as int?,
+      activeProgramDay: map['active_program_day'] as int?,
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
   }

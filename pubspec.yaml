@@ -88,6 +88,7 @@ flutter:
   assets:
     - assets/seed/foods.json
     - assets/seed/exercises.json
+    - assets/seed/programs.json
     - assets/illustrations/
     - assets/images/
     - assets/exercise_media/

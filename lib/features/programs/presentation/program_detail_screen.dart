@@ -1,10 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/domain/entities/program.dart';
 import 'package:fitpilot/application/providers/programs_provider.dart';
-import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 
@@ -87,22 +86,24 @@ class ProgramDetailScreen extends ConsumerWidget {
                 (context, index) {
                   final week = index + 1;
                   final sessions = program.getSessionsForWeek(week);
-                  return AppCard(
-                    variant: AppCardVariant.surface,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: Theme(
-                      data: theme.copyWith(dividerColor: Colors.transparent),
-                      child: ExpansionTile(
-                        initiallyExpanded: index == 0,
-                        title: Text('Week \', style: theme.textTheme.bodyStrong),
-                        subtitle: Text('\ sessions', style: theme.textTheme.caption),
-                        children: sessions.map((s) {
-                          return ListTile(
-                            title: Text('Day \'),
-                            subtitle: Text('\ min'),
-                            trailing: Icon(Icons.fitness_center, color: ext.textDisabled),
-                          );
-                        }).toList(),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: AppCard(
+                      variant: AppCardVariant.standard,
+                      child: Theme(
+                        data: theme.copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          initiallyExpanded: index == 0,
+                          title: Text('Week $week', style: theme.textTheme.bodyStrong),
+                          subtitle: Text('${sessions.length} sessions', style: theme.textTheme.caption),
+                          children: sessions.map((s) {
+                            return ListTile(
+                              title: Text('Day ${s.dayNumber}'),
+                              subtitle: Text('${s.minutes} min'),
+                              trailing: Icon(Icons.fitness_center, color: ext.textDisabled),
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
                   );

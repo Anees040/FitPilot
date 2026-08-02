@@ -83,7 +83,29 @@ void main() {
             goal TEXT NOT NULL,
             allowance_kcal INTEGER NOT NULL,
             equipment TEXT NOT NULL,
+            active_program_id TEXT,
+            active_program_week INTEGER,
+            active_program_day INTEGER,
             updated_at TEXT NOT NULL
+          )
+        ''');
+          await db.execute('''
+          CREATE TABLE programs (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            icon TEXT NOT NULL,
+            goal TEXT NOT NULL
+          )
+        ''');
+          await db.execute('''
+          CREATE TABLE program_sessions (
+            id TEXT PRIMARY KEY,
+            program_id TEXT NOT NULL,
+            week_number INTEGER NOT NULL,
+            day_number INTEGER NOT NULL,
+            exercise_id TEXT NOT NULL,
+            minutes INTEGER NOT NULL,
+            FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
           )
         ''');
           await db.execute('''

@@ -38,6 +38,9 @@ void main() {
     final googleBtn = find.byType(GoogleButton);
     expect(googleBtn, findsOneWidget);
 
+    await tester.ensureVisible(googleBtn);
+    await tester.pump(const Duration(milliseconds: 500));
+    
     await tester.tap(googleBtn);
     await tester.pump();
 

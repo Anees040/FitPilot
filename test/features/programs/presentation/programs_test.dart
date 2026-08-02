@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/features/programs/presentation/programs_screen.dart';
+import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/programs_provider.dart';
 import 'package:fitpilot/domain/entities/program.dart';
 
@@ -12,14 +13,15 @@ void main() {
         overrides: [
           programsProvider.overrideWith((ref) => Future.value([])),
         ],
-        child: const MaterialApp(
-          home: ProgramsScreen(),
+        child: MaterialApp(
+          theme: AppTheme.getDarkTheme(),
+          home: const ProgramsScreen(),
         ),
       ),
     );
 
     await tester.pumpAndSettle();
-    expect(find.text('No Programs'), findsOneWidget);
+    expect(find.text('Check back later for curated plans.'), findsOneWidget);
   });
 
   testWidgets('ProgramsScreen displays list of programs', (WidgetTester tester) async {
@@ -31,8 +33,9 @@ void main() {
         overrides: [
           programsProvider.overrideWith((ref) => Future.value([pws])),
         ],
-        child: const MaterialApp(
-          home: ProgramsScreen(),
+        child: MaterialApp(
+          theme: AppTheme.getDarkTheme(),
+          home: const ProgramsScreen(),
         ),
       ),
     );

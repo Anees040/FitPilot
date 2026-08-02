@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
@@ -23,10 +23,11 @@ class ProgramsScreen extends ConsumerWidget {
       body: programsAsync.when(
         data: (programs) {
           if (programs.isEmpty) {
-            return const EmptyState(
-              icon: Icons.assignment_outlined,
-              title: 'No Programs',
+            return EmptyState(
+              illustration: 'empty_programs',
               message: 'Check back later for curated plans.',
+              buttonLabel: 'Refresh',
+              onAction: () => ref.invalidate(programsProvider),
             );
           }
 
@@ -67,7 +68,7 @@ class ProgramsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '\ weeks • \ sessions',
+                            '${prog.totalWeeks} weeks • ${prog.sessions.length} sessions',
                             style: theme.textTheme.caption,
                           ),
                         ],
@@ -85,7 +86,7 @@ class ProgramsScreen extends ConsumerWidget {
           child: SkeletonList(count: 5),
         ),
         error: (e, st) => ErrorState(
-          reason: 'Failed to load programs.\\n\',
+          reason: 'Failed to load programs.',
           onRetry: () => ref.invalidate(programsProvider),
         ),
       ),

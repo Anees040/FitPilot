@@ -17,7 +17,7 @@ import 'package:sqflite/sqflite.dart';
 /// 11 — added unit_kg_lb, week_starts_mon, haptics_on to profile
 /// 12 — added updated_at to burn_completions; added theme_color + goal_weight_kg guards
 /// 13 — added name to profile
-/// 14 — added programs and program_sessions tables, active_program fields to profile
+/// 14 — added programs, program_sessions tables and active program profile fields
 class AppDatabase {
   static Database? _db;
 
@@ -142,12 +142,12 @@ class AppDatabase {
         week_starts_mon INTEGER NOT NULL DEFAULT 1,
         haptics_on INTEGER NOT NULL DEFAULT 1,
         active_program_id TEXT,
-        active_program_week INTEGER NOT NULL DEFAULT 1,
-        active_program_day INTEGER NOT NULL DEFAULT 1,
+        active_program_week INTEGER,
+        active_program_day INTEGER,
         updated_at TEXT NOT NULL
       )
     ''');
-    
+
     batch.execute('''
       CREATE TABLE programs (
         id TEXT PRIMARY KEY,
@@ -156,7 +156,7 @@ class AppDatabase {
         goal TEXT NOT NULL
       )
     ''');
-    
+
     batch.execute('''
       CREATE TABLE program_sessions (
         id TEXT PRIMARY KEY,
@@ -418,8 +418,13 @@ class AppDatabase {
       } catch (_) {}
     }
     if (oldVersion < 14) {
+      try {
+        await db.execute("ALTER TABLE profile ADD COLUMN active_program_id TEXT");
+        await db.execute("ALTER TABLE profile ADD COLUMN active_program_week INTEGER");
+        await db.execute("ALTER TABLE profile ADD COLUMN active_program_day INTEGER");
+      } catch (_) {}
       await db.execute('''
-        CREATE TABLE programs (
+        CREATE TABLE IF NOT EXISTS programs (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           icon TEXT NOT NULL,
@@ -427,7 +432,7 @@ class AppDatabase {
         )
       ''');
       await db.execute('''
-        CREATE TABLE program_sessions (
+        CREATE TABLE IF NOT EXISTS program_sessions (
           id TEXT PRIMARY KEY,
           program_id TEXT NOT NULL,
           week_number INTEGER NOT NULL,
@@ -436,15 +441,6 @@ class AppDatabase {
           minutes INTEGER NOT NULL
         )
       ''');
-      try {
-        await db.execute("ALTER TABLE profile ADD COLUMN active_program_id TEXT");
-      } catch (_) {}
-      try {
-        await db.execute("ALTER TABLE profile ADD COLUMN active_program_week INTEGER NOT NULL DEFAULT 1");
-      } catch (_) {}
-      try {
-        await db.execute("ALTER TABLE profile ADD COLUMN active_program_day INTEGER NOT NULL DEFAULT 1");
-      } catch (_) {}
     }
   }
 

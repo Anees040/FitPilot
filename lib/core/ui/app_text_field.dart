@@ -31,51 +31,47 @@ class AppTextField extends FormField<String> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  height: 56,
-                  child: TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    obscureText: obscureText,
-                    keyboardType: keyboardType,
-                    inputFormatters: inputFormatters,
-                    onChanged: (val) {
-                      state.didChange(val);
-                      if (onChanged != null) onChanged(val);
-                    },
-                    textInputAction: textInputAction,
-                    onSubmitted: onSubmitted,
-                    style: theme.textTheme.bodyStrong,
-                    decoration: InputDecoration(
-                      labelText: label,
-                      labelStyle: theme.textTheme.caption,
-                      floatingLabelStyle: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary),
-                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                      filled: true,
-                      fillColor: ext.surfaceRaised,
-                      prefixIcon: leading,
-                      suffixIcon: trailing,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: ext.hairline, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: ext.error, width: 1.5),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: ext.error, width: 1.5),
-                      ),
-                      // Trigger error styling without displaying the default text
-                      errorText: displayErrorText != null && displayErrorText.isNotEmpty ? '' : null,
-                      errorStyle: const TextStyle(height: 0, color: Colors.transparent),
+                TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  obscureText: obscureText,
+                  keyboardType: keyboardType,
+                  inputFormatters: inputFormatters,
+                  onChanged: (val) {
+                    state.didChange(val);
+                    if (onChanged != null) onChanged(val);
+                  },
+                  textInputAction: textInputAction,
+                  onSubmitted: onSubmitted,
+                  style: theme.textTheme.bodyStrong,
+                  decoration: InputDecoration(
+                    labelText: label,
+                    labelStyle: theme.textTheme.caption,
+                    floatingLabelStyle: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary),
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    filled: true,
+                    fillColor: ext.surfaceRaised,
+                    prefixIcon: leading,
+                    suffixIcon: trailing,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: ext.hairline, width: 1),
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: ext.error, width: 1.5),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: ext.error, width: 1.5),
+                    ),
+                    errorText: displayErrorText != null && displayErrorText.isNotEmpty ? '' : null,
+                    errorStyle: const TextStyle(height: 0, color: Colors.transparent),
                   ),
                 ),
                 if (displayErrorText != null && displayErrorText.isNotEmpty)
