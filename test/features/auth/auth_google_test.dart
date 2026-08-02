@@ -3,16 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/data/auth/fake_auth_repository.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:fitpilot/core/navigation/app_router.dart';
+import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
 import 'package:fitpilot/features/auth/presentation/auth_screen.dart';
 
 void main() {
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
   Widget buildTestApp(FakeAuthRepository authRepo) {
     return ProviderScope(
       overrides: [
         authRepositoryProvider.overrideWithValue(authRepo),
+        databaseProvider.overrideWith((ref) async => await AppDatabase.inMemory()),
       ],
       child: MaterialApp.router(
         theme: AppTheme.getLightTheme(),

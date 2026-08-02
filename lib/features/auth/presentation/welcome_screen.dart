@@ -4,7 +4,8 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+  final int initialIndex;
+  const WelcomeScreen({super.key, this.initialIndex = 0});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -12,7 +13,19 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   final PageController _pageController = PageController();
-  int _currentIndex = 0;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex.clamp(0, _totalPages - 1);
+    // If initial index is set, jump page controller to it immediately
+    if (_currentIndex > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _pageController.jumpToPage(_currentIndex);
+      });
+    }
+  }
 
   static const int _totalPages = 4;
 
@@ -84,7 +97,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   _WelcomePage(
                     onCreateAccount: () => context.push('/auth?mode=signup'),
-                    onGuest: () => context.go('/today'),
+                    onGuest: () => context.go('/profile-setup'),
                     onLogin: () => context.push('/auth?mode=login'),
                   ),
                 ],
@@ -276,24 +289,39 @@ class _WelcomePage extends StatelessWidget {
 
           // Hero illustration
           Expanded(
-            child: Center(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final imageSize = constraints.maxHeight < constraints.maxWidth
-                      ? constraints.maxHeight * 0.95
-                      : constraints.maxWidth * 0.95;
-                  return Image.asset(
-                    'assets/illustrations/welcome_hero.png',
-                    width: imageSize,
-                    height: imageSize,
-                    fit: BoxFit.contain,
-                    errorBuilder: (c, e, s) => Icon(
-                      Icons.restaurant,
-                      size: 80,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    ),
-                  );
-                },
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(40),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final imageSize = constraints.maxHeight < constraints.maxWidth
+                        ? constraints.maxHeight * 0.85
+                        : constraints.maxWidth * 0.85;
+                    return Image.asset(
+                      'assets/illustrations/welcome_hero.png',
+                      width: imageSize,
+                      height: imageSize,
+                      fit: BoxFit.contain,
+                      errorBuilder: (c, e, s) => Icon(
+                        Icons.restaurant,
+                        size: 80,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -375,47 +403,47 @@ class _FeaturePage extends StatelessWidget {
         children: [
           const SizedBox(height: 72), // Space for top nav bar
 
-          // Illustration image
           Expanded(
             child: Center(
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.contain,
-                errorBuilder: (c, e, s) => Icon(
-                  Icons.image_outlined,
-                  size: 80,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      imagePath,
+                      height: 300,
+                      fit: BoxFit.contain,
+                      errorBuilder: (c, e, s) => Icon(
+                        Icons.image_outlined,
+                        size: 80,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    Text(
+                      title,
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 28,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        fontSize: 16,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-
-          const SizedBox(height: 40),
-
-          // Title
-          Text(
-            title,
-            style: theme.textTheme.headlineLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              fontSize: 28,
-              color: theme.colorScheme.onSurface,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Subtitle
-          Text(
-            subtitle,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 16,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
           const SizedBox(height: 96), // Space for bottom nav bar
         ],
       ),

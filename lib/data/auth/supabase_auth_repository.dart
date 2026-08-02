@@ -106,7 +106,10 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<void> sendPasswordReset({required String email}) async {
     try {
-      await _client.auth.resetPasswordForEmail(email);
+      await _client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: kIsWeb ? null : 'io.fitpilot://login-callback',
+      );
     } catch (e) {
       throw _mapException(e);
     }

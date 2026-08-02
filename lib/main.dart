@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/config/env.dart';
 import 'package:fitpilot/core/navigation/app_router.dart';
 import 'package:fitpilot/application/bootstrap.dart';
 import 'package:fitpilot/application/providers/theme_provider.dart';
@@ -11,11 +14,36 @@ void main() {
   runApp(const ProviderScope(child: FitPilotApp()));
 }
 
-class FitPilotApp extends ConsumerWidget {
+class FitPilotApp extends ConsumerStatefulWidget {
   const FitPilotApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FitPilotApp> createState() => _FitPilotAppState();
+}
+
+class _FitPilotAppState extends ConsumerState<FitPilotApp> {
+  StreamSubscription? _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Env.isSupabaseConfigured) {
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+        if (data.event == AuthChangeEvent.passwordRecovery) {
+          appRouter.go('/update-password');
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(

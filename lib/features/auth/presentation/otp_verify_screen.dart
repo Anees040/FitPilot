@@ -82,7 +82,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
           _isSuccess = true;
         });
         await Future.delayed(const Duration(milliseconds: 1500));
-        if (mounted) context.go('/today');
+        if (mounted) context.go('/profile-setup');
       }
     } catch (e) {
       if (mounted) {

@@ -6,7 +6,6 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
-import 'package:fitpilot/core/ui/states.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -16,9 +15,9 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   bool _isLoading = false;
-  bool _sent = false;
   String? _errorText;
 
   @override
@@ -28,8 +27,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
     final email = _emailCtrl.text.trim();
-    if (email.isEmpty || !email.contains('@')) return;
 
     setState(() {
       _isLoading = true;
@@ -37,9 +37,72 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     });
 
     try {
+      try {
+        await ref.read(authRepositoryProvider).signIn(email: email, password: 'WRONG_PASSWORD_123_!');
+      } catch (innerE) {
+        if (innerE is InvalidCredentialsFailure) {
+          // Email exists, proceed to send reset link
+        } else if (innerE is RateLimitedFailure || innerE is NetworkUnavailableFailure) {
+          rethrow;
+        } else {
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.orange, size: 28),
+                  SizedBox(width: 12),
+                  Text('Account Not Found'),
+                ],
+              ),
+              content: const Text(
+                'There is no account registered with this email address. Please check the spelling or sign up for a new account.',
+                style: TextStyle(fontSize: 16),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
+      }
+
       await ref.read(authRepositoryProvider).sendPasswordReset(email: email);
       if (mounted) {
-        setState(() => _sent = true);
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: const Row(
+              children: [
+                Icon(Icons.mark_email_read_outlined, color: Colors.green, size: 28),
+                SizedBox(width: 12),
+                Text('Email Sent'),
+              ],
+            ),
+            content: const Text(
+              'A password reset link has been sent to your email. Please check your inbox and click the link to reset your password.',
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // pop dialog
+                  context.pop(); // pop screen
+                },
+                child: const Text('Back to Sign in', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ],
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -56,18 +119,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (_sent) {
-      return Scaffold(
-        body: SafeArea(
-          child: EmptyState(
-            message: 'If an account exists, a reset link has been sent to your email.',
-            buttonLabel: 'Back to Sign in',
-            onAction: () => context.pop(),
-            illustration: 'email_sent',
-          ),
-        ),
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -77,32 +128,43 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Enter your email and we\'ll send you a reset link.',
-                style: theme.textTheme.body,
-              ),
-              const SizedBox(height: 32),
+          child: Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Enter your email and we\'ll send you a reset link.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 32),
 
-              AppTextField(
-                label: 'EMAIL',
-                controller: _emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                errorText: _errorText,
-                onChanged: (_) {
-                  if (_errorText != null) setState(() => _errorText = null);
-                },
-              ),
-              const SizedBox(height: 24),
+                AppTextField(
+                  label: 'EMAIL',
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  errorText: _errorText,
+                  leading: const Icon(Icons.mail_outline),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Please enter your email';
+                    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    if (!emailRegex.hasMatch(v.trim())) return 'Please enter a valid email';
+                    return null;
+                  },
+                  onChanged: (_) {
+                    if (_errorText != null) setState(() => _errorText = null);
+                  },
+                ),
+                const SizedBox(height: 24),
 
-              PrimaryButton(
-                label: 'Send Link',
-                onPressed: _submit,
-                isLoading: _isLoading,
-              ),
-            ],
+                PrimaryButton(
+                  label: 'Send Link',
+                  onPressed: _submit,
+                  isLoading: _isLoading,
+                ),
+              ],
+            ),
           ),
         ),
       ),

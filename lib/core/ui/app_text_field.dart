@@ -44,6 +44,7 @@ class AppTextField extends FormField<String> {
                   textInputAction: textInputAction,
                   onSubmitted: onSubmitted,
                   style: theme.textTheme.bodyStrong,
+                  cursorColor: theme.colorScheme.primary,
                   decoration: InputDecoration(
                     labelText: label,
                     labelStyle: theme.textTheme.caption,

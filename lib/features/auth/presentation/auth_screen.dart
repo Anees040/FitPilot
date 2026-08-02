@@ -115,12 +115,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (user != null) {
         final merger = ref.read(guestMergeServiceProvider);
         await merger?.mergeGuestData(user.id);
-        if (mounted) context.go('/today');
+        if (mounted) context.go('/profile-setup');
       }
     } on UnverifiedEmailFailure catch (_) {
       if (mounted) context.push('/otp', extra: _emailCtrl.text.trim());
     } catch (e) {
-      if (mounted) setState(() => _formError = _mapError(e));
+      if (mounted) {
+        if (e is EmailAlreadyRegisteredFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('That email is already registered. Try logging in.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        } else {
+          setState(() => _formError = _mapError(e));
+        }
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -141,7 +154,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (user != null) {
         final merger = ref.read(guestMergeServiceProvider);
         await merger?.mergeGuestData(user.id);
-        if (mounted) context.go('/today');
+        if (mounted) context.go('/profile-setup');
       }
     } catch (e) {
       if (mounted) setState(() => _formError = _mapError(e));
@@ -201,75 +214,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 
-  void _showForgotPasswordDialog() {
-    final theme = Theme.of(context);
-    final emailCtrl = TextEditingController(text: _emailCtrl.text);
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: theme.colorScheme.surface,
-          title: Text(
-            'Forgot Password',
-            style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Enter your email and we will send you a reset link.',
-                style: TextStyle(color: theme.colorScheme.onSurface),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                style: TextStyle(color: theme.colorScheme.onSurface),
-                decoration: InputDecoration(
-                  hintText: 'Email',
-                  hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                  filled: true,
-                  fillColor: theme.extension<AppColors>()?.surfaceRaised,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text('Cancel', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-            ),
-            TextButton(
-              onPressed: () async {
-                final email = emailCtrl.text.trim();
-                if (email.isEmpty) return;
-                Navigator.pop(dialogContext);
-                try {
-                  await ref.read(authRepositoryProvider).sendPasswordReset(email: email);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password reset link sent!')),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(_mapError(e))),
-                    );
-                  }
-                }
-              },
-              child: Text('Send Link', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 
   void _toggleMode() {
     setState(() {
@@ -310,7 +255,26 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 16),
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                              width: 2,
+                            ),
+                          ),
+                          child: Image.asset(
+                            'assets/images/logo_mark_orange.png',
+                            height: 48,
+                            fit: BoxFit.contain,
+                            errorBuilder: (c, e, s) => Icon(Icons.fitness_center, size: 48, color: theme.colorScheme.primary),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                       Text(
                         _isLogin ? 'Welcome back 👋' : 'Create account',
                         style: theme.textTheme.headlineLarge?.copyWith(
@@ -444,7 +408,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: GestureDetector(
-                            onTap: _showForgotPasswordDialog,
+                            onTap: () => context.push('/forgot-password'),
                             child: Text(
                               'Forgot Password?',
                               style: theme.textTheme.bodyMedium?.copyWith(
@@ -504,7 +468,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         _SocialButton(
                           label: 'Continue as Guest',
                           icon: Icons.person_outline,
-                          onPressed: () => context.go('/today'),
+                          onPressed: () => context.go('/profile-setup'),
                         ),
                       ],
 
@@ -564,6 +528,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      cursorColor: theme.colorScheme.primary,
       style: TextStyle(color: theme.colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hintText,
