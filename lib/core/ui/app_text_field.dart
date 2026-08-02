@@ -10,6 +10,7 @@ class AppTextField extends FormField<String> {
     required String label,
     this.controller,
     String? errorText,
+    Widget? leading,
     Widget? trailing,
     bool obscureText = false,
     TextInputType? keyboardType,
@@ -47,12 +48,14 @@ class AppTextField extends FormField<String> {
                     style: theme.textTheme.bodyStrong,
                     decoration: InputDecoration(
                       labelText: label,
-                      labelStyle: theme.textTheme.overline,
+                      labelStyle: theme.textTheme.caption,
+                      floatingLabelStyle: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary),
                       floatingLabelBehavior: FloatingLabelBehavior.always,
                       filled: true,
-                      fillColor: theme.colorScheme.surface,
+                      fillColor: ext.surfaceRaised,
+                      prefixIcon: leading,
                       suffixIcon: trailing,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide(color: ext.hairline, width: 1),
@@ -77,10 +80,19 @@ class AppTextField extends FormField<String> {
                 ),
                 if (displayErrorText != null && displayErrorText.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8, left: 16),
-                    child: Text(
-                      displayErrorText,
-                      style: theme.textTheme.caption.copyWith(color: ext.error),
+                    padding: const EdgeInsets.only(top: 8, left: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.error_outline, size: 16, color: ext.error),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            displayErrorText,
+                            style: theme.textTheme.caption.copyWith(color: ext.error),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
               ],

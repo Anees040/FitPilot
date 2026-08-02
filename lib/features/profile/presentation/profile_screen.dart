@@ -80,6 +80,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
@@ -102,6 +103,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                _buildHeaderAvatar(theme, ext, profile),
+                const SizedBox(height: 24),
                 _buildComputedTargetDisplay(theme, profile),
                 const SizedBox(height: 24),
 
@@ -254,16 +257,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text('Theme Mode', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        trailing: DropdownButton<ThemeModePref>(
-                          value: profile.themeMode,
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(value: ThemeModePref.system, child: Text('System')),
-                            DropdownMenuItem(value: ThemeModePref.light, child: Text('Light')),
-                            DropdownMenuItem(value: ThemeModePref.dark, child: Text('Dark')),
+                        title: Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Text('Theme Mode', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                        ),
+                        subtitle: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildThemeModeSwatch(theme, ext, 'System', ThemeModePref.system, profile.themeMode == ThemeModePref.system, (v) => _updateProfile(profile.copyWith(themeMode: v))),
+                            _buildThemeModeSwatch(theme, ext, 'Light', ThemeModePref.light, profile.themeMode == ThemeModePref.light, (v) => _updateProfile(profile.copyWith(themeMode: v))),
+                            _buildThemeModeSwatch(theme, ext, 'Dark', ThemeModePref.dark, profile.themeMode == ThemeModePref.dark, (v) => _updateProfile(profile.copyWith(themeMode: v))),
                           ],
-                          onChanged: (v) => _updateProfile(profile.copyWith(themeMode: v)),
                         ),
                       ),
                       Divider(color: theme.dividerColor, height: 1),
@@ -341,6 +345,103 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void _updateProfile(Profile newProfile) async {
     await ref.read(profileRepositoryProvider.future).then((r) => r.save(newProfile));
     ref.invalidate(profileProvider);
+  }
+
+  Widget _buildHeaderAvatar(ThemeData theme, AppColors ext, Profile profile) {
+    final session = ref.watch(currentUserProvider);
+    
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
+            AppSnackbar.success(context, 'Gallery picker (Milestone B)');
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: ext.emberGradient,
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                (profile.name?.isNotEmpty ?? false) ? profile.name![0].toUpperCase() : '?',
+                style: theme.textTheme.displayMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          (profile.name?.isNotEmpty ?? false) ? profile.name! : 'Adventurer',
+          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        if (session != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            session.email,
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildThemeModeSwatch(ThemeData theme, AppColors ext, String label, ThemeModePref value, bool isSelected, ValueChanged<ThemeModePref> onSelected) {
+    Color swatchColor;
+    switch (value) {
+      case ThemeModePref.light:
+        swatchColor = const Color(0xFFF5F1E8);
+        break;
+      case ThemeModePref.dark:
+        swatchColor = const Color(0xFF171512);
+        break;
+      case ThemeModePref.system:
+        swatchColor = ext.hairline;
+        break;
+    }
+
+    return GestureDetector(
+      onTap: () => onSelected(value),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: swatchColor,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? theme.colorScheme.primary : ext.hairline,
+                width: isSelected ? 3 : 1,
+              ),
+              boxShadow: isSelected
+                  ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 1)]
+                  : null,
+            ),
+            child: value == ThemeModePref.system 
+                ? Icon(Icons.brightness_auto, color: Colors.white, size: 24)
+                : null,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: theme.textTheme.caption.copyWith(
+              color: isSelected ? theme.colorScheme.primary : theme.textTheme.caption.color,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildComputedTargetDisplay(ThemeData theme, Profile profile) {

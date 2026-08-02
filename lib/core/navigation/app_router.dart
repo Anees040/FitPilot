@@ -18,6 +18,10 @@ import 'package:fitpilot/features/profile/presentation/profile_setup_screen.dart
 import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/exercise_library_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/exercise_detail_screen.dart';
+import 'package:fitpilot/features/programs/presentation/programs_screen.dart';
+import 'package:fitpilot/features/programs/presentation/program_detail_screen.dart';
+import 'package:fitpilot/features/programs/presentation/session_detail_screen.dart';
+import 'package:fitpilot/domain/entities/program.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -83,6 +87,25 @@ final appRouter = GoRouter(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => ExerciseDetailScreen(
         exerciseId: state.pathParameters['id']!,
+      ),
+    ),
+    GoRoute(
+      path: '/programs',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const ProgramsScreen(),
+    ),
+    GoRoute(
+      path: '/programs/detail',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => ProgramDetailScreen(
+        program: state.extra as ProgramWithSessions,
+      ),
+    ),
+    GoRoute(
+      path: '/programs/session',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => SessionDetailScreen(
+        session: state.extra as ProgramSession,
       ),
     ),
     StatefulShellRoute(

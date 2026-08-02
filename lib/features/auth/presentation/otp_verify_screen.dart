@@ -20,6 +20,7 @@ class OtpVerifyScreen extends ConsumerStatefulWidget {
 class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   final _codeCtrl = TextEditingController();
   bool _isLoading = false;
+  bool _isSuccess = false;
   String? _errorText;
   int _resendCooldown = 60;
   Timer? _timer;
@@ -79,14 +80,18 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       }
 
       if (mounted) {
-        context.go('/today');
+        setState(() {
+          _isSuccess = true;
+        });
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) context.go('/today');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _errorText = _mapError(e));
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && !_isSuccess) setState(() => _isLoading = false);
     }
   }
 
@@ -177,22 +182,43 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
               ],
               const SizedBox(height: 16),
 
-              PrimaryButton(
-                label: 'Verify',
-                onPressed: _codeCtrl.text.length == 6 && !_isLoading ? _submit : null,
-                isLoading: _isLoading,
-              ),
-              const SizedBox(height: 16),
+              if (_isSuccess) ...[
+                const SizedBox(height: 32),
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.elasticOut,
+                  builder: (context, value, child) {
+                    return Transform.scale(
+                      scale: value,
+                      child: Icon(Icons.check_circle, size: 80, color: ext.success),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Verified!',
+                  style: theme.textTheme.h2.copyWith(color: ext.success),
+                  textAlign: TextAlign.center,
+                ),
+              ] else ...[
+                PrimaryButton(
+                  label: 'Verify',
+                  onPressed: _codeCtrl.text.length == 6 && !_isLoading ? _submit : null,
+                  isLoading: _isLoading,
+                ),
+                const SizedBox(height: 16),
 
-              TertiaryButton(
-                label: _resendCooldown > 0
-                    ? 'Resend in ${_resendCooldown}s'
-                    : 'Resend code',
-                onPressed: _resendCooldown == 0 ? _resend : null,
-                color: _resendCooldown > 0
-                    ? theme.textTheme.caption.color
-                    : theme.colorScheme.primary,
-              ),
+                TertiaryButton(
+                  label: _resendCooldown > 0
+                      ? 'Resend in ${_resendCooldown}s'
+                      : 'Resend code',
+                  onPressed: _resendCooldown == 0 ? _resend : null,
+                  color: _resendCooldown > 0
+                      ? theme.textTheme.caption.color
+                      : theme.colorScheme.primary,
+                ),
+              ],
             ],
           ),
         ),

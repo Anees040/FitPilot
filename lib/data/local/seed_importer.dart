@@ -15,6 +15,7 @@ class SeedImporter {
   Future<void> importAll() async {
     await _importFoods();
     await _importExercises();
+    await _importPrograms();
   }
 
   Future<void> _importFoods() async {
@@ -71,6 +72,49 @@ class SeedImporter {
         'media_asset': e['media_asset'] as String?,
         'video_url': e['video_url'] as String?,
       });
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<void> _importPrograms() async {
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM programs'),
+    );
+    if (count != null && count > 0) return;
+
+    final jsonStr = await rootBundle.loadString('assets/seed/programs.json');
+    final List<dynamic> programs = json.decode(jsonStr) as List<dynamic>;
+
+    final batch = db.batch();
+    for (final prog in programs) {
+      final p = prog as Map<String, dynamic>;
+      final programId = p['id'] as String;
+      batch.insert('programs', {
+        'id': programId,
+        'name': p['name'] as String,
+        'icon': p['icon'] as String,
+        'goal': p['goal'] as String,
+      });
+
+      final weeks = p['weeks'] as List<dynamic>;
+      for (final week in weeks) {
+        final w = week as Map<String, dynamic>;
+        final weekNum = w['week_number'] as int;
+        final sessions = w['sessions'] as List<dynamic>;
+        
+        for (final session in sessions) {
+          final s = session as Map<String, dynamic>;
+          final dayNum = s['day_number'] as int;
+          batch.insert('program_sessions', {
+            'id': '${programId}_w${weekNum}_d$dayNum',
+            'program_id': programId,
+            'week_number': weekNum,
+            'day_number': dayNum,
+            'exercise_id': s['exercise_id'] as String,
+            'minutes': s['minutes'] as int,
+          });
+        }
+      }
     }
     await batch.commit(noResult: true);
   }

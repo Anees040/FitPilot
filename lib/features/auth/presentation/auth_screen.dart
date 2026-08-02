@@ -11,10 +11,11 @@ import 'package:fitpilot/core/config/env.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/application/providers/demo_provider.dart';
+import 'package:fitpilot/core/ui/glow_blob_background.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   final String? initialMode;
-  
+
   const AuthScreen({super.key, this.initialMode});
 
   @override
@@ -66,13 +67,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
   }
 
-  bool get _isPasswordValid => _isLogin || (_hasLength && _hasLetter && _hasNumber);
+  bool get _isPasswordValid =>
+      _isLogin || (_hasLength && _hasLetter && _hasNumber);
 
   String _mapError(Object e) {
     if (e is RateLimitedFailure) return 'Too many attempts, wait a minute.';
     if (e is NetworkUnavailableFailure) return 'No connection.';
-    if (e is EmailAlreadyRegisteredFailure) return 'That email is already registered. Try logging in.';
-    if (e is InvalidCredentialsFailure) return 'Email or password is incorrect.';
+    if (e is EmailAlreadyRegisteredFailure) {
+      return 'That email is already registered. Try logging in.';
+    }
+    if (e is InvalidCredentialsFailure) {
+      return 'Email or password is incorrect.';
+    }
     if (e is AuthFailure) return e.message;
     return 'An error occurred. Please try again.';
   }
@@ -94,13 +100,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         await ref
             .read(authRepositoryProvider)
             .signUp(email: _emailCtrl.text.trim(), password: _passCtrl.text);
-            
+
         final profile = ref.read(profileProvider).value;
         if (profile != null) {
           final repo = await ref.read(profileRepositoryProvider.future);
-          await repo.save(
-            profile.copyWith(name: _nameCtrl.text.trim()),
-          );
+          await repo.save(profile.copyWith(name: _nameCtrl.text.trim()));
         }
       }
 
@@ -162,263 +166,321 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final isDemo = ref.watch(demoProvider);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Hero Top
-          Expanded(
-            flex: 2,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.primary.withValues(alpha: 0.15),
-                          theme.scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
+      body: GlowBlobBackground(
+        child: Column(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Stack(
+                children: [
+                  SafeArea(
+                    bottom: false,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back),
+                              onPressed: () => context.pop(),
+                            ),
+                            Expanded(
+                              child: Center(
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: ext.nightGlow,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.15),
+                                        blurRadius: 30,
+                                        spreadRadius: 10,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Image.asset(
+                                    theme.brightness == Brightness.dark
+                                        ? 'assets/images/logo_mark_white.png'
+                                        : 'assets/images/logo_mark_orange.png',
+                                    errorBuilder: (c, e, s) => Icon(
+                                      Icons.local_fire_department,
+                                      color: theme.colorScheme.primary,
+                                      size: 40,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                transitionBuilder:
+                                    (
+                                      Widget child,
+                                      Animation<double> animation,
+                                    ) {
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: SlideTransition(
+                                          position: Tween<Offset>(
+                                            begin: const Offset(0.0, 0.2),
+                                            end: Offset.zero,
+                                          ).animate(animation),
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                child: Text(
+                                  _isLogin
+                                      ? 'Welcome\nback'
+                                      : 'Create\naccount',
+                                  key: ValueKey(_isLogin),
+                                  style: theme.textTheme.headlineLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -1,
+                                        height: 1.1,
+                                      ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Expanded(
+              flex: 5,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.shadowColor.withValues(alpha: 0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (isDemo) _buildDemoBanner(theme, ext),
+
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            child: !_isLogin
+                                ? Column(
+                                    children: [
+                                      AppTextField(
+                                        label: 'NAME',
+                                        controller: _nameCtrl,
+                                        keyboardType: TextInputType.name,
+                                        validator: (val) {
+                                          if (!_isLogin &&
+                                              (val == null || val.isEmpty)) {
+                                            return 'Enter your name';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+
+                          AppTextField(
+                            label: 'EMAIL',
+                            controller: _emailCtrl,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Enter your email';
+                              }
+                              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val)) {
+                                return 'Enter a valid email address';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          AppTextField(
+                            label: 'PASSWORD',
+                            controller: _passCtrl,
+                            focusNode: _passFocusNode,
+                            obscureText: _obscurePassword,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Enter your password';
+                              }
+                              return _formError;
+                            },
+                            trailing: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                size: 20,
+                                color: theme.textTheme.bodySmall?.color,
+                              ),
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                            ),
+                            onChanged: _validatePassword,
+                          ),
+
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            child: Column(
+                              children: [
+                                if (!_isLogin &&
+                                    (_passwordFocused ||
+                                        _passCtrl.text.isNotEmpty)) ...[
+                                  const SizedBox(height: 12),
+                                  _buildChecklistItem(
+                                    context,
+                                    'Minimum 8 characters',
+                                    _hasLength,
+                                  ),
+                                  _buildChecklistItem(
+                                    context,
+                                    'At least one letter',
+                                    _hasLetter,
+                                  ),
+                                  _buildChecklistItem(
+                                    context,
+                                    'At least one number',
+                                    _hasNumber,
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
+                                if (_isLogin) ...[
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TertiaryButton(
+                                      label: 'Forgot password?',
+                                      onPressed: () =>
+                                          context.push('/forgot-password'),
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          if (_formError != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              _formError!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: ext.error,
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: 32),
+
+                          PrimaryButton(
+                            label: _isLogin ? 'Log in' : 'Sign up',
+                            onPressed: _submit,
+                            isLoading: _isLoading,
+                          ),
+
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: ext.hairline)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  'OR',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.textTheme.bodySmall?.color,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Expanded(child: Divider(color: ext.hairline)),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          GoogleButton(
+                            isLoading: _isLoading,
+                            onPressed: _submitGoogle,
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _isLogin
+                                    ? "Don't have an account? "
+                                    : "Already have an account? ",
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _toggleMode,
+                                child: Text(
+                                  _isLogin ? 'Sign up' : 'Log in',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 32),
                         ],
                       ),
                     ),
                   ),
                 ),
-                SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => context.pop(),
-                        ),
-                        const Spacer(),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            transitionBuilder: (Widget child, Animation<double> animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0.0, 0.2),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Text(
-                              _isLogin ? 'Welcome\nback' : 'Create\naccount',
-                              key: ValueKey(_isLogin),
-                              style: theme.textTheme.headlineLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -1,
-                                height: 1.1,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Bottom Card
-          Expanded(
-            flex: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.shadowColor.withValues(alpha: 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (isDemo) _buildDemoBanner(theme, ext),
-                        
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          child: !_isLogin
-                              ? Column(
-                                  children: [
-                                    AppTextField(
-                                      label: 'NAME',
-                                      controller: _nameCtrl,
-                                      keyboardType: TextInputType.name,
-                                      validator: (val) {
-                                        if (!_isLogin && (val == null || val.isEmpty)) {
-                                          return 'Enter your name';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    const SizedBox(height: 16),
-                                  ],
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-
-                        AppTextField(
-                          label: 'EMAIL',
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (val) {
-                            if (val == null || val.isEmpty) return 'Enter your email';
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val)) return 'Enter a valid email address';
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        AppTextField(
-                          label: 'PASSWORD',
-                          controller: _passCtrl,
-                          focusNode: _passFocusNode,
-                          obscureText: _obscurePassword,
-                          validator: (val) {
-                            if (val == null || val.isEmpty) return 'Enter your password';
-                            return _formError;
-                          },
-                          trailing: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              size: 20,
-                              color: theme.textTheme.caption.color,
-                            ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-                          onChanged: _validatePassword,
-                        ),
-                        
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          child: Column(
-                            children: [
-                              if (!_isLogin && (_passwordFocused || _passCtrl.text.isNotEmpty)) ...[
-                                const SizedBox(height: 12),
-                                _buildChecklistItem(context, 'Minimum 8 characters', _hasLength),
-                                _buildChecklistItem(context, 'At least one letter', _hasLetter),
-                                _buildChecklistItem(context, 'At least one number', _hasNumber),
-                                const SizedBox(height: 8),
-                              ],
-                              if (_isLogin) ...[
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TertiaryButton(
-                                    label: 'Forgot password?',
-                                    onPressed: () => context.push('/forgot-password'),
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        if (_formError != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            _formError!,
-                            style: theme.textTheme.caption.copyWith(color: ext.error),
-                          ),
-                        ],
-
-                        const SizedBox(height: 32),
-                        
-                        PrimaryButton(
-                          label: _isLogin ? 'Log in' : 'Sign up',
-                          onPressed: _submit,
-                          isLoading: _isLoading,
-                        ),
-
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: ext.hairline)),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                'OR',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.textTheme.caption.color,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            Expanded(child: Divider(color: ext.hairline)),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-
-                        GoogleButton(
-                          isLoading: _isLoading,
-                          onPressed: _submitGoogle,
-                        ),
-
-                        const SizedBox(height: 32),
-                        
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _isLogin ? "Don't have an account? " : "Already have an account? ",
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: _toggleMode,
-                              child: Text(
-                                _isLogin ? 'Sign up' : 'Log in',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
-                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -443,7 +505,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           Text(
             text,
             style: theme.textTheme.caption.copyWith(
-              color: isMet ? theme.textTheme.body.color : theme.textTheme.caption.color,
+              color: isMet
+                  ? theme.textTheme.body.color
+                  : theme.textTheme.caption.color,
             ),
           ),
         ],
@@ -467,7 +531,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           Expanded(
             child: Text(
               'Demo Mode — Data will not be saved',
-              style: theme.textTheme.caption.copyWith(color: ext.warning, fontWeight: FontWeight.bold),
+              style: theme.textTheme.caption.copyWith(
+                color: ext.warning,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -475,4 +542,3 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 }
-

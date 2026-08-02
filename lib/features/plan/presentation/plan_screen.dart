@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
@@ -10,6 +11,8 @@ import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
+import 'package:fitpilot/core/ui/fade_scroll_row.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
 import '../../../core/ui/exercise_media.dart';
 
 
@@ -114,7 +117,7 @@ class PlanScreen extends ConsumerWidget {
         Text('Pick ONE — each option clears your surplus on its own.', style: theme.textTheme.caption),
         const SizedBox(height: 8),
         ...state.options.map(
-          (option) => _buildOptionCard(context, ref, option),
+          (option) => _ExpandableOptionCard(option: option),
         ),
       ],
     );
@@ -162,7 +165,7 @@ class PlanScreen extends ConsumerWidget {
               ...logs.map((log) {
                 return DropdownMenuItem(
                   value: log.id,
-                  child: Text('${log.customName} (${log.kcal.midpoint} kcal)'),
+                  child: Text('${log.customName ?? log.foodName} (${log.kcal.midpoint} kcal)'),
                 );
               }),
             ],
@@ -182,7 +185,6 @@ class PlanScreen extends ConsumerWidget {
     );
   }
 
-  // G2.4 — horizontally scrollable chip rows with fade hint at trailing edge
   Widget _buildCategoryFilters(BuildContext context, WidgetRef ref) {
     final currentCat = ref.watch(burnCategoryFilterProvider);
     final currentPace = ref.watch(burnPaceFilterProvider);
@@ -190,7 +192,7 @@ class PlanScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FadeScrollRow(
+        FadeScrollRow(
           children: [
             _buildFilterChip(
               label: 'Recommended',
@@ -220,7 +222,7 @@ class PlanScreen extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 8),
-        _FadeScrollRow(
+        FadeScrollRow(
           children: [
             _buildFilterChip(
               label: 'Any pace',
@@ -262,19 +264,36 @@ class PlanScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildOptionCard(
-    BuildContext context,
-    WidgetRef ref,
-    BurnOption option,
-  ) {
+class _ExpandableOptionCard extends ConsumerStatefulWidget {
+  final BurnOption option;
+
+  const _ExpandableOptionCard({required this.option});
+
+  @override
+  ConsumerState<_ExpandableOptionCard> createState() => _ExpandableOptionCardState();
+}
+
+class _ExpandableOptionCardState extends ConsumerState<_ExpandableOptionCard> {
+  bool _isExpanded = false;
+
+  void _toggleExpand() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
+    final option = widget.option;
     final isWalking = option.activity.contains('Walking');
     
     String subtitle;
     if (option.sessions > 1) {
-      subtitle = 'Too big for one session — ${option.sessions} × ${option.minutesPerSession} min over ${option.sessions} days';
+      subtitle = '${option.sessions} × ${option.minutesPerSession} min over ${option.sessions} days';
     } else {
       subtitle = isWalking && option.steps != null
           ? '${option.minutes} min • ~${option.steps} steps'
@@ -284,76 +303,86 @@ class PlanScreen extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: AppCard(
-        // G2.5 — whole card is tappable, navigates to exercise detail
-        onTap: option.exerciseId != null
-            ? () => context.push('/exercises/${option.exerciseId}')
-            : null,
-        child: Row(
+        onTap: _toggleExpand,
+        child: Column(
           children: [
-            if (option.mediaAsset != null)
-              Container(
-                width: 48,
-                height: 48,
-                margin: const EdgeInsets.only(right: 12),
-                child: ExerciseMedia.asset(
-                  mediaAsset: option.mediaAsset!,
-                  borderRadius: 8,
-                ),
-              ),
-            // G2.3 — clamp text to prevent overflow
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            Row(
+              children: [
+                if (option.mediaAsset != null)
+                  Container(
+                    width: 56,
+                    height: 56,
+                    margin: const EdgeInsets.only(right: 16),
+                    child: ExerciseMedia.asset(
+                      mediaAsset: option.mediaAsset!,
+                      borderRadius: 12,
+                    ),
+                  ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Flexible(
-                        child: Text(
-                          option.activity,
-                          style: theme.textTheme.bodyStrong,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              option.activity,
+                              style: theme.textTheme.bodyStrong,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (option.difficulty != null) ...[
+                            const SizedBox(width: 8),
+                            _buildDifficultyDots(option.difficulty!, theme, ext),
+                          ],
+                        ],
                       ),
-                      if (option.difficulty != null) ...[
-                        const SizedBox(width: 8),
-                        _buildDifficultyDots(option.difficulty!, theme, ext),
-                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.caption,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.caption,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                ),
+                Icon(
+                  _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  color: ext.textDisabled,
+                ),
+              ],
+            ),
+            if (_isExpanded) ...[
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: SecondaryButton(
+                      label: 'See details',
+                      onPressed: option.exerciseId != null
+                          ? () => context.push('/exercises/${option.exerciseId}')
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: PrimaryButton(
+                      label: 'Mark Done',
+                      onPressed: () {
+                        HapticFeedback.heavyImpact();
+                        ref.read(burnPlanProvider.notifier).markDone(option);
+                        AppSnackbar.success(context, 'Marked ${option.activity} as done!');
+                        context.go('/today'); // Return to Today to see the ring fill
+                      },
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            // G2.5 — "Done" button has its own GestureDetector to avoid absorbing card tap
-            GestureDetector(
-              onTap: () {
-                ref.read(burnPlanProvider.notifier).markDone(option);
-                AppSnackbar.success(context, 'Marked ${option.activity} as done!');
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: ext.hairline),
-                  color: Colors.transparent,
-                ),
-                child: Text(
-                  'Done',
-                  style: theme.textTheme.caption.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.textTheme.bodyStrong.color,
-                  ),
-                ),
-              ),
-            ),
+            ],
           ],
         ),
       ),
@@ -375,38 +404,6 @@ class PlanScreen extends ConsumerWidget {
           ),
         );
       }),
-    );
-  }
-}
-
-/// A horizontally scrollable row with a fade hint at the trailing edge.
-/// G2.4 — replaces the plain SingleChildScrollView + Row pattern.
-class _FadeScrollRow extends StatelessWidget {
-  final List<Widget> children;
-
-  const _FadeScrollRow({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return ShaderMask(
-      shaderCallback: (bounds) => LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [
-          Colors.white,
-          Colors.white,
-          Colors.white.withValues(alpha: 0.0),
-        ],
-        stops: const [0.0, 0.85, 1.0],
-      ).createShader(bounds),
-      blendMode: BlendMode.dstIn,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.only(left: 0, right: 32), // extra padding for fade
-        child: Row(
-          children: children,
-        ),
-      ),
     );
   }
 }

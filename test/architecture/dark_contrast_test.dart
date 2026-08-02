@@ -108,7 +108,7 @@ void main() {
         AppTheme.darkAccent,
         AppTheme.darkSurfaceRaised
       ],
-      'white on accent (button)': [Colors.white, AppTheme.darkAccent],
+      'dark on accent (button)': [const Color(0xFF1A1208), AppTheme.darkAccent],
       'highlight on surface': [AppTheme.darkHighlight, AppTheme.darkSurface],
     };
 

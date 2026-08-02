@@ -1,57 +1,101 @@
 import 'package:flutter/material.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
+class AnimatedScaleButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onPressed;
+  final bool disabled;
+
+  const AnimatedScaleButton({
+    super.key,
+    required this.child,
+    this.onPressed,
+    this.disabled = false,
+  });
+
+  @override
+  State<AnimatedScaleButton> createState() => _AnimatedScaleButtonState();
+}
+
+class _AnimatedScaleButtonState extends State<AnimatedScaleButton> {
+  bool _isPressed = false;
+
+  void _handleTapDown(TapDownDetails details) {
+    if (!widget.disabled) setState(() => _isPressed = true);
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    if (!widget.disabled) setState(() => _isPressed = false);
+  }
+
+  void _handleTapCancel() {
+    if (!widget.disabled) setState(() => _isPressed = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _handleTapDown,
+      onTapUp: _handleTapUp,
+      onTapCancel: _handleTapCancel,
+      onTap: widget.disabled ? null : widget.onPressed,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutBack,
+        child: Opacity(
+          opacity: widget.disabled ? 0.4 : 1.0,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
-  final Color? color;
 
   const PrimaryButton({
     super.key,
     required this.label,
     this.onPressed,
     this.isLoading = false,
-    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
-    
-    return SizedBox(
-      height: 52,
-      width: double.infinity,
-      child: FilledButton(
-        onPressed: isLoading ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: color ?? theme.colorScheme.primary,
-          disabledBackgroundColor: ext.hairline,
-          disabledForegroundColor: theme.textTheme.caption.color,
-          foregroundColor: theme.colorScheme.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          textStyle: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.onPrimary),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.pressed)) {
-              return theme.colorScheme.onSurface.withValues(alpha: 0.08);
-            }
-            return null;
-          }),
+    final disabled = onPressed == null || isLoading;
+
+    return AnimatedScaleButton(
+      onPressed: onPressed,
+      disabled: disabled,
+      child: Container(
+        height: 52,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26), // pill
+          gradient: ext.emberGradient,
+          color: ext.emberGradient == null ? theme.colorScheme.primary : null,
         ),
+        alignment: Alignment.center,
         child: isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1A1208)),
                 ),
               )
-            : Text(label),
+            : Text(
+                label,
+                style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.onPrimary),
+              ),
       ),
     );
   }
@@ -71,22 +115,23 @@ class SecondaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
-    
-    return SizedBox(
-      height: 52,
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: theme.colorScheme.surface,
-          foregroundColor: theme.colorScheme.onSurface,
-          side: BorderSide(color: ext.hairline, width: 1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          textStyle: theme.textTheme.bodyStrong,
+    final disabled = onPressed == null;
+
+    return AnimatedScaleButton(
+      onPressed: onPressed,
+      disabled: disabled,
+      child: Container(
+        height: 52,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: ext.accentSoft,
         ),
-        child: Text(label),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.primary),
+        ),
       ),
     );
   }
@@ -107,14 +152,18 @@ class TertiaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return TextButton(
+    return AnimatedScaleButton(
       onPressed: onPressed,
-      style: TextButton.styleFrom(
-        minimumSize: const Size(44, 44),
-        foregroundColor: color ?? theme.textTheme.caption.color,
-        textStyle: theme.textTheme.bodyStrong,
+      disabled: onPressed == null,
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: theme.textTheme.bodyStrong.copyWith(color: color ?? theme.textTheme.caption.color),
+        ),
       ),
-      child: Text(label),
     );
   }
 }
@@ -133,35 +182,21 @@ class GoogleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
+    final isDark = theme.brightness == Brightness.dark;
+    final disabled = onPressed == null || isLoading;
     
-    return SizedBox(
-      height: 52,
-      width: double.infinity,
-      child: FilledButton(
-        onPressed: isLoading ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: Colors.white,
-          disabledBackgroundColor: ext.hairline,
-          disabledForegroundColor: theme.textTheme.caption.color,
-          foregroundColor: const Color(0xFF1F1F1F),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: ext.hairline, width: 1),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: 'Roboto',
-            fontWeight: FontWeight.w500,
-            fontSize: 16,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.pressed)) {
-              return theme.colorScheme.shadow.withValues(alpha: 0.08);
-            }
-            return null;
-          }),
+    return AnimatedScaleButton(
+      onPressed: onPressed,
+      disabled: disabled,
+      child: Container(
+        height: 52,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: isDark ? ext.surfaceRaised : Colors.white,
+          border: Border.all(color: ext.hairline, width: 1),
         ),
+        alignment: Alignment.center,
         child: isLoading
             ? SizedBox(
                 width: 20,
@@ -180,7 +215,15 @@ class GoogleButton extends StatelessWidget {
                     width: 24,
                   ),
                   const SizedBox(width: 12),
-                  const Text('Continue with Google'),
+                  Text(
+                    'Continue with Google',
+                    style: TextStyle(
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                      color: isDark ? const Color(0xFFF2F2F2) : const Color(0xFF1F1F1F),
+                    ),
+                  ),
                 ],
               ),
       ),

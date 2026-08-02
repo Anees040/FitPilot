@@ -34,9 +34,15 @@
 - [x] G6 — Dark theme overhaul
 - [x] G8 — Profile & Settings refactor
 - [x] J1 — Meal-first logic pivot and Welcome Screen Polish
+- [x] J2 — Profile, Auth, and Splash Screen Redesign
 
 ## Last completed
 
+- J2 — Profile, Auth, and Splash Screen Redesign
+  - Overhauled ProfileScreen with header avatar, live-preview theme swatches, and clean settings structure.
+  - Implemented GlowBlobBackground for Auth and Splash screens.
+  - Updated AuthScreen and OtpVerifyScreen with premium animations and new brand styling.
+  - Resolved UI bugs including fixing blank screen issue on ProgressScreen when updating weight.
 - J1 — Meal-first logic pivot & Welcome Screen
   - Shifted from calorie allowance model to a "debt" model where users only log guilt meals.
   - Updated TodayScreen, ProfileScreen, and StreakEngine to use `toBurn` instead of `remainingKcal`.

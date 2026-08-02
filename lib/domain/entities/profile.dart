@@ -33,6 +33,9 @@ class Profile extends Equatable {
   final String unitKgLb;
   final bool weekStartsMon;
   final bool hapticsOn;
+  final String? activeProgramId;
+  final int activeProgramWeek;
+  final int activeProgramDay;
   final DateTime updatedAt;
 
   static const int defaultAllowanceKcal = 300;
@@ -56,6 +59,9 @@ class Profile extends Equatable {
     this.unitKgLb = 'kg',
     this.weekStartsMon = true,
     this.hapticsOn = true,
+    this.activeProgramId,
+    this.activeProgramWeek = 1,
+    this.activeProgramDay = 1,
     required this.updatedAt,
   }) {
     if (weightKg < 25 || weightKg > 300) {
@@ -126,8 +132,12 @@ class Profile extends Equatable {
     String? unitKgLb,
     bool? weekStartsMon,
     bool? hapticsOn,
+    String? activeProgramId,
+    int? activeProgramWeek,
+    int? activeProgramDay,
     DateTime? updatedAt,
     bool clearOverride = false,
+    bool clearProgram = false,
   }) {
     return Profile(
       name: name ?? this.name,
@@ -148,6 +158,9 @@ class Profile extends Equatable {
       unitKgLb: unitKgLb ?? this.unitKgLb,
       weekStartsMon: weekStartsMon ?? this.weekStartsMon,
       hapticsOn: hapticsOn ?? this.hapticsOn,
+      activeProgramId: clearProgram ? null : (activeProgramId ?? this.activeProgramId),
+      activeProgramWeek: activeProgramWeek ?? this.activeProgramWeek,
+      activeProgramDay: activeProgramDay ?? this.activeProgramDay,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -172,6 +185,9 @@ class Profile extends Equatable {
     unitKgLb,
     weekStartsMon,
     hapticsOn,
+    activeProgramId,
+    activeProgramWeek,
+    activeProgramDay,
     updatedAt,
   ];
 

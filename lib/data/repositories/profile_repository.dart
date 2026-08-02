@@ -39,6 +39,9 @@ class ProfileRepository {
       'unit_kg_lb': profile.unitKgLb,
       'week_starts_mon': profile.weekStartsMon ? 1 : 0,
       'haptics_on': profile.hapticsOn ? 1 : 0,
+      'active_program_id': profile.activeProgramId,
+      'active_program_week': profile.activeProgramWeek,
+      'active_program_day': profile.activeProgramDay,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
 
@@ -81,6 +84,9 @@ class ProfileRepository {
       unitKgLb: map['unit_kg_lb'] as String? ?? 'kg',
       weekStartsMon: (map['week_starts_mon'] as int? ?? 1) == 1,
       hapticsOn: (map['haptics_on'] as int? ?? 1) == 1,
+      activeProgramId: map['active_program_id'] as String?,
+      activeProgramWeek: map['active_program_week'] as int? ?? 1,
+      activeProgramDay: map['active_program_day'] as int? ?? 1,
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
   }

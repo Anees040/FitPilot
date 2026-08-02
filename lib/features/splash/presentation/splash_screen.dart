@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/application/bootstrap.dart';
+import 'package:fitpilot/core/ui/glow_blob_background.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -110,22 +111,12 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         : 'assets/images/logo_mark_orange.png';
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.1),
-                  theme.scaffoldBackgroundColor,
-                ],
-                radius: 1.5,
-              ),
-            ),
-          ),
-          // Logo in the center
+      backgroundColor: Colors.transparent,
+      body: GlowBlobBackground(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Logo in the center
           Center(
             child: FadeTransition(
               opacity: _scaleAnimation,
@@ -163,11 +154,12 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     fontSize: 16,
                     letterSpacing: 1.2,
                   ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

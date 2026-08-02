@@ -1,0 +1,194 @@
+﻿[
+  {
+    "id": "weight-loss-kickstart",
+    "name": "Weight Loss Kickstart",
+    "icon": "🔥",
+    "goal": "A perfect blend of brisk walking, light jogging, and beginner HIIT to maximize calorie burn over 4 weeks.",
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "brisk-walking", "minutes": 30},
+          {"day_number": 2, "exercise_id": "jumping-jacks", "minutes": 15},
+          {"day_number": 3, "exercise_id": "brisk-walking", "minutes": 40},
+          {"day_number": 4, "exercise_id": "jogging-12min", "minutes": 20}
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "incline-walking", "minutes": 30},
+          {"day_number": 2, "exercise_id": "mountain-climbers", "minutes": 15},
+          {"day_number": 3, "exercise_id": "jogging-12min", "minutes": 25},
+          {"day_number": 4, "exercise_id": "jump-rope-moderate", "minutes": 20}
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "running-6mph", "minutes": 20},
+          {"day_number": 2, "exercise_id": "burpees", "minutes": 15},
+          {"day_number": 3, "exercise_id": "hill-hiking", "minutes": 45},
+          {"day_number": 4, "exercise_id": "cycling-moderate", "minutes": 30}
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "sprint-intervals", "minutes": 20},
+          {"day_number": 2, "exercise_id": "high-knees", "minutes": 20},
+          {"day_number": 3, "exercise_id": "running-6mph", "minutes": 30},
+          {"day_number": 4, "exercise_id": "stair-sprints", "minutes": 20}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "calisthenics-foundations",
+    "name": "Calisthenics Foundations",
+    "icon": "💪",
+    "goal": "Master your bodyweight with progressions for pushups, pullups, dips, squats, and planks over 4 weeks.",
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "air-squats", "minutes": 15},
+          {"day_number": 2, "exercise_id": "pushup-vigorous", "minutes": 10},
+          {"day_number": 3, "exercise_id": "plank", "minutes": 10},
+          {"day_number": 4, "exercise_id": "glute-bridge", "minutes": 15}
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "walking-lunges", "minutes": 15},
+          {"day_number": 2, "exercise_id": "pullup", "minutes": 15},
+          {"day_number": 3, "exercise_id": "dips", "minutes": 15},
+          {"day_number": 4, "exercise_id": "crunches", "minutes": 15}
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "pistol-squat", "minutes": 20},
+          {"day_number": 2, "exercise_id": "chinup", "minutes": 20},
+          {"day_number": 3, "exercise_id": "pushup-vigorous", "minutes": 20},
+          {"day_number": 4, "exercise_id": "leg-raises", "minutes": 20}
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "pullup", "minutes": 25},
+          {"day_number": 2, "exercise_id": "dips", "minutes": 25},
+          {"day_number": 3, "exercise_id": "pistol-squat", "minutes": 25},
+          {"day_number": 4, "exercise_id": "superman-hold", "minutes": 20}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "home-hiit-burner",
+    "name": "Home HIIT Burner",
+    "icon": "⚡",
+    "goal": "Fast-paced, high-intensity intervals using no equipment to scorch calories in just 3 weeks.",
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "jumping-jacks", "minutes": 15},
+          {"day_number": 2, "exercise_id": "high-knees", "minutes": 15},
+          {"day_number": 3, "exercise_id": "skater-hops", "minutes": 20}
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "burpees", "minutes": 20},
+          {"day_number": 2, "exercise_id": "mountain-climbers", "minutes": 20},
+          {"day_number": 3, "exercise_id": "jump-rope-fast", "minutes": 25}
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "squat-jumps", "minutes": 25},
+          {"day_number": 2, "exercise_id": "bear-crawl", "minutes": 20},
+          {"day_number": 3, "exercise_id": "burpees", "minutes": 30}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gym-strength-basics",
+    "name": "Gym Strength Basics",
+    "icon": "🏋️",
+    "goal": "Learn the ropes at the gym with a 4-week split combining essential machines and free weights.",
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "chest-press-machine", "minutes": 30},
+          {"day_number": 2, "exercise_id": "leg-press", "minutes": 30},
+          {"day_number": 3, "exercise_id": "lat-pulldown", "minutes": 30},
+          {"day_number": 4, "exercise_id": "ab-crunch-machine", "minutes": 20}
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "bench-press", "minutes": 35},
+          {"day_number": 2, "exercise_id": "barbell-squat", "minutes": 35},
+          {"day_number": 3, "exercise_id": "seated-cable-row", "minutes": 35},
+          {"day_number": 4, "exercise_id": "dumbbell-walking-lunges", "minutes": 25}
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "overhead-press", "minutes": 40},
+          {"day_number": 2, "exercise_id": "deadlift", "minutes": 40},
+          {"day_number": 3, "exercise_id": "barbell-row", "minutes": 40},
+          {"day_number": 4, "exercise_id": "step-ups", "minutes": 30}
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "clean-and-press", "minutes": 45},
+          {"day_number": 2, "exercise_id": "kettlebell-swings", "minutes": 45},
+          {"day_number": 3, "exercise_id": "farmers-carry", "minutes": 30},
+          {"day_number": 4, "exercise_id": "dumbbell-hiit", "minutes": 30}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "daily-walk-challenge",
+    "name": "Daily Walk Challenge",
+    "icon": "👟",
+    "goal": "Build a solid cardiovascular base with 2 weeks of progressively longer brisk walking sessions.",
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "brisk-walking", "minutes": 20},
+          {"day_number": 2, "exercise_id": "brisk-walking", "minutes": 25},
+          {"day_number": 3, "exercise_id": "brisk-walking", "minutes": 30},
+          {"day_number": 4, "exercise_id": "brisk-walking", "minutes": 35},
+          {"day_number": 5, "exercise_id": "brisk-walking", "minutes": 40}
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {"day_number": 1, "exercise_id": "brisk-walking", "minutes": 40},
+          {"day_number": 2, "exercise_id": "brisk-walking", "minutes": 45},
+          {"day_number": 3, "exercise_id": "brisk-walking", "minutes": 50},
+          {"day_number": 4, "exercise_id": "brisk-walking", "minutes": 55},
+          {"day_number": 5, "exercise_id": "brisk-walking", "minutes": 60}
+        ]
+      }
+    ]
+  }
+]

@@ -8,7 +8,9 @@ import 'package:fitpilot/domain/entities/streak_state.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/features/progress/presentation/weight_trend_section.dart';
+import 'package:intl/intl.dart';
 
 class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
@@ -42,6 +44,50 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
             onRetry: () => ref.invalidate(progressProvider),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddWeightDialog(context, ref),
+        backgroundColor: theme.colorScheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showAddWeightDialog(BuildContext context, WidgetRef ref) {
+    // We will extract this from WeightTrendSection
+    final controller = TextEditingController();
+    final theme = Theme.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: theme.colorScheme.surface,
+        title: Text('Add Weight', style: theme.textTheme.h2),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: 'WEIGHT (KG)',
+            labelStyle: theme.textTheme.caption,
+            filled: true,
+            fillColor: theme.colorScheme.surfaceContainerHighest,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: theme.textTheme.caption.color)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final val = double.tryParse(controller.text);
+              if (val != null && val >= 25 && val <= 300) {
+                Navigator.pop(context);
+                await ref.read(progressProvider.notifier).addWeight(val);
+              }
+            },
+            child: Text('Save', style: TextStyle(color: theme.colorScheme.primary)),
+          ),
+        ],
       ),
     );
   }
@@ -103,21 +149,28 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: ext.accentSoft,
+                  color: ext.energySoft,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.local_fire_department, color: theme.colorScheme.primary, size: 28),
+                child: Icon(Icons.local_fire_department, color: ext.energy, size: 28),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${streak.currentStreak}-day streak',
-                      style: theme.textTheme.display.copyWith(
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+                    TweenAnimationBuilder<int>(
+                      tween: IntTween(begin: 0, end: streak.currentStreak),
+                      duration: const Duration(seconds: 1),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return Text(
+                          '$value-day streak',
+                          style: theme.textTheme.display.copyWith(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -163,10 +216,23 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     // Prepare dates
     final sortedDates = last35Days.keys.toList()..sort();
     
+    // Find unique months in the range for the label
+    final uniqueMonths = sortedDates
+        .map((d) => DateFormat('MMM').format(d))
+        .toSet()
+        .toList();
+    final monthLabel = uniqueMonths.join(' - ');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('HEATMAP', style: theme.textTheme.overline.copyWith(fontWeight: FontWeight.bold)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('HEATMAP', style: theme.textTheme.overline.copyWith(fontWeight: FontWeight.bold)),
+            Text(monthLabel, style: theme.textTheme.caption.copyWith(fontWeight: FontWeight.bold)),
+          ],
+        ),
         const SizedBox(height: 8),
         AppCard(
           child: Column(
@@ -245,7 +311,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   }
                   
                   if (isToday) {
-                    return Container(
+                    dot = Container(
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         border: Border.all(color: theme.colorScheme.primary, width: 2.0),
@@ -255,7 +321,15 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                     );
                   }
                   
-                  return dot;
+                  return GestureDetector(
+                    onTap: () {
+                      AppBottomSheet.show(
+                        context,
+                        child: _DayDetailSheet(date: date, status: status),
+                      );
+                    },
+                    child: dot,
+                  );
                 },
               ),
               const SizedBox(height: 16),
@@ -429,6 +503,74 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _DayDetailSheet extends StatelessWidget {
+  final DateTime date;
+  final DayStatus status;
+
+  const _DayDetailSheet({required this.date, required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    
+    String title = DateFormat('EEEE, MMMM d').format(date);
+    String statusText;
+    Color statusColor;
+
+    switch (status.state) {
+      case DayState.cleared:
+        statusText = 'Cleared';
+        statusColor = ext.success;
+        break;
+      case DayState.inProgress:
+        statusText = 'In Progress';
+        statusColor = ext.warning;
+        break;
+      case DayState.unburned:
+        statusText = 'Unburned';
+        statusColor = ext.error;
+        break;
+      case DayState.noData:
+        statusText = 'No Data';
+        statusColor = ext.hairline;
+        break;
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.h2,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: statusColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              statusText,
+              style: theme.textTheme.bodyStrong,
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
       ],
     );
   }

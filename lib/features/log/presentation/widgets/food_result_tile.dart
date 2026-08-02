@@ -66,7 +66,6 @@ class _FoodResultCardState extends State<FoodResultCard> {
               aspectRatio: 1.6,
               child: Container(
                 decoration: BoxDecoration(
-                  color: ext.surfaceRaised,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: ClipRRect(
@@ -131,7 +130,7 @@ class _FoodResultCardState extends State<FoodResultCard> {
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stack) => _fallbackIcon(context, ext),
+        errorBuilder: (context, error, stack) => _buildCategoryArt(context, ext),
       );
     }
     // 2. Try network URL (only when local not available)
@@ -142,25 +141,63 @@ class _FoodResultCardState extends State<FoodResultCard> {
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stack) => _fallbackIcon(context, ext),
+        errorBuilder: (context, error, stack) => _buildCategoryArt(context, ext),
       );
     }
-    return _fallbackIcon(context, ext);
+    return _buildCategoryArt(context, ext);
   }
 
-  Widget _fallbackIcon(BuildContext context, AppColors ext) {
+  Widget _buildCategoryArt(BuildContext context, AppColors ext) {
     final theme = Theme.of(context);
+    
+    final nameLower = widget.food.name.toLowerCase();
+    IconData icon = Icons.restaurant;
+    Color bgColor = ext.surfaceRaised;
+    Color iconColor = theme.colorScheme.primary;
+
+    if (nameLower.contains('rice') || nameLower.contains('biryani')) {
+      icon = Icons.rice_bowl;
+      bgColor = ext.accentSoft;
+    } else if (nameLower.contains('bread') || nameLower.contains('toast') || nameLower.contains('roti') || nameLower.contains('naan')) {
+      icon = Icons.bakery_dining;
+      bgColor = ext.energySoft;
+    } else if (nameLower.contains('burger') || nameLower.contains('pizza') || nameLower.contains('fast food')) {
+      icon = Icons.fastfood;
+      bgColor = ext.error.withValues(alpha: 0.15);
+      iconColor = ext.error;
+    } else if (nameLower.contains('drink') || nameLower.contains('juice') || nameLower.contains('coffee') || nameLower.contains('tea')) {
+      icon = Icons.local_cafe;
+      bgColor = ext.accentSoft;
+    } else if (nameLower.contains('sweet') || nameLower.contains('cake') || nameLower.contains('chocolate') || nameLower.contains('cookie')) {
+      icon = Icons.cake;
+      bgColor = ext.energySoft;
+    } else if (nameLower.contains('fruit') || nameLower.contains('apple') || nameLower.contains('banana')) {
+      icon = Icons.apple;
+      bgColor = ext.success.withValues(alpha: 0.15);
+      iconColor = ext.success;
+    } else if (nameLower.contains('meat') || nameLower.contains('chicken') || nameLower.contains('beef')) {
+      icon = Icons.kebab_dining;
+      bgColor = ext.error.withValues(alpha: 0.15);
+      iconColor = ext.error;
+    } else if (nameLower.contains('dairy') || nameLower.contains('milk') || nameLower.contains('cheese')) {
+      icon = Icons.egg;
+      bgColor = ext.accentSoft;
+    } else if (nameLower.contains('snack') || nameLower.contains('chips')) {
+      icon = Icons.tapas;
+      bgColor = ext.energySoft;
+    }
+
     return Container(
       width: double.infinity,
       height: double.infinity,
       decoration: BoxDecoration(
-        color: ext.surfaceRaised,
+        color: bgColor,
       ),
       child: Center(
         child: Icon(
-          Icons.restaurant,
-          size: 24,
-          color: theme.textTheme.caption.color,
+          icon,
+          size: 48,
+          color: iconColor.withValues(alpha: 0.6),
         ),
       ),
     );

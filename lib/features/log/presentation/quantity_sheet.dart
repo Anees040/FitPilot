@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:fitpilot/domain/entities/food_item.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
+import 'package:fitpilot/application/providers/burn_provider.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
-import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'widgets/quantity_stepper.dart';
 import 'widgets/kcal_range_text.dart';
 
@@ -71,12 +72,33 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 24),
+            // Kcal range visual bar
+            Container(
+              height: 8,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                // Simple visual heuristic: max range 1000 for full width
+                widthFactor: (multipliedRange.midpoint / 1000).clamp(0.0, 1.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 32),
             PrimaryButton(
-              label: 'Add to today',
+              label: 'Add & see burn',
               onPressed: () {
+                final logId = const Uuid().v4();
                 final log = FoodLog(
-                  id: const Uuid().v4(),
+                  id: logId,
                   foodId: widget.food.id,
                   quantity: _quantity,
                   kcal: multipliedRange,
@@ -84,8 +106,11 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
                   loggedAt: DateTime.now(),
                 );
                 ref.read(todayProvider.notifier).addLog(log);
-                Navigator.pop(context);
-                AppSnackbar.success(context, 'Meal logged');
+                
+                // Set the selected meal in the burn plan state and navigate
+                ref.read(burnPlanMealIdProvider.notifier).state = logId;
+                Navigator.pop(context); // close sheet
+                context.go('/plan'); // go to plan
               },
             ),
           ],

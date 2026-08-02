@@ -17,6 +17,7 @@ import 'package:sqflite/sqflite.dart';
 /// 11 — added unit_kg_lb, week_starts_mon, haptics_on to profile
 /// 12 — added updated_at to burn_completions; added theme_color + goal_weight_kg guards
 /// 13 — added name to profile
+/// 14 — added programs and program_sessions tables, active_program fields to profile
 class AppDatabase {
   static Database? _db;
 
@@ -26,7 +27,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 13,
+      version: 14,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -38,7 +39,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 13,
+      version: 14,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -140,7 +141,30 @@ class AppDatabase {
         unit_kg_lb TEXT NOT NULL DEFAULT 'kg',
         week_starts_mon INTEGER NOT NULL DEFAULT 1,
         haptics_on INTEGER NOT NULL DEFAULT 1,
+        active_program_id TEXT,
+        active_program_week INTEGER NOT NULL DEFAULT 1,
+        active_program_day INTEGER NOT NULL DEFAULT 1,
         updated_at TEXT NOT NULL
+      )
+    ''');
+    
+    batch.execute('''
+      CREATE TABLE programs (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        goal TEXT NOT NULL
+      )
+    ''');
+    
+    batch.execute('''
+      CREATE TABLE program_sessions (
+        id TEXT PRIMARY KEY,
+        program_id TEXT NOT NULL,
+        week_number INTEGER NOT NULL,
+        day_number INTEGER NOT NULL,
+        exercise_id TEXT NOT NULL,
+        minutes INTEGER NOT NULL
       )
     ''');
 
@@ -391,6 +415,35 @@ class AppDatabase {
         await db.execute(
           "ALTER TABLE profile ADD COLUMN name TEXT",
         );
+      } catch (_) {}
+    }
+    if (oldVersion < 14) {
+      await db.execute('''
+        CREATE TABLE programs (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          icon TEXT NOT NULL,
+          goal TEXT NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE program_sessions (
+          id TEXT PRIMARY KEY,
+          program_id TEXT NOT NULL,
+          week_number INTEGER NOT NULL,
+          day_number INTEGER NOT NULL,
+          exercise_id TEXT NOT NULL,
+          minutes INTEGER NOT NULL
+        )
+      ''');
+      try {
+        await db.execute("ALTER TABLE profile ADD COLUMN active_program_id TEXT");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE profile ADD COLUMN active_program_week INTEGER NOT NULL DEFAULT 1");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE profile ADD COLUMN active_program_day INTEGER NOT NULL DEFAULT 1");
       } catch (_) {}
     }
   }

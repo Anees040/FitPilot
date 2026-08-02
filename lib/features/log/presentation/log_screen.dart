@@ -6,6 +6,8 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
+import 'package:fitpilot/core/ui/fade_scroll_row.dart';
+import 'package:fitpilot/core/ui/select_chip.dart';
 import 'widgets/food_result_tile.dart';
 import 'quantity_sheet.dart';
 import 'manual_entry_sheet.dart';
@@ -16,6 +18,7 @@ class LogScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
     final searchState = ref.watch(foodSearchProvider);
     final queryText = ref.watch(foodSearchQueryProvider);
 
@@ -26,13 +29,15 @@ class LogScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: AppTextField(
-                label: 'SEARCH FOODS',
+                label: 'SEARCH FOOD OR SCAN...',
+                leading: Icon(Icons.search, color: ext.textDisabled),
                 trailing: IconButton(
-                  icon: Icon(Icons.document_scanner, color: theme.colorScheme.primary),
+                  icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.primary),
                   onPressed: () => context.push('/capture'),
                 ),
                 onChanged: (val) {
@@ -40,6 +45,27 @@ class LogScreen extends ConsumerWidget {
                 },
               ),
             ),
+            const SizedBox(height: 12),
+            FadeScrollRow(
+              children: [
+                _buildCategoryChip('Rice', ref),
+                _buildCategoryChip('Bread', ref),
+                _buildCategoryChip('Fast Food', ref),
+                _buildCategoryChip('Drinks', ref),
+                _buildCategoryChip('Sweets', ref),
+                _buildCategoryChip('Fruit', ref),
+                _buildCategoryChip('Meat', ref),
+                _buildCategoryChip('Dairy', ref),
+                _buildCategoryChip('Snacks', ref),
+                _buildCategoryChip('Other', ref),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text('RECENT', style: theme.textTheme.overline),
+            ),
+            const SizedBox(height: 12),
             Expanded(
               child: searchState.when(
                 data: (results) {
@@ -67,7 +93,7 @@ class LogScreen extends ConsumerWidget {
                             maxCrossAxisExtent: 200,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            mainAxisExtent: 220,
+                            mainAxisExtent: 200,
                           ),
                           itemCount: results.length,
                           itemBuilder: (context, index) {
@@ -116,6 +142,26 @@ class LogScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(String label, WidgetRef ref) {
+    final queryText = ref.watch(foodSearchQueryProvider);
+    final isSelected = queryText.toLowerCase() == label.toLowerCase();
+    
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: SelectChip(
+        label: label,
+        isSelected: isSelected,
+        onSelected: () {
+          if (isSelected) {
+            ref.read(foodSearchQueryProvider.notifier).state = '';
+          } else {
+            ref.read(foodSearchQueryProvider.notifier).state = label;
+          }
+        },
       ),
     );
   }

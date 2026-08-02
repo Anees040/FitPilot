@@ -22,7 +22,7 @@ class WeightTrendSection extends ConsumerStatefulWidget {
 }
 
 class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
-  int _days = 30;
+  int _days = 7;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     final goalWeightKg = profileAsync.valueOrNull?.goalWeightKg;
 
     final now = DateTime.now();
-    final cutoff = _days == 365 ? now.subtract(const Duration(days: 3650)) : now.subtract(Duration(days: _days));
+    final cutoff = now.subtract(Duration(days: _days));
     final filtered = widget.entries.where((e) => e.date.isAfter(cutoff)).toList();
     filtered.sort((a, b) => a.date.compareTo(b.date));
 
@@ -43,11 +43,6 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('WEIGHT TREND', style: theme.textTheme.overline),
-            TertiaryButton(
-              label: '+ Add',
-              onPressed: () => _showAddWeightDialog(context, ref),
-              color: theme.colorScheme.primary,
-            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -87,9 +82,9 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
   Widget _buildFilterChips(ThemeData theme, AppColors ext) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [30, 90, 365].map((days) {
+      children: [7, 30, 90].map((days) {
         final isSelected = _days == days;
-        final label = days == 365 ? 'All' : '${days}d';
+        final label = days == 7 ? 'W' : (days == 30 ? 'M' : '3M');
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: ChoiceChip(
@@ -128,7 +123,7 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     final first = filtered.first.weightKg;
     final last = filtered.last.weightKg;
     final diff = last - first;
-    final label = _days == 365 ? 'overall' : 'in $_days days';
+    final label = _days == 7 ? 'this week' : (_days == 30 ? 'this month' : 'in 3 months');
 
     if (diff == 0) {
       return Text('No change $label', style: theme.textTheme.bodyStrong);
@@ -150,29 +145,17 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
       return FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.weightKg);
     }).toList();
 
-    if (spots.length == 1) {
-      spots.add(FlSpot(spots.first.x + 1, spots.first.y));
-    }
-
-    double minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
-    double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
-    if (goalWeightKg != null) {
-      minY = minY < goalWeightKg ? minY : goalWeightKg;
-      maxY = maxY > goalWeightKg ? maxY : goalWeightKg;
-    }
-    if (minY == maxY) {
-      minY -= 5.0;
-      maxY += 5.0;
-    } else {
-      final padding = (maxY - minY) * 0.1;
-      minY -= padding;
-      maxY += padding;
+    double minX = spots.first.x;
+    double maxX = spots.last.x;
+    if (minX == maxX) {
+      maxX = minX + 86400000; // + 1 day
+      minX = minX - 86400000; // - 1 day
     }
 
     return LineChart(
       LineChartData(
-        minY: minY,
-        maxY: maxY,
+        minX: minX,
+        maxX: maxX,
         gridData: const FlGridData(show: false),
         titlesData: const FlTitlesData(
           bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -203,14 +186,21 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: false,
+            isCurved: true,
             color: theme.colorScheme.primary,
             barWidth: 3,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: true),
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.3),
+                  theme.colorScheme.primary.withValues(alpha: 0.0),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
         ],
@@ -269,7 +259,8 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     final controller = TextEditingController(text: entry.weightKg.toString());
     _showWeightDialog(context, ref, 'Edit Weight', controller, () async {
       final val = double.tryParse(controller.text);
-      if (val != null) {
+      if (val != null && val >= 25 && val <= 300) {
+        // Pop dialog immediately to prevent UI freeze, then do async work
         Navigator.pop(context);
         await ref.read(progressProvider.notifier).editWeight(entry.id, val);
       }
@@ -277,14 +268,7 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
   }
 
   void _showAddWeightDialog(BuildContext context, WidgetRef ref) {
-    final controller = TextEditingController();
-    _showWeightDialog(context, ref, 'Add Weight', controller, () async {
-      final val = double.tryParse(controller.text);
-      if (val != null) {
-        Navigator.pop(context);
-        await ref.read(progressProvider.notifier).addWeight(val);
-      }
-    });
+    // Moved to ProgressScreen, but keeping here as a stub to avoid removing unused imports or if it is ever called again.
   }
 
   void _showWeightDialog(BuildContext context, WidgetRef ref, String title, TextEditingController controller, VoidCallback onSave) {
