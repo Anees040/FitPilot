@@ -20,11 +20,17 @@ abstract class AuthRepository {
   /// Resends the OTP verification email.
   Future<void> resendOtp({required String email});
 
-  /// Sends a password reset link to the email.
+  /// Sends a password reset email.
   Future<void> sendPasswordReset({required String email});
 
   /// Signs in a user with Google OAuth / ID Token.
   Future<void> signInWithGoogle({required String webClientId});
+
+  /// Updates the user's password.
+  Future<void> updatePassword({required String newPassword});
+
+  /// Deletes the current user account.
+  Future<void> deleteAccount();
 
   /// Signs the current user out.
   Future<void> signOut();

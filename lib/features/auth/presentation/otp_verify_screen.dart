@@ -6,7 +6,6 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
-import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 
 class OtpVerifyScreen extends ConsumerStatefulWidget {
@@ -50,7 +49,6 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     super.dispose();
   }
 
-  // G3.4 — friendly error mapping
   String _mapError(Object e) {
     if (e is RateLimitedFailure) return 'Too many attempts, wait a minute.';
     if (e is NetworkUnavailableFailure) return 'No connection.';
@@ -95,7 +93,6 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     }
   }
 
-  // G3.3 — resend actually calls the API
   Future<void> _resend() async {
     if (_resendCooldown > 0) return;
 
@@ -109,116 +106,211 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackbar.success(context, _mapError(e));
+        AppSnackbar.error(context, _mapError(e));
       }
     }
+  }
+
+  String get _formattedTime {
+    final minutes = (_resendCooldown / 60).floor().toString().padLeft(2, '0');
+    final seconds = (_resendCooldown % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: Text('Verify Email', style: theme.textTheme.h2),
-        centerTitle: true,
+        backgroundColor: theme.colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // G3.3 — show email address and 'edit' link
-              RichText(
-                text: TextSpan(
-                  style: theme.textTheme.body,
+              Text(
+                'Verify your email',
+                style: theme.textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 28,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Enter the 6-digit code sent to',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.email,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Text(
+                      'Change',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: theme.extension<AppColors>()!.warning),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Don\'t see it? Check your spam folder.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.extension<AppColors>()!.warning,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+
+              Center(
+                child: _OtpDigitBoxes(
+                  controller: _codeCtrl,
+                  hasError: _errorText != null,
+                  onChanged: (val) {
+                    if (_errorText != null) setState(() => _errorText = null);
+                    if (val.length == 6 && !_isLoading) {
+                      Future.microtask(_submit);
+                    }
+                    setState(() {});
+                  },
+                ),
+              ),
+              
+              if (_errorText != null) ...[
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    _errorText!,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: 32),
+              
+              if (_isLoading)
+                Center(
+                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                )
+              else if (_isSuccess)
+                Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.check_circle, size: 64, color: theme.extension<AppColors>()!.success),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Verified!',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.extension<AppColors>()!.success,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Center(
+                  child: GestureDetector(
+                    onTap: _resendCooldown == 0 ? _resend : null,
+                    child: Text.rich(
+                      TextSpan(
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: _resendCooldown > 0 
+                              ? theme.colorScheme.onSurface.withValues(alpha: 0.6) 
+                              : theme.colorScheme.primary,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: _resendCooldown > 0 ? 'Resend code in ' : 'Resend code',
+                          ),
+                          if (_resendCooldown > 0)
+                            TextSpan(
+                              text: _formattedTime,
+                              style: TextStyle(fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                
+              const Spacer(),
+              
+              // Safe Data Card at bottom
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.extension<AppColors>()!.hairline),
+                ),
+                child: Row(
                   children: [
-                    const TextSpan(text: 'Code sent to '),
-                    TextSpan(
-                      text: widget.email,
-                      style: theme.textTheme.bodyStrong,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.extension<AppColors>()!.success.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.verified_user_outlined, color: theme.extension<AppColors>()!.success),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your data is safe with us',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'We never share your personal\ninformation.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 4),
-              // G3.3 — 'edit' link goes back to sign-up/sign-in
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Text(
-                  'Wrong address? Edit',
-                  style: theme.textTheme.caption.copyWith(
-                    color: theme.colorScheme.primary,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // G3.3 — OTP boxes; validate ONLY on explicit Verify tap or auto-submit after 6th digit
-              _OtpDigitBoxes(
-                controller: _codeCtrl,
-                hasError: _errorText != null,
-                onChanged: (val) {
-                  // Clear error when user edits
-                  if (_errorText != null) setState(() => _errorText = null);
-                  // G3.3 — auto-submit on 6th digit WITH loading spinner first
-                  if (val.length == 6 && !_isLoading) {
-                    // Trigger submit asynchronously — spinner shows before network call
-                    Future.microtask(_submit);
-                  }
-                  setState(() {});
-                },
-              ),
-              if (_errorText != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _errorText!,
-                  style: theme.textTheme.caption.copyWith(color: ext.error),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-              const SizedBox(height: 16),
-
-              if (_isSuccess) ...[
-                const SizedBox(height: 32),
-                TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.elasticOut,
-                  builder: (context, value, child) {
-                    return Transform.scale(
-                      scale: value,
-                      child: Icon(Icons.check_circle, size: 80, color: ext.success),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Verified!',
-                  style: theme.textTheme.h2.copyWith(color: ext.success),
-                  textAlign: TextAlign.center,
-                ),
-              ] else ...[
-                PrimaryButton(
-                  label: 'Verify',
-                  onPressed: _codeCtrl.text.length == 6 && !_isLoading ? _submit : null,
-                  isLoading: _isLoading,
-                ),
-                const SizedBox(height: 16),
-
-                TertiaryButton(
-                  label: _resendCooldown > 0
-                      ? 'Resend in ${_resendCooldown}s'
-                      : 'Resend code',
-                  onPressed: _resendCooldown == 0 ? _resend : null,
-                  color: _resendCooldown > 0
-                      ? theme.textTheme.caption.color
-                      : theme.colorScheme.primary,
-                ),
-              ],
             ],
           ),
         ),
@@ -268,62 +360,66 @@ class _OtpDigitBoxesState extends State<_OtpDigitBoxes> {
   Widget build(BuildContext context) {
     final text = widget.controller.text;
     final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
     final isFocused = _focusNode.hasFocus;
 
-    return Stack(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(6, (index) {
-            final isFilled = index < text.length;
-            final isCurrent = index == text.length && isFocused;
+    return SizedBox(
+      width: double.infinity,
+      height: 64,
+      child: Stack(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(6, (index) {
+              final isFilled = index < text.length;
+              final isCurrent = index == text.length && isFocused;
 
-            return Container(
-              width: 48,
-              height: 56,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: widget.hasError
-                      ? ext.error
-                      : isCurrent
-                          ? theme.colorScheme.primary
-                          : ext.hairline,
-                  width: isCurrent ? 2 : 1,
+              return Container(
+                width: 48,
+                height: 64,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: widget.hasError
+                        ? theme.colorScheme.error
+                        : isCurrent || isFilled
+                            ? theme.colorScheme.primary
+                            : theme.extension<AppColors>()!.hairline,
+                    width: isCurrent || isFilled ? 1.5 : 1,
+                  ),
                 ),
-              ),
-              child: Text(
-                isFilled ? text[index] : '',
-                style: theme.textTheme.h1.copyWith(
-                  color: widget.hasError ? ext.error : theme.textTheme.display.color,
+                child: Text(
+                  isFilled ? text[index] : '',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: widget.hasError ? theme.colorScheme.error : theme.colorScheme.onSurface,
+                  ),
                 ),
-              ),
-            );
-          }),
-        ),
-        Positioned.fill(
-          child: TextField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            autofocus: true,
-            cursorColor: Colors.transparent,
-            style: const TextStyle(color: Colors.transparent),
-            decoration: const InputDecoration(
-              counterText: '',
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              fillColor: Colors.transparent,
-            ),
-            onChanged: widget.onChanged,
+              );
+            }),
           ),
-        ),
-      ],
+          Positioned.fill(
+            child: TextField(
+              controller: widget.controller,
+              focusNode: _focusNode,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              autofocus: true,
+              cursorColor: Colors.transparent,
+              style: const TextStyle(color: Colors.transparent),
+              decoration: const InputDecoration(
+                counterText: '',
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                fillColor: Colors.transparent,
+              ),
+              onChanged: widget.onChanged,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

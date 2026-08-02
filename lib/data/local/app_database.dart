@@ -452,4 +452,41 @@ class AppDatabase {
           "kcal_min > kcal_max OR kcal_min < 0 OR quantity <= 0 OR (food_id IS NULL AND (custom_name IS NULL OR trim(custom_name) = ''))",
     );
   }
+
+  /// Wipes all user-specific data from the local database and resets the profile.
+  /// This must be called during sign-out to prevent data bleeding between accounts.
+  static Future<void> clearUserData(Database db) async {
+    final batch = db.batch();
+    
+    batch.delete('food_logs');
+    batch.delete('weight_entries');
+    batch.delete('burn_completions');
+    batch.delete('sync_queue');
+    
+    // Clear sync metadata so the next user triggers a full initial pull
+    try {
+      batch.delete('sync_metadata');
+    } catch (_) {}
+
+    // Reset profile to a blank guest state
+    batch.delete('profile');
+    batch.insert('profile', {
+      'id': 1,
+      'gender': 'unspecified',
+      'goal': 'maintain',
+      'activity_level': 'light',
+      'equipment': '[]',
+      'allowance_kcal': 300,
+      'theme_mode': 'system',
+      'theme_color': 'orange',
+      'plan_category_pref': 'recommended',
+      'plan_pace_pref': 'any',
+      'unit_kg_lb': 0,
+      'week_starts_mon': 1,
+      'haptics_on': 1,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+
+    await batch.commit();
+  }
 }

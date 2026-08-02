@@ -146,6 +146,25 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> updatePassword({required String newPassword}) async {
+    try {
+      await _client.auth.updateUser(supa.UserAttributes(password: newPassword));
+    } catch (e) {
+      throw _mapException(e);
+    }
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      await _client.rpc('delete_account');
+      await signOut();
+    } catch (e) {
+      throw _mapException(e);
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     try {
       if (!kIsWeb) {

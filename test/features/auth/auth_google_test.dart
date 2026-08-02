@@ -5,7 +5,7 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/data/auth/fake_auth_repository.dart';
 import 'package:fitpilot/core/navigation/app_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
-import 'package:fitpilot/core/ui/buttons.dart';
+
 import 'package:fitpilot/features/auth/presentation/auth_screen.dart';
 
 void main() {
@@ -35,7 +35,7 @@ void main() {
 
     expect(find.byType(AuthScreen), findsOneWidget);
 
-    final googleBtn = find.byType(GoogleButton);
+    final googleBtn = find.text('Continue with Google');
     expect(googleBtn, findsOneWidget);
 
     await tester.ensureVisible(googleBtn);

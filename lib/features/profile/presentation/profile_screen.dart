@@ -4,6 +4,7 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
+import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/data/sync/sync_service.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
@@ -548,7 +549,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                  onPressed: () async {
+                    final db = await ref.read(databaseProvider.future);
+                    await AppDatabase.clearUserData(db);
+                    await ref.read(authRepositoryProvider).signOut();
+                  },
                   child: const Text('Sign Out'),
                 ),
               ],
@@ -577,6 +582,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               );
             },
           ),
+          const SizedBox(height: 16),
+          SecondaryButton(
+            label: 'Change Password',
+            onPressed: _showChangePasswordDialog,
+          ),
+          const SizedBox(height: 8),
+          SecondaryButton(
+            label: 'Delete Account',
+            onPressed: _showDeleteAccountDialog,
+            // We can style it red if desired, but default secondary is okay
+          ),
         ] else ...[
           PrimaryButton(
             label: 'Sign In / Create Account',
@@ -590,6 +606,106 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  void _showChangePasswordDialog() {
+    final passwordCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool loading = false;
+    AppBottomSheet.show(
+      context,
+      child: StatefulBuilder(
+        builder: (context, setModalState) {
+          return Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Change Password', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                AppTextField(
+                  label: 'New Password',
+                  controller: passwordCtrl,
+                  obscureText: true,
+                  validator: (v) {
+                    if (v == null || v.length < 8) return 'Min 8 chars required';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  label: loading ? 'Updating...' : 'Update Password',
+                  onPressed: loading ? null : () async {
+                    if (!formKey.currentState!.validate()) return;
+                    setModalState(() => loading = true);
+                    try {
+                      await ref.read(authRepositoryProvider).updatePassword(newPassword: passwordCtrl.text);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        AppSnackbar.success(context, 'Password updated successfully!');
+                      }
+                    } catch (e) {
+                      setModalState(() => loading = false);
+                      if (context.mounted) {
+                        AppSnackbar.error(context, e.toString());
+                      }
+                    }
+                  },
+                )
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog() {
+    bool loading = false;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Delete Account'),
+              content: const Text(
+                'Are you sure you want to delete your account? This action cannot be undone and will permanently erase all your data.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: loading ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: loading ? null : () async {
+                    setDialogState(() => loading = true);
+                    try {
+                      final db = await ref.read(databaseProvider.future);
+                      await AppDatabase.clearUserData(db);
+                      await ref.read(authRepositoryProvider).deleteAccount();
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        AppSnackbar.success(context, 'Account deleted successfully.');
+                      }
+                    } catch (e) {
+                      setDialogState(() => loading = false);
+                      if (context.mounted) {
+                        AppSnackbar.error(context, e.toString());
+                      }
+                    }
+                  },
+                  child: loading 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text('Delete Permanently', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

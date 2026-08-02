@@ -162,6 +162,9 @@ class SyncService {
           if (table == 'profile') {
             // Supabase 'profiles' table uses a UUID id (the user's auth id).
             data.remove('id');
+            data.remove('active_program_id');
+            data.remove('active_program_week');
+            data.remove('active_program_day');
             data['id'] = userId;
           } else {
             data['user_id'] = userId;

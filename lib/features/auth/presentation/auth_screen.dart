@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,9 +10,6 @@ import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/config/env.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
-import 'package:fitpilot/core/ui/app_text_field.dart';
-import 'package:fitpilot/application/providers/demo_provider.dart';
-import 'package:fitpilot/core/ui/glow_blob_background.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   final String? initialMode;
@@ -29,46 +27,36 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  final _passFocusNode = FocusNode();
+  final _confirmPassCtrl = TextEditingController();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _agreedToTerms = false;
   String? _formError;
-
-  bool _passwordFocused = false;
-  bool _hasLength = false;
-  bool _hasLetter = false;
-  bool _hasNumber = false;
 
   @override
   void initState() {
     super.initState();
     _isLogin = widget.initialMode != 'signup';
-    _passFocusNode.addListener(() {
-      setState(() => _passwordFocused = _passFocusNode.hasFocus);
-    });
+    _passCtrl.addListener(_onPasswordChanged);
+  }
+
+  void _onPasswordChanged() {
+    if (!_isLogin && mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
+    _passCtrl.removeListener(_onPasswordChanged);
     _passCtrl.dispose();
-    _passFocusNode.dispose();
+    _confirmPassCtrl.dispose();
     super.dispose();
   }
-
-  void _validatePassword(String value) {
-    if (_isLogin) return;
-    setState(() {
-      _hasLength = value.length >= 8;
-      _hasLetter = RegExp(r'[a-zA-Z]').hasMatch(value);
-      _hasNumber = RegExp(r'[0-9]').hasMatch(value);
-    });
-  }
-
-  bool get _isPasswordValid =>
-      _isLogin || (_hasLength && _hasLetter && _hasNumber);
 
   String _mapError(Object e) {
     if (e is RateLimitedFailure) return 'Too many attempts, wait a minute.';
@@ -84,7 +72,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate() || !_isPasswordValid) return;
+    if (!_formKey.currentState!.validate()) return;
+
+    if (!_isLogin && !_agreedToTerms) {
+      setState(() => _formError = 'You must agree to the Terms & Conditions.');
+      return;
+    }
+
+    if (!_isLogin && _passCtrl.text != _confirmPassCtrl.text) {
+      setState(() => _formError = 'Passwords do not match.');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -152,369 +150,566 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  void _showTermsDialog() {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Terms & Conditions',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 250),
+                child: SingleChildScrollView(
+                  child: Text(
+                    'Welcome to FitPilot! These terms govern your use of the app...\n\n'
+                    '1. Data Privacy\nYour data is stored securely. We do not sell your personal data.\n\n'
+                    '2. Honest Tracking\nWe encourage honest tracking. Do not cheat yourself!\n\n'
+                    '3. Health Disclaimer\nFitPilot is not a medical professional. Consult a doctor before starting any rigorous exercise.\n\n'
+                    '(Mock Terms and Conditions for demonstration purposes.)',
+                    style: TextStyle(color: theme.colorScheme.onSurface, height: 1.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              PrimaryButton(
+                label: 'I Accept',
+                onPressed: () {
+                  setState(() => _agreedToTerms = true);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final theme = Theme.of(context);
+    final emailCtrl = TextEditingController(text: _emailCtrl.text);
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: theme.colorScheme.surface,
+          title: Text(
+            'Forgot Password',
+            style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Enter your email and we will send you a reset link.',
+                style: TextStyle(color: theme.colorScheme.onSurface),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                style: TextStyle(color: theme.colorScheme.onSurface),
+                decoration: InputDecoration(
+                  hintText: 'Email',
+                  hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                  filled: true,
+                  fillColor: theme.extension<AppColors>()?.surfaceRaised,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text('Cancel', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+            ),
+            TextButton(
+              onPressed: () async {
+                final email = emailCtrl.text.trim();
+                if (email.isEmpty) return;
+                Navigator.pop(dialogContext);
+                try {
+                  await ref.read(authRepositoryProvider).sendPasswordReset(email: email);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password reset link sent!')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(_mapError(e))),
+                    );
+                  }
+                }
+              },
+              child: Text('Send Link', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _toggleMode() {
     setState(() {
       _isLogin = !_isLogin;
       _formError = null;
+      _passCtrl.clear();
+      _confirmPassCtrl.clear();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
-    final isDemo = ref.watch(demoProvider);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GlowBlobBackground(
-        child: SafeArea(
-          bottom: false,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Align(
-                  alignment: Alignment.topLeft,
+      backgroundColor: theme.colorScheme.surface,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8.0, top: 8.0),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back),
+                    icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
                     onPressed: () => context.pop(),
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 16),
-                      Center(
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: ext.nightGlow,
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                                blurRadius: 30,
-                                spreadRadius: 10,
-                              ),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) => Icon(
-                                Icons.local_fire_department,
-                                color: theme.colorScheme.primary,
-                                size: 50,
-                              ),
-                            ),
-                          ),
+                      Text(
+                        _isLogin ? 'Welcome back 👋' : 'Create account',
+                        style: theme.textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 32,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _isLogin
+                            ? 'Login to continue your journey'
+                            : 'Let\'s get you started',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(height: 32),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0.0, 0.2),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            ),
-                          );
+
+                      if (!_isLogin) ...[
+                        _buildTextField(
+                          controller: _nameCtrl,
+                          hintText: 'Full Name',
+                          icon: Icons.person_outline,
+                          validator: (v) => v == null || v.trim().isEmpty
+                              ? 'Required'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      _buildTextField(
+                        controller: _emailCtrl,
+                        hintText: _isLogin ? 'Email or Phone' : 'Email',
+                        icon: Icons.mail_outline,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Required';
+                          if (!_isLogin) {
+                            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                            if (!emailRegex.hasMatch(v.trim())) return 'Invalid email format';
+                          }
+                          return null;
                         },
-                        child: Text(
-                          _isLogin ? 'Welcome\nback' : 'Create\naccount',
-                          key: ValueKey(_isLogin),
-                          style: theme.textTheme.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -1,
-                            height: 1.1,
-                            fontSize: 40,
-                          ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildTextField(
+                        controller: _passCtrl,
+                        hintText: 'Password',
+                        icon: Icons.lock_outline,
+                        obscureText: _obscurePassword,
+                        onSuffixTap: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Required';
+                          if (!_isLogin) {
+                            final hasLength = v.length >= 8;
+                            final hasUpper = v.contains(RegExp(r'[A-Z]'));
+                            final hasLower = v.contains(RegExp(r'[a-z]'));
+                            final hasNumber = v.contains(RegExp(r'[0-9]'));
+                            final hasSpecial = v.contains(RegExp(r'[\W_]'));
+                            if (!hasLength || !hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+                              return 'Password does not meet requirements';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      if (!_isLogin) _PasswordStrengthIndicator(password: _passCtrl.text),
+
+                      if (!_isLogin) ...[
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _confirmPassCtrl,
+                          hintText: 'Confirm Password',
+                          icon: Icons.lock_outline,
+                          obscureText: _obscureConfirmPassword,
+                          onSuffixTap: () => setState(() =>
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Required';
+                            if (v != _passCtrl.text) return 'Passwords do not match';
+                            return null;
+                          },
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-              ),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.cardColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.shadowColor.withValues(alpha: 0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, -5),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(32.0),
-                  child: Form(
-                    key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (isDemo) _buildDemoBanner(theme, ext),
-
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            child: !_isLogin
-                                ? Column(
-                                    children: [
-                                      AppTextField(
-                                        label: 'NAME',
-                                        controller: _nameCtrl,
-                                        keyboardType: TextInputType.name,
-                                        validator: (val) {
-                                          if (!_isLogin &&
-                                              (val == null || val.isEmpty)) {
-                                            return 'Enter your name';
-                                          }
-                                          return null;
-                                        },
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Checkbox(
+                                value: _agreedToTerms,
+                                onChanged: (val) => setState(
+                                    () => _agreedToTerms = val ?? false),
+                                activeColor: theme.colorScheme.primary,
+                                side: BorderSide(color: theme.extension<AppColors>()!.hairline),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text.rich(
+                                TextSpan(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  ),
+                                  children: [
+                                    const TextSpan(text: 'I agree to the '),
+                                    TextSpan(
+                                      text: 'Terms & Conditions',
+                                      style: TextStyle(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-
-                          AppTextField(
-                            label: 'EMAIL',
-                            controller: _emailCtrl,
-                            keyboardType: TextInputType.emailAddress,
-                            validator: (val) {
-                              if (val == null || val.isEmpty) {
-                                return 'Enter your email';
-                              }
-                              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val)) {
-                                return 'Enter a valid email address';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-
-                          AppTextField(
-                            label: 'PASSWORD',
-                            controller: _passCtrl,
-                            focusNode: _passFocusNode,
-                            obscureText: _obscurePassword,
-                            validator: (val) {
-                              if (val == null || val.isEmpty) {
-                                return 'Enter your password';
-                              }
-                              return _formError;
-                            },
-                            trailing: IconButton(
-                              icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                size: 20,
-                                color: theme.textTheme.bodySmall?.color,
-                              ),
-                              onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
-                            ),
-                            onChanged: _validatePassword,
-                          ),
-
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            child: Column(
-                              children: [
-                                if (!_isLogin &&
-                                    (_passwordFocused ||
-                                        _passCtrl.text.isNotEmpty)) ...[
-                                  const SizedBox(height: 12),
-                                  _buildChecklistItem(
-                                    context,
-                                    'Minimum 8 characters',
-                                    _hasLength,
-                                  ),
-                                  _buildChecklistItem(
-                                    context,
-                                    'At least one letter',
-                                    _hasLetter,
-                                  ),
-                                  _buildChecklistItem(
-                                    context,
-                                    'At least one number',
-                                    _hasNumber,
-                                  ),
-                                  const SizedBox(height: 8),
-                                ],
-                                if (_isLogin) ...[
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TertiaryButton(
-                                      label: 'Forgot password?',
-                                      onPressed: () =>
-                                          context.push('/forgot-password'),
-                                      color: theme.colorScheme.primary,
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = _showTermsDialog,
                                     ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-
-                          if (_formError != null) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              _formError!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: ext.error,
+                                  ],
+                                ),
                               ),
                             ),
                           ],
+                        ),
+                      ],
 
-                          const SizedBox(height: 32),
-
-                          PrimaryButton(
-                            label: _isLogin ? 'Log in' : 'Sign up',
-                            onPressed: _submit,
-                            isLoading: _isLoading,
-                          ),
-
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Expanded(child: Divider(color: ext.hairline)),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                child: Text(
-                                  'OR',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.textTheme.bodySmall?.color,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                      if (_isLogin) ...[
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GestureDetector(
+                            onTap: _showForgotPasswordDialog,
+                            child: Text(
+                              'Forgot Password?',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
                               ),
-                              Expanded(child: Divider(color: ext.hairline)),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 24),
+                        ),
+                      ],
 
-                          GoogleButton(
-                            isLoading: _isLoading,
-                            onPressed: _submitGoogle,
-                          ),
+                      if (_formError != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _formError!,
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(color: theme.colorScheme.error),
+                        ),
+                      ],
 
-                          const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _isLogin
-                                    ? "Don't have an account? "
-                                    : "Already have an account? ",
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.6,
-                                  ),
-                                ),
+                      PrimaryButton(
+                        label: _isLogin ? 'Login' : 'Sign Up',
+                        isLoading: _isLoading,
+                        onPressed: _submit,
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: theme.extension<AppColors>()!.hairline)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'or continue with',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
-                              GestureDetector(
-                                onTap: _toggleMode,
-                                child: Text(
-                                  _isLogin ? 'Sign up' : 'Log in',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
+                            ),
+                          ),
+                          Expanded(child: Divider(color: theme.extension<AppColors>()!.hairline)),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      _SocialButton(
+                        label: 'Continue with Google',
+                        iconPath: 'assets/images/google_logo.png',
+                        onPressed: _submitGoogle,
+                      ),
+
+                      if (_isLogin) ...[
+                        const SizedBox(height: 12),
+                        _SocialButton(
+                          label: 'Continue as Guest',
+                          icon: Icons.person_outline,
+                          onPressed: () => context.go('/today'),
+                        ),
+                      ],
+
+                      const SizedBox(height: 40),
+
+                      Center(
+                        child: GestureDetector(
+                          onTap: _toggleMode,
+                          child: Text.rich(
+                            TextSpan(
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: _isLogin
+                                      ? "Don't have an account?  "
+                                      : 'Already have an account?  ',
+                                ),
+                                TextSpan(
+                                  text: _isLogin ? 'Sign up' : 'Login',
+                                  style: TextStyle(
                                     color: theme.colorScheme.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-
-                          const SizedBox(height: 32),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildChecklistItem(BuildContext context, String text, bool isMet) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+    VoidCallback? onSuffixTap,
+  }) {
     final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
+    
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: TextStyle(color: theme.colorScheme.onSurface),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+        prefixIcon: Icon(icon, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+        suffixIcon: onSuffixTap != null
+            ? IconButton(
+                icon: Icon(
+                  obscureText ? Icons.visibility_off : Icons.visibility,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                onPressed: onSuffixTap,
+              )
+            : null,
+        filled: true,
+        fillColor: theme.colorScheme.surface,
+        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: theme.extension<AppColors>()!.hairline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: theme.extension<AppColors>()!.hairline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: theme.colorScheme.primary),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: theme.colorScheme.error),
+        ),
+      ),
+    );
+  }
+}
+
+class _PasswordStrengthIndicator extends StatelessWidget {
+  final String password;
+
+  const _PasswordStrengthIndicator({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    if (password.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final hasLength = password.length >= 8;
+    final hasUpper = password.contains(RegExp(r'[A-Z]'));
+    final hasLower = password.contains(RegExp(r'[a-z]'));
+    final hasNumber = password.contains(RegExp(r'[0-9]'));
+    final hasSpecial = password.contains(RegExp(r'[\W_]'));
+    
+    int strength = 0;
+    if (hasLength) strength++;
+    if (hasUpper) strength++;
+    if (hasLower) strength++;
+    if (hasNumber) strength++;
+    if (hasSpecial) strength++;
+
+    final theme = Theme.of(context);
+    Color color;
+    if (strength <= 2) {
+      color = theme.colorScheme.error;
+    } else if (strength <= 4) {
+      color = theme.extension<AppColors>()!.warning;
+    } else {
+      color = theme.extension<AppColors>()!.success;
+    }
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
+      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: Icon(
-              isMet ? Icons.check_circle : Icons.radio_button_unchecked,
-              key: ValueKey(isMet),
-              size: 16,
-              color: isMet ? ext.success : ext.hairline,
-            ),
+          Row(
+            children: List.generate(5, (index) {
+              return Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: index < 4 ? 4 : 0),
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: index < strength ? color : theme.extension<AppColors>()!.hairline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              );
+            }),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(height: 8),
           Text(
-            text,
-            style: theme.textTheme.caption.copyWith(
-              color: isMet
-                  ? theme.textTheme.body.color
-                  : theme.textTheme.caption.color,
-            ),
+            'Requires: 8+ chars, uppercase, lowercase, number, special char',
+            style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 12),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildDemoBanner(ThemeData theme, AppColors ext) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: ext.warning.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ext.warning, width: 1),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: ext.warning),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Demo Mode — Data will not be saved',
-              style: theme.textTheme.caption.copyWith(
-                color: ext.warning,
-                fontWeight: FontWeight.bold,
+class _SocialButton extends StatelessWidget {
+  final String label;
+  final String? iconPath;
+  final IconData? icon;
+  final VoidCallback onPressed;
+
+  const _SocialButton({
+    required this.label,
+    this.iconPath,
+    this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AnimatedScaleButton(
+      onPressed: onPressed,
+      child: Container(
+        height: 52,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.extension<AppColors>()!.hairline),
+          color: theme.colorScheme.surface,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (iconPath != null)
+              Image.asset(iconPath!, width: 24, height: 24)
+            else if (icon != null)
+              Icon(icon, size: 24, color: theme.colorScheme.onSurface),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

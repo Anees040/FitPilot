@@ -111,6 +111,19 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> updatePassword({required String newPassword}) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    _checkGlobalErrors();
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    _checkGlobalErrors();
+    _emit(null);
+  }
+
+  @override
   Future<void> signOut() async {
     await Future.delayed(const Duration(milliseconds: 500));
     _checkGlobalErrors();

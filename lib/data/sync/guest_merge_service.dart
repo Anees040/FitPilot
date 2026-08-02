@@ -14,8 +14,11 @@ class GuestMergeService {
       if (profiles.isNotEmpty) {
         final profile = Map<String, dynamic>.from(profiles.first);
         profile.remove('id');
+        profile.remove('active_program_id');
+        profile.remove('active_program_week');
+        profile.remove('active_program_day');
         profile['id'] = userId;
-        await _remote.upsertRows('profile', [profile]);
+        await _remote.upsertRows('profiles', [profile]);
       }
 
       final logs = await _db.query('food_logs');
