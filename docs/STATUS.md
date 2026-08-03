@@ -40,6 +40,13 @@
 
 ## Last completed
 
+- J4.3 — Sync Architecture Fixes (Data integrity & Guest mode shield)
+  - Unified SQLite type reading using a new `TolerantReader` utility to prevent integer vs double/bool TypeErrors across all repositories.
+  - Re-wrote `SyncService._pullPhase` to explicitly map columns with `toSqliteValue`, mitigating the risk of raw JSON dynamic spread.
+  - Implemented the Guest Mode Shield in `SyncService` (via `syncNow`) and repository `_enqueue` methods, completely preventing guest session writes to the push queue.
+  - Fixed push queue batch duplicate bug: `_processPushBatch` now deduplicates rows using their specific conflict keys (e.g. `user_id_for_date` for weights) and ignores pushes if the cloud row is newer (`updated_at` last-write-wins).
+  - Designed an auth state machine in `auth_screen.dart` to handle retry loops for `forcePullAll` during account takeover, ensuring users are never stuck with an empty local DB.
+
 - J4.2 — Sync Fixes & UI Enhancements
   - Fixed sync queue crash by deduplicating batch rows by ID.
   - Handled `weight_one_per_day` constraint correctly in `GuestMergeService` and `SyncService` by adding `onConflict` logic.

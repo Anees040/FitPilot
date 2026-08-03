@@ -3,15 +3,17 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:fitpilot/core/utils/type_readers.dart';
 import '../../domain/entities/food_item.dart';
 import '../../domain/entities/kcal_range.dart';
 
 /// Repository for food catalog CRUD and search.
 class FoodRepository {
   final Database db;
+  final bool Function() isGuest;
   static const _uuid = Uuid();
 
-  const FoodRepository(this.db);
+  const FoodRepository(this.db, {required this.isGuest});
 
   /// Case-insensitive search on name or name_ur, ordered by best match.
   Future<List<FoodItem>> search(String query, {int limit = 30}) async {
@@ -79,13 +81,13 @@ class FoodRepository {
         name: row['name'] as String,
         nameUr: row['name_ur'] as String?,
         portionLabel: row['portion_label'] as String,
-        grams: (row['grams'] as num?)?.round(),
+        grams: TolerantReader.readInt(row['grams']),
         kcalPerPortion: KcalRange(
-          (row['kcal_min'] as num?)?.round() ?? 0,
-          (row['kcal_max'] as num?)?.round() ?? 0,
+          TolerantReader.readInt(row['kcal_min']) ?? 0,
+          TolerantReader.readInt(row['kcal_max']) ?? 0,
         ),
         imageUrl: row['image_url'] as String?,
-        isVerified: ((row['is_verified'] as num?)?.round() ?? 0) == 1,
+        isVerified: TolerantReader.readBool(row['is_verified']) ?? false,
       );
     } catch (e) {
       assert(() {
@@ -103,6 +105,7 @@ class FoodRepository {
     String op,
     Map<String, dynamic> payload,
   ) async {
+    if (isGuest()) return; // Guest Mode Shield
     await db.insert('sync_queue', {
       'table_name': table,
       'row_id': rowId,

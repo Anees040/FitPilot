@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:fitpilot/core/utils/type_readers.dart';
 
 /// Loads seed data from bundled JSON assets into the database.
 ///
@@ -35,9 +36,9 @@ class SeedImporter {
         'name': f['name'] as String,
         'name_ur': f['name_ur'] as String?,
         'portion_label': f['portion_label'] as String,
-        'grams': f['grams'] as int?,
-        'kcal_min': f['kcal_min'] as int,
-        'kcal_max': f['kcal_max'] as int,
+        'grams': TolerantReader.readInt(f['grams']),
+        'kcal_min': TolerantReader.readInt(f['kcal_min']) ?? 0,
+        'kcal_max': TolerantReader.readInt(f['kcal_max']) ?? 0,
         'is_verified': 1,
       });
     }
@@ -61,11 +62,11 @@ class SeedImporter {
         'name': e['name'] as String,
         'category': e['category'] as String,
         'subcategory': e['subcategory'] as String?,
-        'met': (e['met'] as num).toDouble(),
+        'met': TolerantReader.readDouble(e['met']) ?? 5.0,
         'equipment': e['equipment'] as String?,
         'primary_muscles': json.encode(e['primary_muscles'] ?? []),
         'secondary_muscles': json.encode(e['secondary_muscles'] ?? []),
-        'difficulty': (e['difficulty'] as num).toInt(),
+        'difficulty': TolerantReader.readInt(e['difficulty']) ?? 1,
         'pace_tier': e['pace_tier'] as String,
         'steps': json.encode(e['steps'] ?? []),
         'mistakes': json.encode(e['mistakes'] ?? []),
@@ -98,14 +99,14 @@ class SeedImporter {
       final weeks = prog['weeks'] as List<dynamic>;
       for (final w in weeks) {
         final week = w as Map<String, dynamic>;
-        final weekNumber = week['week_number'] as int;
+        final weekNumber = TolerantReader.readInt(week['week_number']) ?? 1;
         final sessions = week['sessions'] as List<dynamic>;
         
         for (final s in sessions) {
           final session = s as Map<String, dynamic>;
-          final dayNumber = session['day_number'] as int;
+          final dayNumber = TolerantReader.readInt(session['day_number']) ?? 1;
           final exerciseId = session['exercise_id'] as String;
-          final minutes = session['minutes'] as int;
+          final minutes = TolerantReader.readInt(session['minutes']) ?? 10;
           
           final sessionId = '${prog['id']}-w$weekNumber-d$dayNumber';
           

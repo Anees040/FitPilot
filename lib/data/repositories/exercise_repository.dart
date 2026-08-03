@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
+import 'package:fitpilot/core/utils/type_readers.dart';
 
 import '../../domain/entities/exercise.dart';
 
@@ -89,11 +90,11 @@ class ExerciseRepository {
       name: row['name'] as String,
       category: _parseCategory(row['category'] as String?),
       subcategory: row['subcategory'] as String?,
-      met: (row['met'] as num?)?.toDouble() ?? 5.0,
+      met: TolerantReader.readDouble(row['met']) ?? 5.0,
       equipment: row['equipment'] as String?,
       primaryMuscles: _safeDecodeStringList(row['primary_muscles']),
       secondaryMuscles: _safeDecodeStringList(row['secondary_muscles']),
-      difficulty: (row['difficulty'] as num?)?.round() ?? 1,
+      difficulty: TolerantReader.readInt(row['difficulty']) ?? 1,
       paceTier: (row['pace_tier'] as String?) ?? 'moderate',
       steps: _safeDecodeStringList(row['steps']),
       mistakes: _safeDecodeStringList(row['mistakes']),

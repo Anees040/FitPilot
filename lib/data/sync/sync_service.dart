@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:fitpilot/core/utils/type_readers.dart';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -125,6 +126,31 @@ class SyncService {
     }
   }
 
+  @visibleForTesting
+  static Map<String, Map<String, dynamic>> deduplicateRows(String table, List<Map<String, dynamic>> rowsToUpsert) {
+    final uniqueRows = <String, Map<String, dynamic>>{};
+    for (final row in rowsToUpsert) {
+      final String conflictKey;
+      if (table == 'weight_entries') {
+        conflictKey = '${row['user_id']}_${row['for_date']}';
+      } else {
+        conflictKey = row['id'].toString();
+      }
+      
+      if (uniqueRows.containsKey(conflictKey)) {
+        final existing = uniqueRows[conflictKey]!;
+        final existingUpdated = DateTime.parse(existing['updated_at'] as String);
+        final currentUpdated = DateTime.parse(row['updated_at'] as String);
+        if (currentUpdated.isAfter(existingUpdated)) {
+          uniqueRows[conflictKey] = row;
+        }
+      } else {
+        uniqueRows[conflictKey] = row;
+      }
+    }
+    return uniqueRows;
+  }
+
   Future<void> _processPushBatch(
     String table,
     List<Map<String, dynamic>> chunk,
@@ -192,17 +218,11 @@ class SyncService {
       return;
     }
 
-    // Deduplicate by ID so we don't send multiple updates for the same row in one batch
-    final uniqueRows = <String, Map<String, dynamic>>{};
-    for (final row in rowsToUpsert) {
-      final pk = row['id'].toString();
-      uniqueRows[pk] = row;
-    }
-    final finalRows = uniqueRows.values.toList();
+    final uniqueRows = deduplicateRows(table, rowsToUpsert);
 
     // Fallback for older DB schema constraints
     if (table == 'food_logs') {
-      for (final row in finalRows) {
+      for (final row in uniqueRows.values) {
         if (row['source'] != null) {
           final src = row['source'] as String;
           const valid = ['catalog', 'search', 'manual', 'photo', 'label', 'labelScan', 'barcode', 'ai', 'custom'];
@@ -211,6 +231,30 @@ class SyncService {
           }
         }
       }
+    }
+
+    // Conflict Rule: last-write-wins by updated_at (Cloud wins if newer)
+    final idsToCheck = uniqueRows.values.map((r) => r['id'].toString()).toList();
+    final cloudUpdatedAts = await remote.fetchCloudUpdatedAts(_remoteTable(table), idsToCheck);
+    
+    final finalRows = <Map<String, dynamic>>[];
+    for (final row in uniqueRows.values) {
+      final id = row['id'].toString();
+      final localUpdatedStr = row['updated_at'] as String;
+      final localUpdated = DateTime.parse(localUpdatedStr);
+      
+      final cloudUpdated = cloudUpdatedAts[id];
+      if (cloudUpdated != null && cloudUpdated.isAfter(localUpdated)) {
+        // Cloud is newer, skip pushing this row. The pull phase will get the newer row.
+        continue;
+      }
+      finalRows.add(row);
+    }
+
+    if (finalRows.isEmpty) {
+      // Everything was skipped (cloud is newer), so we just remove these from the queue
+      await _removeFromQueue(queueIds);
+      return;
     }
 
     try {
@@ -273,24 +317,77 @@ class SyncService {
             }
 
             // Remote is newer or row doesn't exist locally
-            final dataToInsert = Map<String, dynamic>.from(row);
-
-            // Handle table differences
+            // Explicit Mappers
+            Map<String, dynamic> dataToInsert = {};
             if (table == 'profile') {
-              dataToInsert['id'] = 1; // back to local singleton id
-              // SQLite stores arrays as JSON text
-              if (dataToInsert['equipment'] is List) {
-                dataToInsert['equipment'] = jsonEncode(dataToInsert['equipment']);
-              }
-            } else {
-              dataToInsert.remove('user_id'); // SQLite doesn't have user_id
-            }
-
-            // Convert booleans to integers for SQLite
-            for (final key in dataToInsert.keys.toList()) {
-              if (dataToInsert[key] is bool) {
-                dataToInsert[key] = (dataToInsert[key] as bool) ? 1 : 0;
-              }
+              dataToInsert = {
+                'id': 1,
+                'weight_kg': row['weight_kg'],
+                'height_cm': row['height_cm'],
+                'age': row['age'],
+                'gender': row['gender'],
+                'activity_level': row['activity_level'],
+                'goal': row['goal'],
+                'allowance_kcal': row['allowance_kcal'],
+                'target_override': row['target_override'],
+                'equipment': row['equipment'] != null ? jsonEncode(row['equipment']) : null,
+                'name': row['name'],
+                'goal_weight_kg': row['goal_weight_kg'],
+                'theme_mode': row['theme_mode'],
+                'theme_color': row['theme_color'],
+                'plan_category_pref': row['plan_category_pref'],
+                'plan_pace_pref': row['plan_pace_pref'],
+                'unit_kg_lb': row['unit_kg_lb'],
+                'week_starts_mon': TolerantReader.toSqliteValue(row['week_starts_mon']),
+                'haptics_on': TolerantReader.toSqliteValue(row['haptics_on']),
+                'active_program_id': row['active_program_id'],
+                'active_program_week': row['active_program_week'],
+                'active_program_day': row['active_program_day'],
+                'updated_at': row['updated_at'],
+              };
+            } else if (table == 'food_logs') {
+              dataToInsert = {
+                'id': row['id'],
+                'food_id': row['food_id'],
+                'food_name': row['food_name'],
+                'custom_name': row['custom_name'],
+                'quantity': row['quantity'],
+                'kcal_min': row['kcal_min'],
+                'kcal_max': row['kcal_max'],
+                'source': row['source'],
+                'logged_at': row['logged_at'],
+                'deleted_at': row['deleted_at'],
+                'updated_at': row['updated_at'],
+              };
+            } else if (table == 'weight_entries') {
+              dataToInsert = {
+                'id': row['id'],
+                'weight_kg': row['weight_kg'],
+                'for_date': row['for_date'],
+                'updated_at': row['updated_at'],
+              };
+            } else if (table == 'burn_completions') {
+              dataToInsert = {
+                'id': row['id'],
+                'activity': row['activity'],
+                'minutes': row['minutes'],
+                'kcal': row['kcal'],
+                'for_date': row['for_date'],
+                'completed_at': row['completed_at'],
+                'updated_at': row['updated_at'],
+              };
+            } else if (table == 'food_catalog') {
+              dataToInsert = {
+                'id': row['id'],
+                'name': row['name'],
+                'name_ur': row['name_ur'],
+                'portion_label': row['portion_label'],
+                'grams': row['grams'],
+                'kcal_min': row['kcal_min'],
+                'kcal_max': row['kcal_max'],
+                'image_url': row['image_url'],
+                'is_verified': TolerantReader.toSqliteValue(row['is_verified']),
+              };
             }
 
             // If it's a tombstone, we can physically delete or soft delete

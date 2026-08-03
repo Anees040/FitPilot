@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/core/utils/type_readers.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/domain/entities/program.dart';
@@ -26,10 +27,10 @@ final programsProvider = FutureProvider<List<ProgramWithSessions>>((ref) async {
     sessions.add(ProgramSession(
       id: row['id'] as String,
       programId: row['program_id'] as String,
-      weekNumber: row['week_number'] as int,
-      dayNumber: row['day_number'] as int,
+      weekNumber: TolerantReader.readInt(row['week_number']) ?? 1,
+      dayNumber: TolerantReader.readInt(row['day_number']) ?? 1,
       exerciseId: row['exercise_id'] as String,
-      minutes: row['minutes'] as int,
+      minutes: TolerantReader.readInt(row['minutes']) ?? 10,
     ));
   }
   

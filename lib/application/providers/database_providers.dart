@@ -8,6 +8,8 @@ import 'package:fitpilot/data/repositories/food_repository.dart';
 import 'package:fitpilot/data/repositories/log_repository.dart';
 import 'package:fitpilot/data/repositories/profile_repository.dart';
 
+import 'package:fitpilot/application/providers/auth_provider.dart';
+
 /// Provides the initialized Database instance.
 /// It is safe to use `AppDatabase.instance()` asynchronously since it's a singleton,
 /// but providing it via a FutureProvider makes it easy for other providers to await it.
@@ -21,19 +23,22 @@ final databaseProvider = FutureProvider<Database>((ref) async {
 /// Exposes the FoodRepository.
 final foodRepositoryProvider = FutureProvider<FoodRepository>((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return FoodRepository(db);
+  bool isGuest() => ref.read(currentUserProvider) == null;
+  return FoodRepository(db, isGuest: isGuest);
 });
 
 /// Exposes the LogRepository.
 final logRepositoryProvider = FutureProvider<LogRepository>((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return LogRepository(db);
+  bool isGuest() => ref.read(currentUserProvider) == null;
+  return LogRepository(db, isGuest: isGuest);
 });
 
 /// Exposes the BurnRepository.
 final burnRepositoryProvider = FutureProvider<BurnRepository>((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return BurnRepository(db);
+  bool isGuest() => ref.read(currentUserProvider) == null;
+  return BurnRepository(db, isGuest: isGuest);
 });
 
 /// Exposes the ProfileRepository.
@@ -41,7 +46,8 @@ final profileRepositoryProvider = FutureProvider<ProfileRepository>((
   ref,
 ) async {
   final db = await ref.watch(databaseProvider.future);
-  return ProfileRepository(db);
+  bool isGuest() => ref.read(currentUserProvider) == null;
+  return ProfileRepository(db, isGuest: isGuest);
 });
 
 /// Exposes the ExerciseRepository.

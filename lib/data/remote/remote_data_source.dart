@@ -27,6 +27,21 @@ class RemoteDataSource {
     return List<Map<String, dynamic>>.from(res);
   }
 
+  Future<Map<String, DateTime>> fetchCloudUpdatedAts(String table, List<String> ids) async {
+    if (_client == null || ids.isEmpty) return {};
+    final res = await _client
+        .from(table)
+        .select('id, updated_at')
+        .inFilter('id', ids);
+    final map = <String, DateTime>{};
+    for (final row in res) {
+      if (row['id'] != null && row['updated_at'] != null) {
+        map[row['id'].toString()] = DateTime.parse(row['updated_at'].toString());
+      }
+    }
+    return map;
+  }
+
   /// Checks if the cloud account has meaningful data by querying tables.
   Future<bool> hasCloudData(String userId) async {
     if (_client == null) return false;

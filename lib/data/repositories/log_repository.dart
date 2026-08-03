@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/foundation.dart';
+import 'package:fitpilot/core/utils/type_readers.dart';
 
 import '../../domain/entities/food_log.dart';
 import '../../domain/entities/kcal_range.dart';
@@ -7,8 +8,9 @@ import '../../domain/entities/kcal_range.dart';
 /// Repository for food log CRUD.
 class LogRepository {
   final Database db;
+  final bool Function() isGuest;
 
-  const LogRepository(this.db);
+  const LogRepository(this.db, {required this.isGuest});
 
   /// Add a new food log.
   Future<void> add(FoodLog log) async {
@@ -140,10 +142,10 @@ class LogRepository {
         foodId: row['food_id'] as String?,
         foodName: foodName,
         customName: row['custom_name'] as String?,
-        quantity: (row['quantity'] as num),
+        quantity: TolerantReader.readDouble(row['quantity']) ?? 1.0,
         kcal: KcalRange(
-          (row['kcal_min'] as num?)?.round() ?? 0,
-          (row['kcal_max'] as num?)?.round() ?? 0,
+          TolerantReader.readInt(row['kcal_min']) ?? 0,
+          TolerantReader.readInt(row['kcal_max']) ?? 0,
         ),
         source: LogSource.values.byName(row['source'] as String),
         loggedAt: DateTime.parse(row['logged_at'] as String),
@@ -170,6 +172,7 @@ class LogRepository {
   }
 
   Future<void> _enqueue(String table, String rowId, String op) async {
+    if (isGuest()) return; // Guest Mode Shield
     await db.insert('sync_queue', {
       'table_name': table,
       'row_id': rowId,

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -8,9 +6,10 @@ import '../../domain/entities/burn_option.dart';
 /// Repository for burn completion records.
 class BurnRepository {
   final Database db;
+  final bool Function() isGuest;
   static const _uuid = Uuid();
 
-  const BurnRepository(this.db);
+  const BurnRepository(this.db, {required this.isGuest});
 
   /// Record a completed burn.
   Future<void> add(
@@ -51,11 +50,12 @@ class BurnRepository {
   }
 
   Future<void> _enqueue(String table, String rowId, String op) async {
+    if (isGuest()) return; // Guest Mode Shield
     await db.insert('sync_queue', {
       'table_name': table,
       'row_id': rowId,
       'op': op,
-      'payload': json.encode({'row_id': rowId}),
+      'payload': null,
       'queued_at': DateTime.now().toIso8601String(),
     });
   }

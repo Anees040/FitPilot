@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
+import 'package:fitpilot/core/utils/type_readers.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
+import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/domain/engines/range_calculator.dart';
 import 'package:fitpilot/domain/engines/streak_engine.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
@@ -56,7 +58,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       return WeightEntry(
         id: r['id'] as String,
         date: DateTime.parse(r['for_date'] as String),
-        weightKg: (r['weight_kg'] as num?)?.toDouble() ?? 0.0,
+        weightKg: TolerantReader.readDouble(r['weight_kg']) ?? 0.0,
         updatedAt: DateTime.parse(r['updated_at'] as String),
       );
     }).toList();
@@ -113,13 +115,15 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       'updated_at': now.toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
 
-    await db.insert('sync_queue', {
-      'table_name': 'weight_entries',
-      'row_id': id,
-      'op': 'upsert',
-      'payload': null,
-      'queued_at': now.toIso8601String(),
-    }); // Upsert requires a UNIQUE constraint on for_date, which we have
+    if (ref.read(currentUserProvider) != null) {
+      await db.insert('sync_queue', {
+        'table_name': 'weight_entries',
+        'row_id': id,
+        'op': 'upsert',
+        'payload': null,
+        'queued_at': now.toIso8601String(),
+      }); // Upsert requires a UNIQUE constraint on for_date, which we have
+    }
 
     ref.invalidateSelf();
     ref.read(syncTriggerManagerProvider)?.onLocalWrite();
@@ -145,13 +149,15 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       whereArgs: [id],
     );
 
-    await db.insert('sync_queue', {
-      'table_name': 'weight_entries',
-      'row_id': id,
-      'op': 'upsert',
-      'payload': null,
-      'queued_at': now.toIso8601String(),
-    });
+    if (ref.read(currentUserProvider) != null) {
+      await db.insert('sync_queue', {
+        'table_name': 'weight_entries',
+        'row_id': id,
+        'op': 'upsert',
+        'payload': null,
+        'queued_at': now.toIso8601String(),
+      });
+    }
 
     ref.invalidateSelf();
     ref.read(syncTriggerManagerProvider)?.onLocalWrite();
@@ -174,13 +180,15 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       whereArgs: [id],
     );
 
-    await db.insert('sync_queue', {
-      'table_name': 'weight_entries',
-      'row_id': id,
-      'op': 'delete',
-      'payload': null,
-      'queued_at': now.toIso8601String(),
-    });
+    if (ref.read(currentUserProvider) != null) {
+      await db.insert('sync_queue', {
+        'table_name': 'weight_entries',
+        'row_id': id,
+        'op': 'delete',
+        'payload': null,
+        'queued_at': now.toIso8601String(),
+      });
+    }
 
     ref.invalidateSelf();
     ref.read(syncTriggerManagerProvider)?.onLocalWrite();

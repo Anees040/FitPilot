@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/domain/entities/notification_preferences.dart';
+import 'package:fitpilot/core/utils/type_readers.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
@@ -20,11 +21,11 @@ class NotificationPrefsNotifier extends AsyncNotifier<NotificationPreferences> {
     
     final r = rows.first;
     return NotificationPreferences(
-      mealRemindersEnabled: (r['meal_reminders_enabled'] as int) == 1,
+      mealRemindersEnabled: TolerantReader.readBool(r['meal_reminders_enabled']) ?? false,
       mealTimes: List<String>.from(jsonDecode(r['meal_times'] as String)),
-      streakRiskEnabled: (r['streak_risk_enabled'] as int) == 1,
-      milestonesEnabled: (r['milestones_enabled'] as int) == 1,
-      globalMute: (r['global_mute'] as int) == 1,
+      streakRiskEnabled: TolerantReader.readBool(r['streak_risk_enabled']) ?? false,
+      milestonesEnabled: TolerantReader.readBool(r['milestones_enabled']) ?? false,
+      globalMute: TolerantReader.readBool(r['global_mute']) ?? false,
     );
   }
 

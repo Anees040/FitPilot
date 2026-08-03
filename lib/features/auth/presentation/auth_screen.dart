@@ -199,21 +199,58 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       
       await AppDatabase.clearUserData(db);
       
-      final syncService = ref.read(syncServiceProvider);
-      await syncService?.forcePullAll();
+      if (!await _pullWithRetry()) return;
       
       resetApplicationState(ref);
       
       if (mounted) context.go('/today');
     } else if (hasCloudData && !hasGuestData) {
-      final syncService = ref.read(syncServiceProvider);
-      await syncService?.forcePullAll();
+      // Just do the pull, there's no local guest data to worry about.
+      if (!await _pullWithRetry()) return;
       resetApplicationState(ref);
       if (mounted) context.go('/today');
     } else {
       await merger?.mergeGuestData(userId);
       if (mounted) context.go('/profile-setup');
     }
+  }
+
+  Future<bool> _pullWithRetry() async {
+    bool pullSuccess = false;
+    while (!pullSuccess) {
+      try {
+        if (mounted) setState(() { _isLoading = true; _formError = null; });
+        final syncService = ref.read(syncServiceProvider);
+        await syncService?.forcePullAll();
+        pullSuccess = true;
+      } catch (e) {
+        if (!mounted) return false;
+        setState(() { _isLoading = false; });
+        final retry = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: Text('Network Error', style: Theme.of(context).textTheme.titleLarge),
+            content: const Text('Failed to download your account data. Please check your connection and try again.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Sign Out'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        );
+        if (retry != true) {
+          await ref.read(authRepositoryProvider).signOut();
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   void _showTermsDialog() {
