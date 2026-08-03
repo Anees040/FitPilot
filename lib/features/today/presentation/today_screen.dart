@@ -15,19 +15,17 @@ import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
-import 'package:fitpilot/core/ui/progress_ring.dart';
+
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/staggered_list.dart';
 import 'package:intl/intl.dart';
-
-
+import 'package:fitpilot/core/ui/semicircle_progress.dart';
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
     final stateAsync = ref.watch(todayProvider);
     final profileAsync = ref.watch(profileProvider);
 
@@ -88,72 +86,22 @@ class TodayScreen extends ConsumerWidget {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                  sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.2,
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        _ImageCard(
+                          title: 'Workout Hub',
+                          imagePath: 'assets/illustrations/workout_hub_bg.png',
+                          onTap: () => context.push('/workout-hub'),
+                        ),
+                        const SizedBox(height: 16),
+                        _ImageCard(
+                          title: 'Machine Scanner',
+                          imagePath: 'assets/illustrations/machine_scanner_bg.png',
+                          onTap: () => context.push('/capture'),
+                        ),
+                      ],
                     ),
-                    delegate: SliverChildListDelegate([
-                      _FeatureTile(
-                        index: 0,
-                        icon: Icons.camera_alt,
-                        title: 'Snap a meal',
-                        subtitle: 'AI estimation',
-                        color: ext.accentSoft,
-                        iconColor: theme.colorScheme.primary,
-                        onTap: () => context.push('/capture'),
-                      ),
-                      _FeatureTile(
-                        index: 1,
-                        icon: Icons.qr_code_scanner,
-                        title: 'Scan barcode',
-                        subtitle: 'Quick log',
-                        color: ext.surfaceRaised,
-                        iconColor: theme.colorScheme.primary,
-                        onTap: () => context.push('/capture'),
-                      ),
-                      _FeatureTile(
-                        index: 2,
-                        icon: Icons.document_scanner,
-                        title: 'Food label',
-                        subtitle: 'OCR scan',
-                        color: ext.surfaceRaised,
-                        iconColor: theme.colorScheme.primary,
-                        onTap: () => context.push('/capture'),
-                      ),
-                      _FeatureTile(
-                        index: 3,
-                        icon: Icons.fitness_center,
-                        title: 'Exercises',
-                        subtitle: 'Library',
-                        color: ext.surfaceRaised,
-                        iconColor: theme.colorScheme.primary,
-                        onTap: () => context.push('/exercises'),
-                      ),
-                      _FeatureTile(
-                        index: 4,
-                        icon: Icons.bar_chart,
-                        title: 'Progress',
-                        subtitle: 'Trends',
-                        color: ext.surfaceRaised,
-                        iconColor: theme.colorScheme.primary,
-                        onTap: () => context.push('/progress'),
-                      ),
-                      _FeatureTile(
-                        index: 5,
-                        icon: Icons.precision_manufacturing,
-                        title: 'Machine scanner',
-                        subtitle: 'Coming soon',
-                        color: ext.surfaceRaised,
-                        iconColor: ext.textDisabled,
-                        isLocked: true,
-                        onTap: () {
-                          AppBottomSheet.show(context, child: const _ComingSoonSheet());
-                        },
-                      ),
-                    ]),
                   ),
                 ),
               ],
@@ -187,95 +135,73 @@ class _HeroSection extends ConsumerWidget {
     final bool isAllClear = status.state == DayState.cleared;
     final bool isCleanDay = status.state == DayState.noData;
     
-    // Calculate progress (0.0 to 1.0). If no data, 0. If cleared, 1. Otherwise ratio of burned / (burned + toBurn).
-    double progress = 0.0;
-    if (isAllClear) {
-      progress = 1.0;
-    } else if (!isCleanDay && (status.burnedKcal + status.toBurn) > 0) {
-      progress = status.burnedKcal / (status.burnedKcal + status.toBurn);
-    }
+    // Using a target of 2000 for visual progress if we don't have a specific target
+    // We can also just use the upper bound of the wiggle room or target.
+    final targetKcal = 2000.0;
+    double progress = (status.total.min / targetKcal).clamp(0.0, 1.0);
+    final ringColor = ext.energy;
 
-    final ringColor = isAllClear ? ext.success : ext.energy;
-
-    return AppCard(
-      variant: AppCardVariant.hero,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Good morning',
+                      style: theme.textTheme.caption,
+                    ),
+                    Text(
+                      '${userName ?? 'Pilot'} 👋',
+                      style: theme.textTheme.h1.copyWith(color: theme.colorScheme.onSurface),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.notifications_none, size: 28),
+                onPressed: () {
+                  AppSnackbar.success(context, 'No new notifications');
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.camera_alt_outlined, size: 28),
+                onPressed: () => context.push('/capture'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          SemicircleProgress(
+            progress: progress,
+            activeColor: ringColor,
+            backgroundColor: ext.hairline.withValues(alpha: 0.5),
+            strokeWidth: 20,
+            radius: 140,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Good morning, ${userName ?? 'Pilot'}',
-                        style: theme.textTheme.h2.copyWith(color: theme.colorScheme.onSurface),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat('EEEE, MMM d').format(DateTime.now()),
-                        style: theme.textTheme.caption,
-                      ),
-                    ],
+                Text('Today\'s Intake', style: theme.textTheme.caption),
+                const SizedBox(height: 8),
+                Text(
+                  '${status.total.min} - ${status.total.max}',
+                  style: theme.textTheme.display.copyWith(
+                    fontSize: 40, 
+                    height: 1.0,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
+                Text('kcal', style: theme.textTheme.caption),
               ],
             ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: 180,
-              height: 180,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ProgressRing(
-                    progress: progress,
-                    strokeWidth: 12,
-                    color: ringColor,
-                    backgroundColor: ext.hairline.withValues(alpha: 0.5),
-                    child: Container(), // Empty child
-                  ),
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isAllClear) ...[
-                          Icon(Icons.local_fire_department, size: 48, color: ext.success),
-                          const SizedBox(height: 8),
-                          Text('All clear', style: theme.textTheme.caption.copyWith(color: ext.success)),
-                        ] else if (isCleanDay) ...[
-                          Icon(Icons.check_circle_outline, size: 48, color: ext.textDisabled),
-                          const SizedBox(height: 8),
-                          Text('Clean day', style: theme.textTheme.caption),
-                        ] else ...[
-                          TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: status.toBurn.toDouble()),
-                            duration: const Duration(milliseconds: 800),
-                            curve: Curves.easeOutCubic,
-                            builder: (context, value, child) {
-                              return Text(
-                                value.toInt().toString(),
-                                style: theme.textTheme.display.copyWith(
-                                  fontSize: 48, 
-                                  height: 1.0,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              );
-                            },
-                          ),
-                          Text('to burn', style: theme.textTheme.caption),
-                        ]
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ),
+          const SizedBox(height: 16),
             const SizedBox(height: 32),
             if (isCleanDay)
               Text(
@@ -304,17 +230,67 @@ class _HeroSection extends ConsumerWidget {
                   ),
                 ],
               ),
-            if (!isCleanDay && !isAllClear) ...[
-              const SizedBox(height: 24),
-              PrimaryButton(
-                label: 'See burn plan',
-                onPressed: () {
-                  ref.read(burnPlanMealIdProvider.notifier).state = null;
-                  context.go('/plan');
-                },
-              ),
-            ]
+          if (!isCleanDay && !isAllClear) ...[
+            const SizedBox(height: 24),
+            PrimaryButton(
+              label: 'See burn plan',
+              onPressed: () {
+                ref.read(burnPlanMealIdProvider.notifier).state = null;
+                context.go('/plan');
+              },
+            ),
+          ]
+        ],
+      ),
+    );
+  }
+}
+
+class _ImageCard extends StatelessWidget {
+  final String title;
+  final String imagePath;
+  final VoidCallback onTap;
+
+  const _ImageCard({
+    required this.title,
+    required this.imagePath,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 160,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          image: DecorationImage(
+            image: AssetImage(imagePath),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withValues(alpha: 0.3),
+              BlendMode.darken,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
+        ),
+        alignment: Alignment.topLeft,
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
         ),
       ),
     );
@@ -475,116 +451,7 @@ class _LogListItem extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _FeatureTile extends StatelessWidget {
-  final int index;
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final Color iconColor;
-  final bool isLocked;
-  final VoidCallback onTap;
-
-  const _FeatureTile({
-    required this.index,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.iconColor,
-    this.isLocked = false,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
-    
-    return StaggeredEntrance(
-      index: index,
-      child: AnimatedScaleButton(
-        onPressed: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: ext.hairline, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: theme.shadowColor.withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(icon, color: iconColor, size: 28),
-                  if (isLocked)
-                    Icon(Icons.lock, size: 16, color: ext.textDisabled),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                title,
-                style: theme.textTheme.bodyStrong,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: theme.textTheme.caption,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ComingSoonSheet extends StatelessWidget {
-  const _ComingSoonSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(Icons.precision_manufacturing, size: 64, color: theme.colorScheme.primary),
-          const SizedBox(height: 24),
-          Text('Machine Scanner', style: theme.textTheme.h1),
-          const SizedBox(height: 12),
-          Text(
-            'Coming in Milestone D! Point your camera at any treadmill or elliptical screen to automatically capture your calories burned.',
-            style: theme.textTheme.body,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          PrimaryButton(
-            label: 'Got it',
-            onPressed: () => context.pop(),
-          ),
-        ],
-      ),
-    );
+     );
   }
 }
 

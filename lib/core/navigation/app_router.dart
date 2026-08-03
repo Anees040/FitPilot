@@ -19,6 +19,10 @@ import 'package:fitpilot/features/profile/presentation/profile_setup_screen.dart
 import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/exercise_library_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/exercise_detail_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/workout_hub_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/all_categories_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/category_detail_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/muscle_detail_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -94,6 +98,29 @@ final appRouter = GoRouter(
       builder: (context, state) => ExerciseDetailScreen(
         exerciseId: state.pathParameters['id']!,
       ),
+    ),
+    GoRoute(
+      path: '/workout-hub',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const WorkoutHubScreen(),
+      routes: [
+        GoRoute(
+          path: 'all',
+          builder: (context, state) => const AllCategoriesScreen(),
+        ),
+        GoRoute(
+          path: 'category/:id',
+          builder: (context, state) => CategoryDetailScreen(
+            categoryId: state.pathParameters['id']!,
+          ),
+        ),
+        GoRoute(
+          path: 'muscle/:id',
+          builder: (context, state) => MuscleDetailScreen(
+            muscleId: state.pathParameters['id']!,
+          ),
+        ),
+      ]
     ),
     StatefulShellRoute(
       builder: (context, state, navigationShell) {
