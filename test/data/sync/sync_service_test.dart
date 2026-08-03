@@ -12,7 +12,7 @@ class FakeRemoteDataSource extends RemoteDataSource {
   FakeRemoteDataSource() : super(null);
 
   @override
-  Future<void> upsertRows(String table, List<Map<String, dynamic>> rows) async {
+  Future<void> upsertRows(String table, List<Map<String, dynamic>> rows, {String? onConflict}) async {
     if (failNext) {
       failNext = false;
       throw Exception('Fake network error');

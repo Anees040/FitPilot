@@ -6,6 +6,8 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/application/providers/app_reset.dart';
+import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/config/env.dart';
@@ -113,9 +115,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user != null) {
-        final merger = ref.read(guestMergeServiceProvider);
-        await merger?.mergeGuestData(user.id);
-        if (mounted) context.go('/profile-setup');
+        await _handlePostSignIn(user.id);
       }
     } on UnverifiedEmailFailure catch (_) {
       if (mounted) context.push('/otp', extra: _emailCtrl.text.trim());
@@ -152,14 +152,67 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user != null) {
-        final merger = ref.read(guestMergeServiceProvider);
-        await merger?.mergeGuestData(user.id);
-        if (mounted) context.go('/profile-setup');
+        await _handlePostSignIn(user.id);
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Error in _submitGoogle: $e\n$stack');
       if (mounted) setState(() => _formError = _mapError(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handlePostSignIn(String userId) async {
+    final merger = ref.read(guestMergeServiceProvider);
+    final remote = ref.read(remoteDataSourceProvider);
+    final db = await ref.read(databaseProvider.future);
+    
+    final hasCloudData = await remote.hasCloudData(userId);
+    final hasGuestData = await merger?.hasGuestData() ?? false;
+    
+    if (hasCloudData && hasGuestData) {
+      if (!mounted) return;
+      final shouldOverwrite = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: Text('Existing Account Detected', style: Theme.of(context).textTheme.titleLarge),
+          content: const Text('This account already contains saved progress.\n\nContinuing will replace your current guest session with your account data. Do you want to continue?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+      
+      if (shouldOverwrite != true) {
+        await ref.read(authRepositoryProvider).signOut();
+        return; 
+      }
+      
+      await AppDatabase.clearUserData(db);
+      
+      final syncService = ref.read(syncServiceProvider);
+      await syncService?.forcePullAll();
+      
+      resetApplicationState(ref);
+      
+      if (mounted) context.go('/today');
+    } else if (hasCloudData && !hasGuestData) {
+      final syncService = ref.read(syncServiceProvider);
+      await syncService?.forcePullAll();
+      resetApplicationState(ref);
+      if (mounted) context.go('/today');
+    } else {
+      await merger?.mergeGuestData(userId);
+      if (mounted) context.go('/profile-setup');
     }
   }
 

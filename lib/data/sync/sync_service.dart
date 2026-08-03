@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -166,6 +167,8 @@ class SyncService {
             data.remove('active_program_week');
             data.remove('active_program_day');
             data['id'] = userId;
+            // Convert equipment JSON string → Dart List for Postgres text[] column
+            _fixProfileArrayFields(data);
           } else {
             data['user_id'] = userId;
           }
@@ -176,7 +179,7 @@ class SyncService {
           rowsToUpsert.add({
             'id': rowId,
             'user_id': userId,
-            'deleted': true,
+            'deleted_at': DateTime.now().toIso8601String(),
             'updated_at': DateTime.now().toIso8601String(),
           });
         }
@@ -189,9 +192,33 @@ class SyncService {
       return;
     }
 
+    // Deduplicate by ID so we don't send multiple updates for the same row in one batch
+    final uniqueRows = <String, Map<String, dynamic>>{};
+    for (final row in rowsToUpsert) {
+      final pk = row['id'].toString();
+      uniqueRows[pk] = row;
+    }
+    final finalRows = uniqueRows.values.toList();
+
+    // Fallback for older DB schema constraints
+    if (table == 'food_logs') {
+      for (final row in finalRows) {
+        if (row['source'] != null) {
+          final src = row['source'] as String;
+          const valid = ['catalog', 'search', 'manual', 'photo', 'label', 'labelScan', 'barcode', 'ai', 'custom'];
+          if (!valid.contains(src) || src == 'search' || src == 'labelScan' || src == 'label' || src == 'ai' || src == 'custom') {
+            row['source'] = 'manual';
+          }
+        }
+      }
+    }
+
     try {
+      // For weight_entries, use the composite unique constraint to handle offline conflicts
+      final onConflict = table == 'weight_entries' ? 'user_id, for_date' : null;
+      
       // Use the remote table name (e.g. 'profiles' instead of 'profile').
-      await remote.upsertRows(_remoteTable(table), rowsToUpsert);
+      await remote.upsertRows(_remoteTable(table), finalRows, onConflict: onConflict);
       // On success, delete these from queue
       await _removeFromQueue(queueIds);
     } catch (e) {
@@ -251,8 +278,19 @@ class SyncService {
             // Handle table differences
             if (table == 'profile') {
               dataToInsert['id'] = 1; // back to local singleton id
+              // SQLite stores arrays as JSON text
+              if (dataToInsert['equipment'] is List) {
+                dataToInsert['equipment'] = jsonEncode(dataToInsert['equipment']);
+              }
             } else {
               dataToInsert.remove('user_id'); // SQLite doesn't have user_id
+            }
+
+            // Convert booleans to integers for SQLite
+            for (final key in dataToInsert.keys.toList()) {
+              if (dataToInsert[key] is bool) {
+                dataToInsert[key] = (dataToInsert[key] as bool) ? 1 : 0;
+              }
             }
 
             // If it's a tombstone, we can physically delete or soft delete
@@ -280,6 +318,17 @@ class SyncService {
       } catch (e) {
         debugPrint('Sync pull failed for $table: $e');
       }
+    }
+  }
+
+  /// Forces a complete fresh pull of all data from Supabase, ignoring local sync state.
+  /// Call this when overriding local guest data with a cloud account.
+  Future<void> forcePullAll() async {
+    try {
+      await db.delete('sync_metadata');
+      await _pullPhase();
+    } catch (e) {
+      debugPrint('Force pull failed: $e');
     }
   }
 
@@ -330,5 +379,28 @@ class SyncService {
       'key': 'last_pull_$table',
       'value': iso8601,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// Converts JSON-encoded array fields (stored as text in SQLite) to Dart
+  /// lists of strings so Supabase can insert them into PostgreSQL `text[]` columns.
+  void _fixProfileArrayFields(Map<String, dynamic> data) {
+    const arrayFields = ['equipment'];
+    for (final field in arrayFields) {
+      final raw = data[field];
+      if (raw is String) {
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is List) {
+            data[field] = decoded.cast<String>();
+          } else {
+            data[field] = <String>[];
+          }
+        } catch (_) {
+          data[field] = <String>[];
+        }
+      } else if (raw == null) {
+        data[field] = <String>[];
+      }
+    }
   }
 }

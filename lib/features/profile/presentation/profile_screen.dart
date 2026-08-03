@@ -5,8 +5,9 @@ import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/data/local/app_database.dart';
-import 'package:fitpilot/application/providers/sync_provider.dart';
+import 'package:fitpilot/application/providers/app_reset.dart';
 import 'package:fitpilot/data/sync/sync_service.dart';
+import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
@@ -468,6 +469,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     final db = await ref.read(databaseProvider.future);
                     await AppDatabase.clearUserData(db);
                     await ref.read(authRepositoryProvider).signOut();
+                    resetApplicationState(ref);
                   },
                   child: const Text('Sign Out'),
                 ),

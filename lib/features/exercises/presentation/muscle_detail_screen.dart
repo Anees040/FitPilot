@@ -6,8 +6,15 @@ import 'package:fitpilot/application/providers/exercise_provider.dart';
 
 class MuscleDetailScreen extends ConsumerWidget {
   final String muscleId;
+  final String? customTitle;
+  final String? customImage;
 
-  const MuscleDetailScreen({super.key, required this.muscleId});
+  const MuscleDetailScreen({
+    super.key, 
+    required this.muscleId,
+    this.customTitle,
+    this.customImage,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,10 +23,10 @@ class MuscleDetailScreen extends ConsumerWidget {
     final exercisesAsync = ref.watch(exerciseListProvider);
     
     // Map muscleId to Title and Image
-    String title = muscleId.substring(0, 1).toUpperCase() + muscleId.substring(1);
-    String imagePath = 'assets/illustrations/${muscleId}_hero.png';
-    // Fallback if image doesn't exist
-    if (muscleId != 'chest' && muscleId != 'back' && muscleId != 'shoulders' && muscleId != 'arms' && muscleId != 'core' && muscleId != 'legs') {
+    String title = customTitle ?? (muscleId.substring(0, 1).toUpperCase() + muscleId.substring(1));
+    String imagePath = customImage ?? 'assets/illustrations/${muscleId}_hero.png';
+    // Fallback if image doesn't exist and custom not provided
+    if (customImage == null && muscleId != 'chest' && muscleId != 'back' && muscleId != 'shoulders' && muscleId != 'arms' && muscleId != 'core' && muscleId != 'legs') {
       imagePath = 'assets/illustrations/workout_hub_bg.png';
     }
 

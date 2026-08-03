@@ -33,6 +33,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
       ),
       body: SafeArea(
         child: stateAsync.when(
+          skipLoadingOnReload: true,
           data: (state) => _buildBody(context, state),
           loading: () => const Padding(
             padding: EdgeInsets.all(16.0),
@@ -62,6 +63,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     }
 
     return ListView(
+      key: const PageStorageKey('progress_scroll'),
       padding: const EdgeInsets.all(16.0),
       children: [
         _buildStreakCard(context, state.streak),
@@ -163,11 +165,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     final sortedDates = last35Days.keys.toList()..sort();
     
     // Find unique months in the range for the label
-    final uniqueMonths = sortedDates
-        .map((d) => DateFormat('MMM').format(d))
-        .toSet()
-        .toList();
-    final monthLabel = uniqueMonths.join(' - ');
+    final monthLabel = DateFormat('MMMM yyyy').format(now);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

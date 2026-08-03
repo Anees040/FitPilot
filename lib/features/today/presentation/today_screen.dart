@@ -59,20 +59,24 @@ class TodayScreen extends ConsumerWidget {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   sliver: SliverToBoxAdapter(
-                    child: Column(
+                    child: Row(
                       children: [
-                        _ImageCard(
-                          title: 'Workout Hub',
-                          imagePath: 'assets/illustrations/workout_hub_bg.png',
-                          onTap: () => context.push('/workout-hub'),
+                        Expanded(
+                          child: _ImageCard(
+                            title: 'Workout\nHub',
+                            imagePath: 'assets/illustrations/today_workout_hub.png',
+                            onTap: () => context.push('/workout-hub'),
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        _ImageCard(
-                          title: 'Machine Scanner',
-                          imagePath: 'assets/illustrations/machine_scanner_bg.png',
-                          onTap: () {
-                            AppSnackbar.success(context, 'This feature is coming soon!');
-                          },
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _ImageCard(
+                            title: 'Machine\nScanner',
+                            imagePath: 'assets/illustrations/today_machine_scanner.png',
+                            onTap: () {
+                              AppSnackbar.success(context, 'This feature is coming soon!');
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -262,35 +266,57 @@ class _ImageCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 160,
+        height: 140,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          image: DecorationImage(
-            image: AssetImage(imagePath),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3),
-              BlendMode.darken,
-            ),
-          ),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
-              blurRadius: 10,
+              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.15),
+              blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        alignment: Alignment.topLeft,
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
+        clipBehavior: Clip.hardEdge,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+            ),
+            // Gradient overlay for text readability
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x00000000),
+                    Color(0x44000000),
+                    Color(0xCC000000),
+                  ],
+                  stops: [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

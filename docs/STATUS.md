@@ -40,6 +40,19 @@
 
 ## Last completed
 
+- J4.2 — Sync Fixes & UI Enhancements
+  - Fixed sync queue crash by deduplicating batch rows by ID.
+  - Handled `weight_one_per_day` constraint correctly in `GuestMergeService` and `SyncService` by adding `onConflict` logic.
+  - Fixed `fl_chart` web compiler type error by ensuring integer variables are passed as explicitly typed doubles.
+  - Overhauled Today screen cards to display images professionally with gradient overlays.
+  - Realigned All Categories screen images to display properly without clipping.
+  - Added pulse animation to Workout Hub banner and made category tiles slightly opaque.
+- J4.1 — Progress Screen & UI Fixes
+  - Fixed `fl_chart` crash (grey screen) when only 1 weight is logged.
+  - Made the current weight label always use the latest date's weight.
+  - Formatted the weight chart, goal weight line, and weight summary UI properly using the user's unit settings (kg vs lbs).
+  - Fixed the UI scroll jump bug on the progress screen when saving a new weight by enabling `skipLoadingOnReload: true`.
+  - Fixed ruler picker jumping issues in both `ProfileSetupScreen` and `WeightTrendSection` by assigning `ValueKey`s.
 - J4 — Theming, Progress & Workout Hub UI Polish
   - Restored dynamic theme seed generation and added Theme Color selector to `ProfileScreen`.
   - Removed Weight/Height fields from Profile, keeping them isolated to Progress history.

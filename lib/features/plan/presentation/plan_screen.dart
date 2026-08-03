@@ -30,17 +30,17 @@ class PlanScreen extends ConsumerWidget {
         centerTitle: false,
       ),
       body: SafeArea(
-        child: stateAsync.when(
-          data: (state) => _buildBody(context, ref, state),
-          loading: () => const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: SkeletonList(count: 3),
-          ),
-          error: (e, st) => ErrorState(
-            reason: 'Failed to load plan.\n$e',
-            onRetry: () => ref.invalidate(burnPlanProvider),
-          ),
-        ),
+        child: stateAsync.hasValue
+            ? _buildBody(context, ref, stateAsync.value!)
+            : stateAsync.hasError
+                ? ErrorState(
+                    reason: 'Failed to load plan.\n${stateAsync.error}',
+                    onRetry: () => ref.invalidate(burnPlanProvider),
+                  )
+                : const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: SkeletonList(count: 3),
+                  ),
       ),
     );
   }

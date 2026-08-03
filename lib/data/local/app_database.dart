@@ -481,7 +481,7 @@ class AppDatabase {
       'theme_color': 'orange',
       'plan_category_pref': 'recommended',
       'plan_pace_pref': 'any',
-      'unit_kg_lb': 0,
+      'unit_kg_lb': 'kg',
       'week_starts_mon': 1,
       'haptics_on': 1,
       'updated_at': DateTime.now().toIso8601String(),

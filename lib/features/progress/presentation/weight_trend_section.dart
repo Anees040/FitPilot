@@ -5,6 +5,7 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/progress_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/domain/entities/weight_entry.dart';
+import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
@@ -38,10 +39,12 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
 
     final now = DateTime.now();
     final cutoff = now.subtract(const Duration(days: 180));
+    // Sort strictly by date ASC
     final filtered = widget.entries.where((e) => e.date.isAfter(cutoff)).toList();
     filtered.sort((a, b) => a.date.compareTo(b.date));
 
-    final currentWeight = widget.entries.isNotEmpty ? widget.entries.first.weightKg : null;
+    // The current weight should be the LAST element after sorting by date (most recent)
+    final currentWeight = filtered.isNotEmpty ? filtered.last.weightKg : null;
     final bmiWeight = currentWeight ?? profile?.weightKg;
 
     return Column(
@@ -80,11 +83,11 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildWeightSummary(theme, ext, filtered, currentWeight),
+                _buildWeightSummary(theme, ext, filtered, currentWeight, profile),
                 const SizedBox(height: 16),
                 SizedBox(
                   height: 220,
-                  child: _buildChart(theme, ext, filtered, goalWeightKg),
+                  child: _buildChart(theme, ext, filtered, goalWeightKg, profile),
                 ),
               ],
             ),
@@ -117,11 +120,16 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     );
   }
 
-  Widget _buildWeightSummary(ThemeData theme, AppColors ext, List<WeightEntry> filtered, double? currentWeight) {
+  Widget _buildWeightSummary(ThemeData theme, AppColors ext, List<WeightEntry> filtered, double? currentWeight, Profile? profile) {
     if (filtered.isEmpty || currentWeight == null) return const SizedBox();
 
-    final heaviest = filtered.map((e) => e.weightKg).reduce(max);
-    final lightest = filtered.map((e) => e.weightKg).reduce(min);
+    bool isKg = profile?.unitKgLb != 'lb';
+    final weightScale = isKg ? 1.0 : 2.20462;
+    final unitLabel = isKg ? 'kg' : 'lbs';
+
+    final heaviest = filtered.map((e) => e.weightKg).reduce(max) * weightScale;
+    final lightest = filtered.map((e) => e.weightKg).reduce(min) * weightScale;
+    final displayCurrent = currentWeight * weightScale;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -136,9 +144,9 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Text(currentWeight.toStringAsFixed(1), style: theme.textTheme.display.copyWith(fontSize: 32, fontWeight: FontWeight.bold, height: 1.1)),
+                Text(displayCurrent.toStringAsFixed(1), style: theme.textTheme.display.copyWith(fontSize: 32, fontWeight: FontWeight.bold, height: 1.1)),
                 const SizedBox(width: 4),
-                Text('kg', style: theme.textTheme.bodyStrong),
+                Text(unitLabel, style: theme.textTheme.bodyStrong),
               ],
             ),
           ],
@@ -169,33 +177,47 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
 
 
 
-  Widget _buildChart(ThemeData theme, AppColors ext, List<WeightEntry> filtered, double? goalWeightKg) {
+  Widget _buildChart(ThemeData theme, AppColors ext, List<WeightEntry> filtered, double? goalWeightKg, Profile? profile) {
     if (filtered.isEmpty) {
       return Center(
         child: Text('No data in this period', style: theme.textTheme.caption),
       );
     }
+    
+    bool isKg = profile?.unitKgLb != 'lb';
+    final weightScale = isKg ? 1.0 : 2.20462;
 
     final chartBlue = const Color.fromARGB(255, 66, 133, 244);
     final textStyle = theme.textTheme.caption.copyWith(fontSize: 12, color: theme.textTheme.caption.color?.withValues(alpha: 0.6));
 
     List<FlSpot> spots = filtered.map((e) {
-      return FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.weightKg);
+      return FlSpot(e.date.millisecondsSinceEpoch.toDouble(), e.weightKg * weightScale);
     }).toList();
+
+    if (spots.length == 1) {
+      // fl_chart crashes if there's only 1 spot. Duplicate it to make a flat line over 2 days.
+      spots = [
+        FlSpot(spots.first.x - 86400000, spots.first.y),
+        FlSpot(spots.first.x + 86400000, spots.first.y),
+      ];
+    }
 
     double minX = spots.first.x;
     double maxX = spots.last.x;
+    
+    // fl_chart will crash if the X axis domain is 0 (minX == maxX)
     if (minX == maxX) {
-      maxX = minX + 86400000; // + 1 day
-      minX = minX - 86400000; // - 1 day
+      minX -= 86400000;
+      maxX += 86400000;
     }
 
     double minY = spots.map((s) => s.y).reduce(min);
     double maxY = spots.map((s) => s.y).reduce(max);
     
     if (goalWeightKg != null) {
-      if (goalWeightKg < minY) minY = goalWeightKg;
-      if (goalWeightKg > maxY) maxY = goalWeightKg;
+      final goalY = goalWeightKg * weightScale;
+      if (goalY < minY) minY = goalY;
+      if (goalY > maxY) maxY = goalY;
     }
 
     if (minY == maxY) {
@@ -207,6 +229,13 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
       maxY += padding;
     }
 
+    double xInterval = 86400000.0; // Default 1 day
+    final diffDays = (maxX - minX) / 86400000.0;
+    if (diffDays > 7) {
+      final intervalDays = (diffDays / 5).ceil();
+      xInterval = intervalDays * 86400000.0;
+    }
+
     return LineChart(
       LineChartData(
         minX: minX,
@@ -216,9 +245,11 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
+          horizontalInterval: ((maxY - minY) / 4).clamp(1.0, 100.0).toDouble(), // Explicit double interval
+          verticalInterval: xInterval, // Explicit double interval to fix fl_chart bug
           getDrawingHorizontalLine: (value) => FlLine(
             color: theme.dividerColor.withValues(alpha: 0.5),
-            strokeWidth: 1,
+            strokeWidth: 1.0,
             dashArray: [4, 4],
           ),
         ),
@@ -226,14 +257,16 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 22,
-              interval: max(86400000 * 5, (maxX - minX) / 5),
+              reservedSize: 22.0,
+              interval: xInterval, // Dynamic interval to prevent overlapping text
               getTitlesWidget: (value, meta) {
                 final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
                 if (value == minX || value == maxX) return const SizedBox();
+                
+                final formatStr = diffDays > 14 ? 'MMM dd' : 'dd';
                 return Padding(
                   padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(DateFormat('dd').format(date), style: textStyle),
+                  child: Text(DateFormat(formatStr).format(date), style: textStyle.copyWith(fontSize: 10)),
                 );
               },
             ),
@@ -241,14 +274,15 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 32,
+              reservedSize: 32.0,
+              interval: ((maxY - minY) / 4).clamp(1.0, 100.0).toDouble(), // Explicit double interval
               getTitlesWidget: (value, meta) {
                 return Text(value.toInt().toString(), style: textStyle);
               },
             ),
           ),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false, interval: 1.0)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false, interval: 1.0)),
         ),
         borderData: FlBorderData(show: false),
         lineBarsData: [
@@ -256,20 +290,20 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
             spots: spots,
             isCurved: false,
             color: chartBlue,
-            barWidth: 2,
+            barWidth: 2.0,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, barData, index) {
                 if (index == spots.length - 1) {
                   return FlDotCirclePainter(
-                    radius: 5,
+                    radius: 5.0,
                     color: Colors.white,
-                    strokeWidth: 3,
+                    strokeWidth: 3.0,
                     strokeColor: chartBlue,
                   );
                 }
-                return FlDotCirclePainter(radius: 0, color: Colors.transparent);
+                return FlDotCirclePainter(radius: 0.0, color: Colors.transparent);
               },
             ),
             belowBarData: BarAreaData(
@@ -559,6 +593,8 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     final theme = Theme.of(context);
     double weight = initialValue;
     DateTime selectedDate = DateTime.now();
+    final profile = ref.read(profileProvider).valueOrNull;
+    bool isWeightKg = profile?.unitKgLb != 'lb';
 
     showModalBottomSheet(
       context: context,
@@ -578,6 +614,34 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: 200,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildUnitToggle(
+                          theme: theme,
+                          label: 'kg',
+                          isSelected: isWeightKg,
+                          onTap: () {
+                            setModalState(() => isWeightKg = true);
+                          },
+                        ),
+                        _buildUnitToggle(
+                          theme: theme,
+                          label: 'lbs',
+                          isSelected: !isWeightKg,
+                          onTap: () {
+                            setModalState(() => isWeightKg = false);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   if (showDatePicker) ...[
                     InkWell(
@@ -606,27 +670,52 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
                     ),
                     const SizedBox(height: 24),
                   ],
-                  RulerPicker(
-                    minValue: 30,
-                    maxValue: 200,
-                    initialValue: weight,
-                    step: 0.1,
-                    majorTickInterval: 1.0,
-                    valueBuilder: (context, val) => Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(val.toStringAsFixed(1), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 4),
-                        Text('kg', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-                      ],
+                  if (isWeightKg)
+                    RulerPicker(
+                      key: const ValueKey('kg'),
+                      minValue: 30,
+                      maxValue: 200,
+                      initialValue: weight,
+                      step: 0.1,
+                      majorTickInterval: 1.0,
+                      valueBuilder: (context, val) => Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(val.toStringAsFixed(1), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 4),
+                          Text('kg', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        ],
+                      ),
+                      tickFormatter: (val) => val.toInt().toString(),
+                      onChanged: (val) {
+                        weight = val;
+                      },
+                    )
+                  else
+                    RulerPicker(
+                      key: const ValueKey('lbs'),
+                      minValue: 66,
+                      maxValue: 440,
+                      initialValue: (weight * 2.20462).roundToDouble(),
+                      step: 1,
+                      majorTickInterval: 10,
+                      valueBuilder: (context, val) => Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(val.toInt().toString(), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 4),
+                          Text('lbs', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        ],
+                      ),
+                      tickFormatter: (val) => val.toInt().toString(),
+                      onChanged: (val) {
+                        weight = val / 2.20462;
+                      },
                     ),
-                    tickFormatter: (val) => val.toInt().toString(),
-                    onChanged: (val) {
-                      weight = val;
-                    },
-                  ),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -670,6 +759,8 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
     final theme = Theme.of(context);
     final initialHeight = currentHeightCm?.toDouble() ?? 170.0;
     double height = initialHeight;
+    final profile = ref.read(profileProvider).valueOrNull;
+    bool isHeightCm = profile?.unitKgLb != 'lb';
 
     showModalBottomSheet(
       context: context,
@@ -689,28 +780,92 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('Edit Height', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 24),
-                  RulerPicker(
-                    minValue: 50,
-                    maxValue: 250,
-                    initialValue: height,
-                    step: 1.0,
-                    majorTickInterval: 10.0,
-                    valueBuilder: (context, val) => Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
+                  const SizedBox(height: 16),
+                  Container(
+                    width: 200,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
                       children: [
-                        Text(val.toStringAsFixed(0), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 4),
-                        Text('cm', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        _buildUnitToggle(
+                          theme: theme,
+                          label: 'cm',
+                          isSelected: isHeightCm,
+                          onTap: () {
+                            setModalState(() => isHeightCm = true);
+                          },
+                        ),
+                        _buildUnitToggle(
+                          theme: theme,
+                          label: 'ft',
+                          isSelected: !isHeightCm,
+                          onTap: () {
+                            setModalState(() => isHeightCm = false);
+                          },
+                        ),
                       ],
                     ),
-                    tickFormatter: (val) => val.toInt().toString(),
-                    onChanged: (val) {
-                      height = val;
-                    },
                   ),
+                  const SizedBox(height: 24),
+                  if (isHeightCm)
+                    RulerPicker(
+                      key: const ValueKey('cm'),
+                      minValue: 100,
+                      maxValue: 250,
+                      initialValue: height,
+                      step: 1.0,
+                      majorTickInterval: 10.0,
+                      valueBuilder: (context, val) => Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(val.toStringAsFixed(0), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 4),
+                          Text('cm', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        ],
+                      ),
+                      tickFormatter: (val) => val.toInt().toString(),
+                      onChanged: (val) {
+                        height = val;
+                      },
+                    )
+                  else
+                    RulerPicker(
+                      key: const ValueKey('ft'),
+                      minValue: 20,
+                      maxValue: 98,
+                      initialValue: (height / 2.54).roundToDouble(),
+                      step: 1, // inches
+                      majorTickInterval: 12, // 12 inches in a foot
+                      valueBuilder: (context, val) {
+                        int ft = (val / 12).floor();
+                        int inches = (val % 12).round();
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text('$ft', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 4),
+                            Text('ft', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                            const SizedBox(width: 8),
+                            Text('$inches', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 4),
+                            Text('in', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                          ],
+                        );
+                      },
+                      tickFormatter: (val) {
+                        int ft = (val / 12).floor();
+                        return '$ft';
+                      },
+                      onChanged: (val) {
+                        height = (val * 2.54).roundToDouble();
+                      },
+                    ),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -732,6 +887,31 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildUnitToggle({required ThemeData theme, required String label, required bool isSelected, required VoidCallback onTap}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

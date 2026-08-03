@@ -27,27 +27,37 @@ class WorkoutHubScreen extends ConsumerWidget {
               centerTitle: false,
               pinned: true,
             ),
-            SliverToBoxAdapter(
+            const SliverToBoxAdapter(
               child: _HeroSection(),
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _CategoryTile(
-                    title: 'Upper Body',
-                    subtitle: 'Build strength and size',
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    imagePath: 'assets/illustrations/upper_body_hero.png',
-                    onTap: () => context.push('/workout-hub/category/upper_body'),
-                  ),
-                  const SizedBox(height: 16),
-                  _CategoryTile(
-                    title: 'Lower Body',
-                    subtitle: 'Build power and endurance',
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    imagePath: 'assets/illustrations/lower_body_hero.png',
-                    onTap: () => context.push('/workout-hub/category/lower_body'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _CategoryTile(
+                          title: 'Upper Body',
+                          subtitle: 'Build strength and size',
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          imagePath: 'assets/illustrations/upper_body_hero.png',
+                          onTap: () => context.push('/workout-hub/category/upper_body'),
+                          isSmall: true,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _CategoryTile(
+                          title: 'Lower Body',
+                          subtitle: 'Build power and endurance',
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          imagePath: 'assets/illustrations/lower_body_hero.png',
+                          onTap: () => context.push('/workout-hub/category/lower_body'),
+                          isSmall: true,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -57,7 +67,6 @@ class WorkoutHubScreen extends ConsumerWidget {
                           title: 'Chest',
                           subtitle: 'Build a stronger chest',
                           color: theme.colorScheme.surfaceContainerHighest,
-                          textColor: theme.colorScheme.onSurface,
                           imagePath: 'assets/illustrations/chest_hero.png',
                           onTap: () => context.push('/workout-hub/muscle/chest'),
                           isSmall: true,
@@ -69,7 +78,6 @@ class WorkoutHubScreen extends ConsumerWidget {
                           title: 'Back',
                           subtitle: 'Stronger back, better posture',
                           color: theme.colorScheme.surfaceContainerHighest,
-                          textColor: theme.colorScheme.onSurface,
                           imagePath: 'assets/illustrations/back_hero.png',
                           onTap: () => context.push('/workout-hub/muscle/back'),
                           isSmall: true,
@@ -85,7 +93,6 @@ class WorkoutHubScreen extends ConsumerWidget {
                           title: 'Shoulders',
                           subtitle: '3D shoulder development',
                           color: theme.colorScheme.surfaceContainerHighest,
-                          textColor: theme.colorScheme.onSurface,
                           imagePath: 'assets/illustrations/shoulders_hero.png',
                           onTap: () => context.push('/workout-hub/muscle/shoulders'),
                           isSmall: true,
@@ -97,7 +104,6 @@ class WorkoutHubScreen extends ConsumerWidget {
                           title: 'Arms',
                           subtitle: 'Biceps, triceps and forearms',
                           color: theme.colorScheme.surfaceContainerHighest,
-                          textColor: theme.colorScheme.onSurface,
                           imagePath: 'assets/illustrations/arms_hero.png',
                           onTap: () => context.push('/workout-hub/muscle/arms'),
                           isSmall: true,
@@ -113,7 +119,6 @@ class WorkoutHubScreen extends ConsumerWidget {
                           title: 'Core & Abs',
                           subtitle: 'Stronger core, better performance',
                           color: theme.colorScheme.surfaceContainerHighest,
-                          textColor: theme.colorScheme.onSurface,
                           imagePath: 'assets/illustrations/core_hero.png',
                           onTap: () => context.push('/workout-hub/muscle/core'),
                           isSmall: true,
@@ -125,7 +130,6 @@ class WorkoutHubScreen extends ConsumerWidget {
                           title: 'Legs',
                           subtitle: 'Powerful legs, better mobility',
                           color: theme.colorScheme.surfaceContainerHighest,
-                          textColor: theme.colorScheme.onSurface,
                           imagePath: 'assets/illustrations/legs_hero.png',
                           onTap: () => context.push('/workout-hub/muscle/legs'),
                           isSmall: true,
@@ -147,11 +151,7 @@ class WorkoutHubScreen extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: theme.colorScheme.primary,
                         borderRadius: BorderRadius.circular(100),
                         boxShadow: [
                           BoxShadow(
@@ -164,7 +164,10 @@ class WorkoutHubScreen extends ConsumerWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('View All Categories', style: theme.textTheme.bodyStrong.copyWith(color: Colors.white, fontSize: 16)),
+                          Text(
+                            'View All Categories',
+                            style: theme.textTheme.bodyStrong.copyWith(color: Colors.white, fontSize: 16),
+                          ),
                           const SizedBox(width: 8),
                           const Icon(Icons.arrow_forward_rounded, size: 20, color: Colors.white),
                         ],
@@ -182,65 +185,199 @@ class WorkoutHubScreen extends ConsumerWidget {
   }
 }
 
-class _HeroSection extends StatelessWidget {
+// ─────────────────────────────────────────────
+// Animated Hero
+// ─────────────────────────────────────────────
+class _HeroSection extends StatefulWidget {
+  const _HeroSection();
+
+  @override
+  State<_HeroSection> createState() => _HeroSectionState();
+}
+
+class _HeroSectionState extends State<_HeroSection> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 0.12).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    return Container(
-      height: 240,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.colorScheme.surface, theme.colorScheme.surface.withValues(alpha: 0.8), theme.colorScheme.surface.withValues(alpha: 0.0)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -20,
-            bottom: 0,
-            child: Image.asset(
-              'assets/illustrations/actor_standing.png',
-              height: 220,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const SizedBox(),
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: AnimatedBuilder(
+        animation: _pulseController,
+        builder: (context, child) {
+          return Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(
+                    alpha: 0.28 + _pulseAnimation.value,
+                  ),
+                  blurRadius: 18 + (_pulseAnimation.value * 12),
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ),
-          Positioned(
-            left: 20,
-            top: 20,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.5,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Workout Hub',
-                    style: theme.textTheme.display.copyWith(fontSize: 32, color: theme.colorScheme.onSurface),
+            child: child,
+          );
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Real gym photo background with slight zoom pulse
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: 1.0 + (_pulseAnimation.value * 0.3),
+                    child: child,
+                  );
+                },
+                child: Image.asset(
+                  'assets/illustrations/workout_hub_bg.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: theme.colorScheme.primary,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Find the perfect workout for your goal.',
-                    style: theme.textTheme.body.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
-                  ),
-                ],
+                ),
               ),
-            ),
+              // Dark gradient overlay — left to right so text on left is readable
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      theme.colorScheme.shadow.withValues(alpha: 0.82),
+                      theme.colorScheme.shadow.withValues(alpha: 0.35),
+                      theme.colorScheme.shadow.withValues(alpha: 0.0),
+                    ],
+                    stops: const [0.0, 0.55, 1.0],
+                  ),
+                ),
+              ),
+              // Text + chips on left
+              Positioned(
+                left: 24,
+                top: 24,
+                bottom: 20,
+                right: 100,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Primary badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'WORKOUT HUB',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Train\nSmart.',
+                      style: Theme.of(context).textTheme.display.copyWith(
+                        fontSize: 32,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        height: 1.05,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Workouts for every goal.',
+                      style: Theme.of(context).textTheme.caption.copyWith(
+                        color: Colors.white.withValues(alpha: 0.78),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        _StatChip(label: '11 Categories'),
+                        const SizedBox(width: 6),
+                        _StatChip(label: '80+ Exercises'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
+class _StatChip extends StatelessWidget {
+  final String label;
+  const _StatChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Category Tile
+// ─────────────────────────────────────────────
 class _CategoryTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
-  final Color textColor;
   final String imagePath;
   final VoidCallback onTap;
   final bool isSmall;
@@ -249,7 +386,6 @@ class _CategoryTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.color,
-    this.textColor = Colors.white,
     required this.imagePath,
     required this.onTap,
     this.isSmall = false,
@@ -258,12 +394,13 @@ class _CategoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: isSmall ? 140 : 200,
         decoration: BoxDecoration(
+          color: theme.colorScheme.surface, // Or use the passed color
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -277,38 +414,48 @@ class _CategoryTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              imagePath,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(color: color),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    theme.colorScheme.shadow.withValues(alpha: 0.0),
-                    theme.colorScheme.shadow.withValues(alpha: 0.8),
-                  ],
-                  stops: const [0.4, 1.0],
-                ),
+            Opacity(
+              opacity: 0.6,
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(color: color),
               ),
             ),
+              // Darker overlay so text is clearly readable
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x66000000),
+                      Color(0xCC000000),
+                    ],
+                    stops: [0.0, 1.0],
+                  ),
+                ),
+              ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(14.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: theme.textTheme.bodyStrong.copyWith(color: Colors.white, fontSize: isSmall ? 16 : 22),
+                    style: theme.textTheme.bodyStrong.copyWith(
+                      color: Colors.white,
+                      fontSize: isSmall ? 15 : 22,
+                    ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     subtitle,
-                    style: theme.textTheme.caption.copyWith(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
+                    style: theme.textTheme.caption.copyWith(
+                      color: Colors.white.withValues(alpha: 0.82),
+                      fontSize: 11,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

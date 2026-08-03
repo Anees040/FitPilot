@@ -117,9 +117,14 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'muscle/:id',
-          builder: (context, state) => MuscleDetailScreen(
-            muscleId: state.pathParameters['id']!,
-          ),
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return MuscleDetailScreen(
+              muscleId: state.pathParameters['id']!,
+              customTitle: extra?['title'] as String?,
+              customImage: extra?['image'] as String?,
+            );
+          },
         ),
       ]
     ),

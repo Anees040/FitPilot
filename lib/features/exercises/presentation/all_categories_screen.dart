@@ -9,19 +9,75 @@ class AllCategoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    
+    final ext = theme.extension<AppColors>()!;
+
     final List<Map<String, dynamic>> categories = [
-      {'title': 'Upper Body', 'icon': Icons.accessibility_new, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/upper_body'},
-      {'title': 'Lower Body', 'icon': Icons.directions_run, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/lower_body'},
-      {'title': 'Push Pull Legs', 'icon': Icons.fitness_center, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/ppl'},
-      {'title': 'Cardio', 'icon': Icons.directions_bike, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/cardio'},
-      {'title': 'Calisthenics', 'icon': Icons.sports_gymnastics, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/calisthenics'},
-      {'title': 'Powerlifting', 'icon': Icons.sports_martial_arts, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/powerlifting'},
-      {'title': 'Gymnastics', 'icon': Icons.self_improvement, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/gymnastics'},
-      {'title': 'Stretching & Mobility', 'icon': Icons.accessibility, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/mobility'},
-      {'title': 'HIIT', 'icon': Icons.whatshot, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/hiit'},
-      {'title': 'Athletic Performance', 'icon': Icons.sports_basketball, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/athletic'},
-      {'title': 'Recovery', 'icon': Icons.spa, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/recovery'},
+      {
+        'title': 'Upper Body',
+        'subtitle': 'Chest, back, shoulders & arms',
+        'imagePath': 'assets/illustrations/upper_body_hero.png',
+        'route': '/workout-hub/category/upper_body',
+      },
+      {
+        'title': 'Lower Body',
+        'subtitle': 'Quads, hamstrings, glutes & calves',
+        'imagePath': 'assets/illustrations/lower_body_hero.png',
+        'route': '/workout-hub/category/lower_body',
+      },
+      {
+        'title': 'Cardio',
+        'subtitle': 'Burn fat, boost endurance',
+        'imagePath': 'assets/illustrations/cardio_hero.png',
+        'route': '/workout-hub/category/cardio',
+      },
+      {
+        'title': 'Calisthenics',
+        'subtitle': 'Bodyweight mastery',
+        'imagePath': 'assets/illustrations/calisthenics_hero.png',
+        'route': '/workout-hub/category/calisthenics',
+      },
+      {
+        'title': 'Powerlifting',
+        'subtitle': 'Squat, bench, deadlift',
+        'imagePath': 'assets/illustrations/powerlifting_hero.png',
+        'route': '/workout-hub/category/powerlifting',
+      },
+      {
+        'title': 'Gymnastics',
+        'subtitle': 'Strength, balance & flexibility',
+        'imagePath': 'assets/illustrations/gymnastics_hero.png',
+        'route': '/workout-hub/category/gymnastics',
+      },
+      {
+        'title': 'Stretching & Mobility',
+        'subtitle': 'Prevent injury, improve range',
+        'imagePath': 'assets/illustrations/stretching_hero.png',
+        'route': '/workout-hub/category/mobility',
+      },
+      {
+        'title': 'HIIT',
+        'subtitle': 'Maximum burn in minimum time',
+        'imagePath': 'assets/illustrations/hiit_hero.png',
+        'route': '/workout-hub/category/hiit',
+      },
+      {
+        'title': 'Athletic Performance',
+        'subtitle': 'Speed, power & agility',
+        'imagePath': 'assets/illustrations/athletic_hero.png',
+        'route': '/workout-hub/category/athletic',
+      },
+      {
+        'title': 'Recovery',
+        'subtitle': 'Rest smart, recover faster',
+        'imagePath': 'assets/illustrations/recovery_hero.png',
+        'route': '/workout-hub/category/recovery',
+      },
+      {
+        'title': 'Push Pull Legs',
+        'subtitle': 'Classic 3-day split',
+        'imagePath': 'assets/illustrations/arms_hero.png',
+        'route': '/workout-hub/category/ppl',
+      },
     ];
 
     return Scaffold(
@@ -44,26 +100,22 @@ class AllCategoriesScreen extends ConsumerWidget {
             children: [
               Text(
                 'Choose a category to continue',
-                style: theme.textTheme.caption,
+                style: theme.textTheme.caption.copyWith(color: ext.textDisabled),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Expanded(
-                child: GridView.builder(
+                child: ListView.separated(
                   physics: const BouncingScrollPhysics(),
                   itemCount: categories.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.0,
-                  ),
+                  padding: const EdgeInsets.only(bottom: 24),
+                  separatorBuilder: (context, index) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final cat = categories[index];
-                    return _InteractiveCategoryCard(
-                      title: cat['title'],
-                      icon: cat['icon'],
-                      color: cat['color'],
-                      onTap: () => context.push(cat['route']),
+                    return _CategoryListTile(
+                      title: cat['title'] as String,
+                      subtitle: cat['subtitle'] as String,
+                      imagePath: cat['imagePath'] as String,
+                      onTap: () => context.push(cat['route'] as String),
                     );
                   },
                 ),
@@ -76,32 +128,38 @@ class AllCategoriesScreen extends ConsumerWidget {
   }
 }
 
-class _InteractiveCategoryCard extends StatefulWidget {
+class _CategoryListTile extends StatefulWidget {
   final String title;
-  final IconData icon;
-  final Color color;
+  final String subtitle;
+  final String imagePath;
   final VoidCallback onTap;
 
-  const _InteractiveCategoryCard({
+  const _CategoryListTile({
     required this.title,
-    required this.icon,
-    required this.color,
+    required this.subtitle,
+    required this.imagePath,
     required this.onTap,
   });
 
   @override
-  State<_InteractiveCategoryCard> createState() => _InteractiveCategoryCardState();
+  State<_CategoryListTile> createState() => _CategoryListTileState();
 }
 
-class _InteractiveCategoryCardState extends State<_InteractiveCategoryCard> with SingleTickerProviderStateMixin {
+class _CategoryListTileState extends State<_CategoryListTile>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 150));
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -113,7 +171,8 @@ class _InteractiveCategoryCardState extends State<_InteractiveCategoryCard> with
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    final ext = theme.extension<AppColors>()!;
+
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
       onTapUp: (_) {
@@ -124,34 +183,80 @@ class _InteractiveCategoryCardState extends State<_InteractiveCategoryCard> with
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          height: 100,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.surfaceContainerHighest,
-                theme.colorScheme.surface,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
+            color: ext.surfaceRaised,
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: theme.colorScheme.shadow.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Row(
             children: [
-              Icon(widget.icon, color: theme.colorScheme.primary, size: 40),
-              const SizedBox(height: 16),
-              Text(
-                widget.title,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyStrong.copyWith(fontSize: 16, height: 1.2),
+              // Left thumbnail image
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                ),
+                child: SizedBox(
+                  width: 120,
+                  height: 100,
+                  child: Image.asset(
+                    widget.imagePath,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.fitness_center,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Text content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: theme.textTheme.bodyStrong.copyWith(fontSize: 17),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.subtitle,
+                        style: theme.textTheme.caption.copyWith(
+                          color: ext.textDisabled,
+                          fontSize: 13,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Chevron
+              Padding(
+                padding: const EdgeInsets.only(right: 14),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 22,
+                  color: ext.textDisabled,
+                ),
               ),
             ],
           ),

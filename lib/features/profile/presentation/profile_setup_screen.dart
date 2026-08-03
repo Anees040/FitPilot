@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/application/providers/progress_provider.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/features/profile/presentation/widgets/ruler_picker.dart';
@@ -148,6 +149,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
       await repo.save(profile);
       ref.invalidate(profileProvider);
+      
+      // Log the initial weight
+      await ref.read(progressProvider.notifier).addWeight(_weightKg);
 
       if (mounted) context.go('/today');
     } catch (e) {
@@ -543,6 +547,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   const SizedBox(height: 24),
                   if (_isWeightKg)
                     RulerPicker(
+                      key: const ValueKey('kg'),
                       minValue: 30,
                       maxValue: 200,
                       initialValue: _weightKg,
@@ -565,6 +570,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     )
                   else
                     RulerPicker(
+                      key: const ValueKey('lbs'),
                       minValue: 66,
                       maxValue: 440,
                       initialValue: (_weightKg * 2.20462).roundToDouble(),
@@ -675,6 +681,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   const SizedBox(height: 24),
                   if (_isHeightCm)
                     RulerPicker(
+                      key: const ValueKey('cm'),
                       minValue: 100,
                       maxValue: 250,
                       initialValue: _heightCm.toDouble(),
@@ -697,6 +704,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     )
                   else
                     RulerPicker(
+                      key: const ValueKey('ft'),
                       minValue: 40,
                       maxValue: 98,
                       initialValue: (_heightCm / 2.54).roundToDouble(),
