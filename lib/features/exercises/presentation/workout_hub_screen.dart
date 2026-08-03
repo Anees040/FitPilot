@@ -17,7 +17,7 @@ class WorkoutHubScreen extends ConsumerWidget {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: theme.colorScheme.surface,
               elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -32,75 +32,106 @@ class WorkoutHubScreen extends ConsumerWidget {
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.5,
-                ),
+              sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _CategoryTile(
                     title: 'Upper Body',
                     subtitle: 'Build strength and size',
-                    color: Colors.deepOrange.shade800,
+                    color: theme.colorScheme.surfaceContainerHighest,
                     imagePath: 'assets/illustrations/upper_body_hero.png',
                     onTap: () => context.push('/workout-hub/category/upper_body'),
                   ),
+                  const SizedBox(height: 16),
                   _CategoryTile(
                     title: 'Lower Body',
                     subtitle: 'Build power and endurance',
-                    color: Colors.green.shade800,
+                    color: theme.colorScheme.surfaceContainerHighest,
                     imagePath: 'assets/illustrations/lower_body_hero.png',
                     onTap: () => context.push('/workout-hub/category/lower_body'),
                   ),
-                  _CategoryTile(
-                    title: 'Chest',
-                    subtitle: 'Build a stronger chest',
-                    color: Colors.orange.shade100,
-                    textColor: Colors.black87,
-                    imagePath: 'assets/illustrations/chest_hero.png',
-                    onTap: () => context.push('/workout-hub/muscle/chest'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _CategoryTile(
+                          title: 'Chest',
+                          subtitle: 'Build a stronger chest',
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          textColor: theme.colorScheme.onSurface,
+                          imagePath: 'assets/illustrations/chest_hero.png',
+                          onTap: () => context.push('/workout-hub/muscle/chest'),
+                          isSmall: true,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _CategoryTile(
+                          title: 'Back',
+                          subtitle: 'Stronger back, better posture',
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          textColor: theme.colorScheme.onSurface,
+                          imagePath: 'assets/illustrations/back_hero.png',
+                          onTap: () => context.push('/workout-hub/muscle/back'),
+                          isSmall: true,
+                        ),
+                      ),
+                    ],
                   ),
-                  _CategoryTile(
-                    title: 'Back',
-                    subtitle: 'Stronger back, better posture',
-                    color: Colors.blue.shade100,
-                    textColor: Colors.black87,
-                    imagePath: 'assets/illustrations/back_hero.png',
-                    onTap: () => context.push('/workout-hub/muscle/back'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _CategoryTile(
+                          title: 'Shoulders',
+                          subtitle: '3D shoulder development',
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          textColor: theme.colorScheme.onSurface,
+                          imagePath: 'assets/illustrations/shoulders_hero.png',
+                          onTap: () => context.push('/workout-hub/muscle/shoulders'),
+                          isSmall: true,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _CategoryTile(
+                          title: 'Arms',
+                          subtitle: 'Biceps, triceps and forearms',
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          textColor: theme.colorScheme.onSurface,
+                          imagePath: 'assets/illustrations/arms_hero.png',
+                          onTap: () => context.push('/workout-hub/muscle/arms'),
+                          isSmall: true,
+                        ),
+                      ),
+                    ],
                   ),
-                  _CategoryTile(
-                    title: 'Shoulders',
-                    subtitle: '3D shoulder development',
-                    color: Colors.purple.shade100,
-                    textColor: Colors.black87,
-                    imagePath: 'assets/illustrations/shoulders_hero.png',
-                    onTap: () => context.push('/workout-hub/muscle/shoulders'),
-                  ),
-                  _CategoryTile(
-                    title: 'Arms',
-                    subtitle: 'Biceps, triceps and forearms',
-                    color: Colors.orangeAccent.shade100,
-                    textColor: Colors.black87,
-                    imagePath: 'assets/illustrations/arms_hero.png',
-                    onTap: () => context.push('/workout-hub/muscle/arms'),
-                  ),
-                  _CategoryTile(
-                    title: 'Core & Abs',
-                    subtitle: 'Stronger core, better performance',
-                    color: Colors.green.shade100,
-                    textColor: Colors.black87,
-                    imagePath: 'assets/illustrations/core_hero.png',
-                    onTap: () => context.push('/workout-hub/muscle/core'),
-                  ),
-                  _CategoryTile(
-                    title: 'Legs',
-                    subtitle: 'Powerful legs, better mobility',
-                    color: Colors.pink.shade100,
-                    textColor: Colors.black87,
-                    imagePath: 'assets/illustrations/legs_hero.png',
-                    onTap: () => context.push('/workout-hub/muscle/legs'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _CategoryTile(
+                          title: 'Core & Abs',
+                          subtitle: 'Stronger core, better performance',
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          textColor: theme.colorScheme.onSurface,
+                          imagePath: 'assets/illustrations/core_hero.png',
+                          onTap: () => context.push('/workout-hub/muscle/core'),
+                          isSmall: true,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _CategoryTile(
+                          title: 'Legs',
+                          subtitle: 'Powerful legs, better mobility',
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          textColor: theme.colorScheme.onSurface,
+                          imagePath: 'assets/illustrations/legs_hero.png',
+                          onTap: () => context.push('/workout-hub/muscle/legs'),
+                          isSmall: true,
+                        ),
+                      ),
+                    ],
                   ),
                 ]),
               ),
@@ -110,15 +141,34 @@ class WorkoutHubScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(24.0),
                 child: Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => context.push('/workout-hub/all'),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('View All', style: theme.textTheme.bodyStrong.copyWith(color: theme.colorScheme.onSurface)),
-                        const SizedBox(width: 4),
-                        Icon(Icons.arrow_forward_ios, size: 14, color: theme.colorScheme.onSurface),
-                      ],
+                  child: InkWell(
+                    onTap: () => context.push('/workout-hub/all'),
+                    borderRadius: BorderRadius.circular(100),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('View All Categories', style: theme.textTheme.bodyStrong.copyWith(color: Colors.white, fontSize: 16)),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_rounded, size: 20, color: Colors.white),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -142,7 +192,7 @@ class _HeroSection extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [theme.colorScheme.surface, theme.colorScheme.surface.withValues(alpha: 0.8), Colors.grey.shade200.withValues(alpha: 0.5)],
+          colors: [theme.colorScheme.surface, theme.colorScheme.surface.withValues(alpha: 0.8), theme.colorScheme.surface.withValues(alpha: 0.0)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -193,6 +243,7 @@ class _CategoryTile extends StatelessWidget {
   final Color textColor;
   final String imagePath;
   final VoidCallback onTap;
+  final bool isSmall;
 
   const _CategoryTile({
     required this.title,
@@ -201,6 +252,7 @@ class _CategoryTile extends StatelessWidget {
     this.textColor = Colors.white,
     required this.imagePath,
     required this.onTap,
+    this.isSmall = false,
   });
 
   @override
@@ -210,43 +262,53 @@ class _CategoryTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        height: isSmall ? 140 : 200,
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
         clipBehavior: Clip.hardEdge,
         child: Stack(
+          fit: StackFit.expand,
           children: [
-            Positioned(
-              right: -20,
-              bottom: -10,
-              child: Image.asset(
-                imagePath,
-                height: 100,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(),
+            Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(color: color),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    theme.colorScheme.shadow.withValues(alpha: 0.0),
+                    theme.colorScheme.shadow.withValues(alpha: 0.8),
+                  ],
+                  stops: const [0.4, 1.0],
+                ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: theme.textTheme.bodyStrong.copyWith(color: textColor, fontSize: 16),
+                    style: theme.textTheme.bodyStrong.copyWith(color: Colors.white, fontSize: isSmall ? 16 : 22),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: theme.textTheme.caption.copyWith(color: textColor.withValues(alpha: 0.8), fontSize: 11),
+                    style: theme.textTheme.caption.copyWith(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

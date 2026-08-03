@@ -11,23 +11,23 @@ class AllCategoriesScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     
     final List<Map<String, dynamic>> categories = [
-      {'title': 'Upper Body', 'icon': Icons.accessibility_new, 'color': Colors.deepOrange.shade100, 'route': '/workout-hub/category/upper_body'},
-      {'title': 'Lower Body', 'icon': Icons.directions_run, 'color': Colors.green.shade100, 'route': '/workout-hub/category/lower_body'},
-      {'title': 'Push Pull Legs', 'icon': Icons.fitness_center, 'color': Colors.purple.shade100, 'route': '/workout-hub/category/ppl'},
-      {'title': 'Cardio', 'icon': Icons.directions_bike, 'color': Colors.blue.shade100, 'route': '/workout-hub/category/cardio'},
-      {'title': 'Calisthenics', 'icon': Icons.sports_gymnastics, 'color': Colors.orangeAccent.shade100, 'route': '/workout-hub/category/calisthenics'},
-      {'title': 'Powerlifting', 'icon': Icons.sports_martial_arts, 'color': Colors.red.shade100, 'route': '/workout-hub/category/powerlifting'},
-      {'title': 'Gymnastics', 'icon': Icons.self_improvement, 'color': Colors.teal.shade100, 'route': '/workout-hub/category/gymnastics'},
-      {'title': 'Stretching & Mobility', 'icon': Icons.accessibility, 'color': Colors.cyan.shade100, 'route': '/workout-hub/category/mobility'},
-      {'title': 'HIIT', 'icon': Icons.whatshot, 'color': Colors.pink.shade100, 'route': '/workout-hub/category/hiit'},
-      {'title': 'Athletic Performance', 'icon': Icons.sports_basketball, 'color': Colors.indigo.shade100, 'route': '/workout-hub/category/athletic'},
-      {'title': 'Recovery', 'icon': Icons.spa, 'color': Colors.lightGreen.shade100, 'route': '/workout-hub/category/recovery'},
+      {'title': 'Upper Body', 'icon': Icons.accessibility_new, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/upper_body'},
+      {'title': 'Lower Body', 'icon': Icons.directions_run, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/lower_body'},
+      {'title': 'Push Pull Legs', 'icon': Icons.fitness_center, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/ppl'},
+      {'title': 'Cardio', 'icon': Icons.directions_bike, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/cardio'},
+      {'title': 'Calisthenics', 'icon': Icons.sports_gymnastics, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/calisthenics'},
+      {'title': 'Powerlifting', 'icon': Icons.sports_martial_arts, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/powerlifting'},
+      {'title': 'Gymnastics', 'icon': Icons.self_improvement, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/gymnastics'},
+      {'title': 'Stretching & Mobility', 'icon': Icons.accessibility, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/mobility'},
+      {'title': 'HIIT', 'icon': Icons.whatshot, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/hiit'},
+      {'title': 'Athletic Performance', 'icon': Icons.sports_basketball, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/athletic'},
+      {'title': 'Recovery', 'icon': Icons.spa, 'color': theme.colorScheme.surfaceContainerHighest, 'route': '/workout-hub/category/recovery'},
     ];
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -48,10 +48,15 @@ class AllCategoriesScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: ListView.separated(
+                child: GridView.builder(
                   physics: const BouncingScrollPhysics(),
                   itemCount: categories.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.0,
+                  ),
                   itemBuilder: (context, index) {
                     final cat = categories[index];
                     return _InteractiveCategoryCard(
@@ -119,33 +124,35 @@ class _InteractiveCategoryCardState extends State<_InteractiveCategoryCard> with
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: widget.color.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: widget.color.withValues(alpha: 0.8), width: 1.5),
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.surfaceContainerHighest,
+                theme.colorScheme.surface,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Row(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: widget.color.withValues(alpha: 0.5), blurRadius: 8, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: Icon(widget.icon, color: widget.color.withValues(alpha: 1.0), size: 28),
+              Icon(widget.icon, color: theme.colorScheme.primary, size: 40),
+              const SizedBox(height: 16),
+              Text(
+                widget.title,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyStrong.copyWith(fontSize: 16, height: 1.2),
               ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Text(
-                  widget.title,
-                  style: theme.textTheme.bodyStrong.copyWith(fontSize: 18),
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
             ],
           ),
         ),

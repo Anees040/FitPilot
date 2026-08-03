@@ -36,9 +36,18 @@
 - [x] J1 — Meal-first logic pivot and Welcome Screen Polish
 - [x] J2 — Profile, Auth, and Splash Screen Redesign
 - [x] J3 — Splash & Welcome Screen Redesign (mockup-based)
+- [x] J4 — Theming, Progress & Workout Hub UI Polish
 
 ## Last completed
 
+- J4 — Theming, Progress & Workout Hub UI Polish
+  - Restored dynamic theme seed generation and added Theme Color selector to `ProfileScreen`.
+  - Removed Weight/Height fields from Profile, keeping them isolated to Progress history.
+  - Fixed weight trend graph logic and added day numbers to heatmap.
+  - Redesigned Workout Hub to use large, sleek vertical list cards instead of stretched grid items, integrating generated real-world imagery with gradient text overlays.
+  - Re-styled All Categories cards with sleek gradients and removed borders/alpha transparency.
+  - Replaced machine scanner vector image with a generated photo-realistic image (equip_gym).
+  - Created new Notification screen and linked the top app bar icon.
 - J3 — Splash & Welcome Screen Redesign (mockup-based)
   - Redesigned SplashScreen: dark background with custom-painted runner silhouette, orange light trail arc, centered logo, and new motto "Eat Better. Burn Smarter. Live Stronger".
   - Rewrote WelcomeScreen as 4-page flow: Welcome page (Create Account / Continue as Guest / Login), "Log meals honestly" (phone scan + kcal range), "Burn smarter" (activity icons + runner), "Protect your streak" (flame + 18-day counter).

@@ -312,6 +312,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           onTap: () => _showHeightPicker(theme),
           theme: theme,
         ),
+        _buildBMICard(theme),
         _buildDetailCard(
           icon: Icons.cake_outlined,
           iconColor: theme.colorScheme.tertiary,
@@ -329,6 +330,92 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           theme: theme,
         ),
       ],
+    );
+  }
+
+  Widget _buildBMICard(ThemeData theme) {
+    final bmi = _weightKg / ((_heightCm / 100) * (_heightCm / 100));
+    final ext = theme.extension<AppColors>()!;
+    
+    String status = 'Unknown';
+    Color statusColor = ext.hairline;
+
+    if (bmi < 18.5) {
+      statusColor = ext.warning;
+      status = 'Underweight';
+    } else if (bmi < 25) {
+      statusColor = ext.success;
+      status = 'Normal';
+    } else if (bmi < 30) {
+      statusColor = ext.warning;
+      status = 'Overweight';
+    } else if (bmi < 35) {
+      statusColor = ext.error;
+      status = 'Obese I';
+    } else {
+      statusColor = ext.error;
+      status = 'Obese II+';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: theme.extension<AppColors>()?.surfaceRaised ?? theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: statusColor.withValues(alpha: 0.5), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.monitor_heart_outlined, color: statusColor, size: 28),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'BMI', 
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w600,
+                    )
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        bmi.toStringAsFixed(1),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        status,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

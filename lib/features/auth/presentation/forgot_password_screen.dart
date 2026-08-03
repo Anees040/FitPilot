@@ -35,6 +35,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       _isLoading = true;
       _errorText = null;
     });
+    
+    final ext = Theme.of(context).extension<AppColors>()!;
 
     try {
       try {
@@ -51,11 +53,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             context: context,
             builder: (context) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: const Row(
+              title: Row(
                 children: [
-                  Icon(Icons.error_outline, color: Colors.orange, size: 28),
-                  SizedBox(width: 12),
-                  Text('Account Not Found'),
+                  Icon(Icons.error_outline, color: ext.error, size: 28),
+                  const SizedBox(width: 12),
+                  const Text('Account Not Found'),
                 ],
               ),
               content: const Text(
@@ -81,11 +83,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.mark_email_read_outlined, color: Colors.green, size: 28),
-                SizedBox(width: 12),
-                Text('Email Sent'),
+                Icon(Icons.mark_email_read_outlined, color: ext.success, size: 28),
+                const SizedBox(width: 12),
+                const Text('Email Sent'),
               ],
             ),
             content: const Text(

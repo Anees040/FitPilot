@@ -16,8 +16,8 @@ class MockProfileNotifier extends AsyncNotifier<Profile> implements ProfileNotif
     return _current;
   }
 
-  void updateWeight(double newWeight) {
-    _current = _current.copyWith(weightKg: newWeight);
+  void updateAge(int newAge) {
+    _current = _current.copyWith(age: newAge);
     state = AsyncData(_current);
   }
 }
@@ -54,18 +54,18 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    // The default weight should be 70.0
-    expect(find.text('70.0'), findsOneWidget);
+    // The default age should be 25
+    expect(find.text('25'), findsOneWidget);
 
-    // Simulate an external update (e.g., from ProgressScreen)
-    mockNotifier.updateWeight(72.5);
+    // Simulate an external update (e.g., from sync)
+    mockNotifier.updateAge(26);
 
     // Allow UI to rebuild
     await tester.pump();
     await tester.pump();
 
-    // Verify the text field now shows 72.5 instead of 70.0
-    expect(find.text('70.0'), findsNothing);
-    expect(find.text('72.5'), findsOneWidget);
+    // Verify the text field now shows 26 instead of 25
+    expect(find.text('25'), findsNothing);
+    expect(find.text('26'), findsOneWidget);
   });
 }

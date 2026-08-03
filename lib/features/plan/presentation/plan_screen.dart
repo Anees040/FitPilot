@@ -50,7 +50,8 @@ class PlanScreen extends ConsumerWidget {
       return EmptyState(
         message: 'No burn plan needed today. You have a cheat tolerance if you go a bit over.',
         buttonLabel: 'Looking good!',
-        illustration: 'empty_plan',
+        illustration: 'burn_smart',
+        isColoredImage: true,
         onAction: () => context.go('/today'),
       );
     }
@@ -59,7 +60,8 @@ class PlanScreen extends ConsumerWidget {
       return EmptyState(
         message: 'A perfect clean day with no logged meals. Keep it up!',
         buttonLabel: 'Great job!',
-        illustration: 'empty_plan',
+        illustration: 'goal_maintain',
+        isColoredImage: true,
         onAction: () => context.go('/today'),
       );
     }

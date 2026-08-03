@@ -99,10 +99,11 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     );
   }
 
-  Future<void> addWeight(double weightKg) async {
+  Future<void> addWeight(double weightKg, {DateTime? date}) async {
     final db = await ref.read(databaseProvider.future);
     final now = DateTime.now();
-    final forDateStr = DateTime(now.year, now.month, now.day).toIso8601String();
+    final effectiveDate = date ?? now;
+    final forDateStr = DateTime(effectiveDate.year, effectiveDate.month, effectiveDate.day).toIso8601String();
 
     final id = const Uuid().v4();
     await db.insert('weight_entries', {

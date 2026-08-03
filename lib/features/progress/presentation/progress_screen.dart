@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/application/providers/progress_provider.dart';
@@ -45,52 +44,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddWeightDialog(context, ref),
-        backgroundColor: theme.colorScheme.primary,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 
-  void _showAddWeightDialog(BuildContext context, WidgetRef ref) {
-    // We will extract this from WeightTrendSection
-    final controller = TextEditingController();
-    final theme = Theme.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        title: Text('Add Weight', style: theme.textTheme.h2),
-        content: TextField(
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            labelText: 'WEIGHT (KG)',
-            labelStyle: theme.textTheme.caption,
-            filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: theme.textTheme.caption.color)),
-          ),
-          TextButton(
-            onPressed: () async {
-              final val = double.tryParse(controller.text);
-              if (val != null && val >= 25 && val <= 300) {
-                Navigator.pop(context);
-                await ref.read(progressProvider.notifier).addWeight(val);
-              }
-            },
-            child: Text('Save', style: TextStyle(color: theme.colorScheme.primary)),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildBody(BuildContext context, ProgressState state) {
     if (!_hasShownMilestone && state.streak.currentStreak > 0 && state.streak.currentStreak % 7 == 0) {
@@ -104,17 +61,6 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
       });
     }
 
-    final hasHistory = state.last35Days.values.any((d) => d.state != DayState.noData);
-    
-    if (!hasHistory) {
-      return EmptyState(
-        message: 'No progress history yet. Log your meals to start building your streak and insights!',
-        buttonLabel: 'Log today',
-        illustration: 'empty_history',
-        onAction: () => context.go('/log'),
-      );
-    }
-
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
@@ -122,7 +68,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         const SizedBox(height: 24),
         _buildHeatmap(context, state.last35Days),
         const SizedBox(height: 24),
-        _build7DayList(context, state.last35Days),
+        _buildHistoryList(context, state.last35Days),
         const SizedBox(height: 24),
         _buildWeeklySummary(context, state),
         const SizedBox(height: 24),
@@ -284,6 +230,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                         border: Border.all(color: ext.hairline, width: 2.0),
                         borderRadius: BorderRadius.circular(4),
                       ),
+                      child: Center(
+                        child: Text(date.day.toString(), style: theme.textTheme.caption.copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
                     );
                   } else {
                     Color color;
@@ -306,6 +255,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                         color: color,
                         border: Border.all(color: color.withValues(alpha: 0.5), width: 1.0),
                         borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Center(
+                        child: Text(date.day.toString(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
                       ),
                     );
                   }
@@ -373,89 +325,100 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     );
   }
 
-  Widget _build7DayList(BuildContext context, Map<DateTime, DayStatus> last35Days) {
+  Widget _buildHistoryList(BuildContext context, Map<DateTime, DayStatus> last35Days) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
     final sortedDates = last35Days.keys.toList()..sort((a, b) => b.compareTo(a));
+    
     final last7 = sortedDates.take(7).toList();
+
+    Widget buildTileList(String title, List<DateTime> dates) {
+      if (dates.isEmpty) return const SizedBox();
+      return AppCard(
+        padding: EdgeInsets.zero,
+        child: Theme(
+          data: theme.copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            title: Text(title, style: theme.textTheme.h2.copyWith(fontSize: 18)),
+            initiallyExpanded: false,
+            children: [
+              Divider(height: 1, color: ext.hairline),
+              ...dates.asMap().entries.map((entry) {
+                final index = entry.key;
+                final date = entry.value;
+                final status = last35Days[date]!;
+                final isLast = index == dates.length - 1;
+                
+                final dayName = DateFormat('EEE, MMM d').format(date);
+
+                Widget pill;
+                if (status.state == DayState.noData) {
+                  pill = Text('-', style: theme.textTheme.bodyStrong.copyWith(color: theme.textTheme.caption.color));
+                } else if (status.state == DayState.unburned) {
+                  pill = Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: ext.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text('Unburned', style: theme.textTheme.caption.copyWith(color: ext.error, fontWeight: FontWeight.w600)),
+                  );
+                } else {
+                  pill = Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: ext.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text('Safe', style: theme.textTheme.caption.copyWith(color: ext.success, fontWeight: FontWeight.w600)),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            child: Text(dayName, style: theme.textTheme.body),
+                          ),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Text(
+                                  status.state == DayState.noData ? 'No logs' : '≤${status.total.format()}',
+                                  style: theme.textTheme.caption.copyWith(
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                                if (status.burnedKcal > 0) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.local_fire_department, size: 14, color: theme.colorScheme.primary),
+                                ],
+                              ],
+                            ),
+                          ),
+                          pill,
+                        ],
+                      ),
+                    ),
+                    if (!isLast)
+                      Divider(height: 1, color: ext.hairline, indent: 16, endIndent: 16),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Last 7 days', style: theme.textTheme.h2),
-        const SizedBox(height: 16),
-        AppCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: last7.asMap().entries.map((entry) {
-              final index = entry.key;
-              final date = entry.value;
-              final status = last35Days[date]!;
-              final isLast = index == last7.length - 1;
-              
-              final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-              final dayName = days[date.weekday - 1];
-
-              Widget pill;
-              if (status.state == DayState.noData) {
-                pill = Text('-', style: theme.textTheme.bodyStrong.copyWith(color: theme.textTheme.caption.color));
-              } else if (status.state == DayState.unburned) {
-                pill = Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: ext.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text('Unburned', style: theme.textTheme.caption.copyWith(color: ext.error, fontWeight: FontWeight.w600)),
-                );
-              } else {
-                pill = Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: ext.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text('Safe', style: theme.textTheme.caption.copyWith(color: ext.success, fontWeight: FontWeight.w600)),
-                );
-              }
-
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 48,
-                          child: Text(dayName, style: theme.textTheme.body),
-                        ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Text(
-                                status.state == DayState.noData ? 'No logs' : '≤${status.total.format()}',
-                                style: theme.textTheme.caption.copyWith(
-                                  fontFeatures: const [FontFeature.tabularFigures()],
-                                ),
-                              ),
-                              if (status.burnedKcal > 0) ...[
-                                const SizedBox(width: 4),
-                                Icon(Icons.local_fire_department, size: 14, color: theme.colorScheme.primary),
-                              ],
-                            ],
-                          ),
-                        ),
-                        pill,
-                      ],
-                    ),
-                  ),
-                  if (!isLast)
-                    Divider(height: 1, color: ext.hairline, indent: 16, endIndent: 16),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
+        buildTileList('Last 7 Days', last7),
       ],
     );
   }

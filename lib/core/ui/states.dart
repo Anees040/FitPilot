@@ -8,6 +8,7 @@ class EmptyState extends StatelessWidget {
   final String buttonLabel;
   final VoidCallback onAction;
   final String illustration;
+  final bool isColoredImage;
 
   const EmptyState({
     super.key,
@@ -15,6 +16,7 @@ class EmptyState extends StatelessWidget {
     required this.buttonLabel,
     required this.onAction,
     required this.illustration,
+    this.isColoredImage = false,
   });
 
   @override
@@ -26,19 +28,19 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // If we had SVG we'd use flutter_svg, but for now we might use an icon or an Image.
-          // Spec says "line-art illustration 160 dp". If the image isn't available we fallback gracefully.
           SizedBox(
             width: 160,
             height: 160,
             child: illustration.isNotEmpty
-                ? ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      theme.brightness == Brightness.dark ? Colors.white70 : Colors.black87,
-                      BlendMode.srcIn,
-                    ),
-                    child: Image.asset('assets/illustrations/$illustration.png', errorBuilder: (context, error, stackTrace) => Icon(Icons.inbox, size: 80, color: theme.colorScheme.onSurface.withValues(alpha: 0.2))),
-                  )
+                ? (isColoredImage
+                    ? Image.asset('assets/illustrations/$illustration.png', errorBuilder: (context, error, stackTrace) => Icon(Icons.inbox, size: 80, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)))
+                    : ColorFiltered(
+                        colorFilter: ColorFilter.mode(
+                          theme.brightness == Brightness.dark ? Colors.white70 : Colors.black87,
+                          BlendMode.srcIn,
+                        ),
+                        child: Image.asset('assets/illustrations/$illustration.png', errorBuilder: (context, error, stackTrace) => Icon(Icons.inbox, size: 80, color: theme.colorScheme.onSurface.withValues(alpha: 0.2))),
+                      ))
                 : Icon(Icons.inbox, size: 80, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
           ),
           const SizedBox(height: 24),

@@ -50,6 +50,35 @@ class TodayScreen extends ConsumerWidget {
                   ),
                 ),
                 
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Text('Tools & Features', style: theme.textTheme.h2),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        _ImageCard(
+                          title: 'Workout Hub',
+                          imagePath: 'assets/illustrations/workout_hub_bg.png',
+                          onTap: () => context.push('/workout-hub'),
+                        ),
+                        const SizedBox(height: 16),
+                        _ImageCard(
+                          title: 'Machine Scanner',
+                          imagePath: 'assets/illustrations/machine_scanner_bg.png',
+                          onTap: () {
+                            AppSnackbar.success(context, 'This feature is coming soon!');
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 if (state.logs.isNotEmpty) ...[
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -75,35 +104,8 @@ class TodayScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
-
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  sliver: SliverToBoxAdapter(
-                    child: Text('Tools & Features', style: theme.textTheme.h2),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      children: [
-                        _ImageCard(
-                          title: 'Workout Hub',
-                          imagePath: 'assets/illustrations/workout_hub_bg.png',
-                          onTap: () => context.push('/workout-hub'),
-                        ),
-                        const SizedBox(height: 16),
-                        _ImageCard(
-                          title: 'Machine Scanner',
-                          imagePath: 'assets/illustrations/machine_scanner_bg.png',
-                          onTap: () => context.push('/capture'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             );
           },
@@ -166,14 +168,10 @@ class _HeroSection extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.notifications_none, size: 28),
+                icon: const Icon(Icons.notifications_none),
                 onPressed: () {
-                  AppSnackbar.success(context, 'No new notifications');
+                  context.push('/notifications');
                 },
-              ),
-              IconButton(
-                icon: const Icon(Icons.camera_alt_outlined, size: 28),
-                onPressed: () => context.push('/capture'),
               ),
             ],
           ),
@@ -190,7 +188,9 @@ class _HeroSection extends ConsumerWidget {
                 Text('Today\'s Intake', style: theme.textTheme.caption),
                 const SizedBox(height: 8),
                 Text(
-                  '${status.total.min} - ${status.total.max}',
+                  (status.total.min == 0 && status.total.max == 0)
+                      ? '0'
+                      : '${status.total.min} - ${status.total.max}',
                   style: theme.textTheme.display.copyWith(
                     fontSize: 40, 
                     height: 1.0,
@@ -269,13 +269,13 @@ class _ImageCard extends StatelessWidget {
             image: AssetImage(imagePath),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black.withValues(alpha: 0.3),
+              Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3),
               BlendMode.darken,
             ),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -433,20 +433,36 @@ class _LogListItem extends ConsumerWidget {
                         range: log.kcal,
                         style: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700),
                       ),
-                      Text(' â€¢ ${DateFormat.jm().format(log.loggedAt)}', style: theme.textTheme.caption),
+                      Text(' \u2022 ${DateFormat.jm().format(log.loggedAt)}', style: theme.textTheme.caption),
                     ],
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 12),
-            TertiaryButton(
-              label: 'Burn it â†’\n~$minWalk min',
-              color: ext.energy,
-              onPressed: () {
+            GestureDetector(
+              onTap: () {
                 ref.read(burnPlanMealIdProvider.notifier).state = log.id;
                 context.go('/plan');
               },
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Burn it \u2192',
+                      style: theme.textTheme.bodyStrong.copyWith(color: ext.energy),
+                    ),
+                    Text(
+                      '~$minWalk min',
+                      style: theme.textTheme.caption.copyWith(color: ext.energy),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

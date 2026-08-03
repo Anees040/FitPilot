@@ -23,6 +23,7 @@ import 'package:fitpilot/features/exercises/presentation/workout_hub_screen.dart
 import 'package:fitpilot/features/exercises/presentation/all_categories_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/category_detail_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/muscle_detail_screen.dart';
+import 'package:fitpilot/features/today/presentation/notification_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -121,6 +122,11 @@ final appRouter = GoRouter(
           ),
         ),
       ]
+    ),
+    GoRoute(
+      path: '/notifications',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const NotificationScreen(),
     ),
     StatefulShellRoute(
       builder: (context, state, navigationShell) {

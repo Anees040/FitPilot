@@ -29,9 +29,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late TextEditingController _weightCtrl;
   late TextEditingController _goalWeightCtrl;
-  late TextEditingController _heightCtrl;
   late TextEditingController _ageCtrl;
   late TextEditingController _toleranceCtrl;
   late TextEditingController _overrideCtrl;
@@ -46,9 +44,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   void dispose() {
-    _weightCtrl.dispose();
     _goalWeightCtrl.dispose();
-    _heightCtrl.dispose();
     _ageCtrl.dispose();
     _toleranceCtrl.dispose();
     _overrideCtrl.dispose();
@@ -57,9 +53,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _initForm(Profile profile) {
     if (_initialized) return;
-    _weightCtrl = TextEditingController(text: profile.weightKg.toString());
     _goalWeightCtrl = TextEditingController(text: profile.goalWeightKg?.toString() ?? '');
-    _heightCtrl = TextEditingController(text: profile.heightCm.toString());
     _ageCtrl = TextEditingController(text: profile.age.toString());
     _toleranceCtrl = TextEditingController(text: profile.allowanceKcal.toString());
     _overrideCtrl = TextEditingController(text: profile.targetOverride?.toString() ?? '');
@@ -69,8 +63,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _goal = profile.goal;
     _equipment = Set.from(profile.equipment);
 
-    _weightCtrl.addListener(() => setState(() {}));
-    _heightCtrl.addListener(() => setState(() {}));
     _ageCtrl.addListener(() => setState(() {}));
     _toleranceCtrl.addListener(() => setState(() {}));
     _overrideCtrl.addListener(() => setState(() {}));
@@ -95,9 +87,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             if (!_initialized) {
               _initForm(profile);
             } else if (!_isSaving) {
-              final weightStr = profile.weightKg.toString();
-              if (_weightCtrl.text != weightStr) {
-                _weightCtrl.text = weightStr;
+              final ageStr = profile.age.toString();
+              if (_ageCtrl.text != ageStr) {
+                _ageCtrl.text = ageStr;
               }
             }
 
@@ -120,17 +112,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         _buildSectionTitle('BODY', theme),
                         Row(
                           children: [
-                            Expanded(child: _buildTextField('WEIGHT (KG)', _weightCtrl, _validateDouble)),
+                            Expanded(child: _buildTextField('AGE', _ageCtrl, _validateInt)),
                             const SizedBox(width: 16),
                             Expanded(child: _buildTextField('GOAL WT (OPT)', _goalWeightCtrl, _validateOptDouble)),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(child: _buildTextField('HEIGHT (CM)', _heightCtrl, _validateInt)),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildTextField('AGE', _ageCtrl, _validateInt)),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -209,6 +193,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       ListTile(
                         contentPadding: EdgeInsets.zero,
+                        title: Text('Theme Color', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                        trailing: DropdownButton<String>(
+                          value: profile.themeColor,
+                          underline: const SizedBox(),
+                          items: const [
+                            DropdownMenuItem(value: 'orange', child: Text('Orange')),
+                            DropdownMenuItem(value: 'blue', child: Text('Blue')),
+                            DropdownMenuItem(value: 'purple', child: Text('Purple')),
+                            DropdownMenuItem(value: 'green', child: Text('Green')),
+                            DropdownMenuItem(value: 'red', child: Text('Red')),
+                          ],
+                          onChanged: (v) => _updateProfile(profile.copyWith(themeColor: v)),
+                        ),
+                      ),
+                      Divider(color: theme.dividerColor, height: 1),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
                         title: Text('Plan Category', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                         trailing: DropdownButton<String>(
                           value: profile.planCategoryPref,
@@ -256,38 +257,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   icon: Icons.settings,
                   child: Column(
                     children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Text('Theme Mode', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        ),
-                        subtitle: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildThemeModeSwatch(theme, ext, 'System', ThemeModePref.system, profile.themeMode == ThemeModePref.system, (v) => _updateProfile(profile.copyWith(themeMode: v))),
-                            _buildThemeModeSwatch(theme, ext, 'Light', ThemeModePref.light, profile.themeMode == ThemeModePref.light, (v) => _updateProfile(profile.copyWith(themeMode: v))),
-                            _buildThemeModeSwatch(theme, ext, 'Dark', ThemeModePref.dark, profile.themeMode == ThemeModePref.dark, (v) => _updateProfile(profile.copyWith(themeMode: v))),
-                          ],
-                        ),
-                      ),
-                      Divider(color: theme.dividerColor, height: 1),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('Theme Color', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        trailing: DropdownButton<String>(
-                          value: profile.themeColor,
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(value: 'orange', child: Text('Orange')),
-                            DropdownMenuItem(value: 'purple', child: Text('Purple')),
-                            DropdownMenuItem(value: 'green', child: Text('Green')),
-                            DropdownMenuItem(value: 'blue', child: Text('Blue')),
-                          ],
-                          onChanged: (v) => _updateProfile(profile.copyWith(themeColor: v)),
-                        ),
-                      ),
-                      Divider(color: theme.dividerColor, height: 1),
+
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text('Unit', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
@@ -350,40 +320,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildHeaderAvatar(ThemeData theme, AppColors ext, Profile profile) {
     final session = ref.watch(currentUserProvider);
+    final hasName = profile.name != null && profile.name!.isNotEmpty;
     
     return Column(
       children: [
-        GestureDetector(
-          onTap: () {
-            AppSnackbar.success(context, 'Gallery picker (Milestone B)');
-          },
-          child: Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: ext.emberGradient,
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                (profile.name?.isNotEmpty ?? false) ? profile.name![0].toUpperCase() : '?',
-                style: theme.textTheme.displayMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+        Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            shape: BoxShape.circle,
+            border: Border.all(color: ext.hairline, width: 2),
+          ),
+          child: Center(
+            child: Text(
+              hasName ? profile.name![0].toUpperCase() : 'U',
+              style: theme.textTheme.displayMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
         ),
         const SizedBox(height: 16),
         Text(
-          (profile.name?.isNotEmpty ?? false) ? profile.name! : 'Adventurer',
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          hasName ? profile.name! : 'User Profile',
+          style: theme.textTheme.h2.copyWith(fontSize: 24),
         ),
         if (session != null) ...[
           const SizedBox(height: 4),
@@ -396,54 +358,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildThemeModeSwatch(ThemeData theme, AppColors ext, String label, ThemeModePref value, bool isSelected, ValueChanged<ThemeModePref> onSelected) {
-    Color swatchColor;
-    switch (value) {
-      case ThemeModePref.light:
-        swatchColor = const Color(0xFFF5F1E8);
-        break;
-      case ThemeModePref.dark:
-        swatchColor = const Color(0xFF171512);
-        break;
-      case ThemeModePref.system:
-        swatchColor = ext.hairline;
-        break;
-    }
 
-    return GestureDetector(
-      onTap: () => onSelected(value),
-      child: Column(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: swatchColor,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? theme.colorScheme.primary : ext.hairline,
-                width: isSelected ? 3 : 1,
-              ),
-              boxShadow: isSelected
-                  ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 1)]
-                  : null,
-            ),
-            child: value == ThemeModePref.system 
-                ? Icon(Icons.brightness_auto, color: Colors.white, size: 24)
-                : null,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: theme.textTheme.caption.copyWith(
-              color: isSelected ? theme.colorScheme.primary : theme.textTheme.caption.color,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildComputedTargetDisplay(ThemeData theme, Profile profile) {
     return AppCard(
@@ -766,9 +681,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final overrideVal = _overrideCtrl.text.trim();
 
       final updated = currentProfile.copyWith(
-        weightKg: double.parse(_weightCtrl.text),
         goalWeightKg: _goalWeightCtrl.text.isEmpty ? null : double.parse(_goalWeightCtrl.text),
-        heightCm: int.parse(_heightCtrl.text),
         age: int.parse(_ageCtrl.text),
         gender: _gender,
         goal: _goal,
@@ -794,14 +707,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         setState(() => _isSaving = false);
       }
     }
-  }
-
-  String? _validateDouble(String? v) {
-    if (v == null || v.isEmpty) return 'Required';
-    final d = double.tryParse(v);
-    if (d == null) return 'Invalid number';
-    if (d < 25 || d > 300) return '25-300 kg only';
-    return null;
   }
 
   String? _validateOptDouble(String? v) {

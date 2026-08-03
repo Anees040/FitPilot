@@ -53,7 +53,20 @@ class AppTheme {
     radius: 0.8,
   );
 
-  static ThemeData getLightTheme() {
+  static Color _getSeedColor(String colorName, {bool isDark = false}) {
+    switch (colorName.toLowerCase()) {
+      case 'blue': return isDark ? const Color(0xFF6B8EFF) : const Color(0xFF2E5BFF);
+      case 'green': return isDark ? const Color(0xFF5ECA7B) : const Color(0xFF259846);
+      case 'purple': return isDark ? const Color(0xFFB878FF) : const Color(0xFF8B3DFF);
+      case 'red': return isDark ? const Color(0xFFFF6B6B) : const Color(0xFFE53935);
+      case 'orange':
+      default:
+        return isDark ? darkAccent : lightAccent;
+    }
+  }
+
+  static ThemeData getLightTheme([String colorName = 'orange']) {
+    final seed = _getSeedColor(colorName, isDark: false);
     return _buildTheme(
       bg: lightBg,
       surface: lightSurface,
@@ -62,9 +75,9 @@ class AppTheme {
       textSecondary: lightTextSecondary,
       textDisabled: lightTextDisabled,
       hairline: lightHairline,
-      accent: lightAccent,
-      accentDeep: lightAccentDeep,
-      accentSoft: lightAccentSoft,
+      accent: seed,
+      accentDeep: seed,
+      accentSoft: seed.withValues(alpha: 0.1),
       energy: lightEnergy,
       energySoft: lightEnergySoft,
       success: lightSuccess,
@@ -75,7 +88,8 @@ class AppTheme {
     );
   }
 
-  static ThemeData getDarkTheme() {
+  static ThemeData getDarkTheme([String colorName = 'orange']) {
+    final seed = _getSeedColor(colorName, isDark: true);
     return _buildTheme(
       bg: darkBg,
       surface: darkSurface,
@@ -84,9 +98,9 @@ class AppTheme {
       textSecondary: darkTextSecondary,
       textDisabled: darkTextDisabled,
       hairline: darkHairline,
-      accent: darkAccent,
-      accentDeep: darkAccentDeep,
-      accentSoft: darkAccentSoft,
+      accent: seed,
+      accentDeep: seed,
+      accentSoft: seed.withValues(alpha: 0.1),
       energy: darkEnergy,
       energySoft: darkEnergySoft,
       success: darkSuccess,
@@ -162,6 +176,11 @@ class AppTheme {
         foregroundColor: text,
         elevation: 0,
         scrolledUnderElevation: 0,
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: accent,
+        selectionColor: accent.withValues(alpha: 0.3),
+        selectionHandleColor: accent,
       ),
     );
   }
