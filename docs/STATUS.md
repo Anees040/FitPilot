@@ -37,16 +37,15 @@
 - [x] J2 — Profile, Auth, and Splash Screen Redesign
 - [x] J3 — Splash & Welcome Screen Redesign (mockup-based)
 - [x] J4 — Theming, Progress & Workout Hub UI Polish
+- [x] J5 — Sign-out sequence, Password flow, and Workout Hub taxonomy fixes
 
 ## Last completed
 
-- J4.4 — Progress Screen Crash Fixes
-  - Fixed `last35Days[date]!` null assertions in `_buildHeatmap` and `_buildHistoryList` by providing a default `DayStatus`.
-  - Fixed duplicate weight row bug: `progress_provider.addWeight` now checks for existing entries by `for_date` and updates them instead of inserting new UUIDs, preventing `fl_chart` crashes.
-  - Added one-time deduplication cleanup to `ProgressNotifier.build` keeping the most recently updated weight entry.
-  - Reordered `addWeight`, `editWeight`, and `deleteWeight` to execute all profile modifications and database operations *before* calling `ref.invalidateSelf()`, preventing asynchronous `StateError` crashes when `ProgressScreen` is preserved via `skipLoadingOnReload: true`.
-  - Fixed BMI rendering crash (`AssertionError: !left.isNaN`) when height is 0 by guarding `!bmi.isFinite`.
-  - Removed leftover self-talk comments.
+- J5 — Targeted Engineering & Sync Fixes
+  - Fixed map type downcasts and explicit casts for `strict-casts: true` compliance (`flutter analyze` -> 0 issues).
+  - Updated Sign-out sequence: pauses sync background triggers, clears user data, signs out, resets Riverpod app state, and navigates to `/today`.
+  - Created `ChangePasswordScreen` at `/change-password` with current password re-auth, complexity validation, and updated `app_router.dart`.
+  - Fixed Workout Hub taxonomy matching in `muscle_detail_screen.dart` (case-insensitive and muscle group aliases like arms, legs, back).
 
 - J4.3 — Sync Architecture Fixes (Data integrity & Guest mode shield)
   - Unified SQLite type reading using a new `TolerantReader` utility to prevent integer vs double/bool TypeErrors across all repositories.

@@ -22,7 +22,7 @@ class NotificationPrefsNotifier extends AsyncNotifier<NotificationPreferences> {
     final r = rows.first;
     return NotificationPreferences(
       mealRemindersEnabled: TolerantReader.readBool(r['meal_reminders_enabled']) ?? false,
-      mealTimes: List<String>.from(jsonDecode(r['meal_times'] as String)),
+      mealTimes: List<String>.from(jsonDecode(r['meal_times'] as String) as Iterable<dynamic>),
       streakRiskEnabled: TolerantReader.readBool(r['streak_risk_enabled']) ?? false,
       milestonesEnabled: TolerantReader.readBool(r['milestones_enabled']) ?? false,
       globalMute: TolerantReader.readBool(r['global_mute']) ?? false,

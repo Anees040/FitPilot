@@ -57,7 +57,7 @@ class ProfileRepository {
 
   Profile _rowToProfile(Map<String, dynamic> map) {
     final equipmentStr = map['equipment'] as String? ?? '[]';
-    final List<dynamic> equipmentList = jsonDecode(equipmentStr);
+    final List<dynamic> equipmentList = jsonDecode(equipmentStr) as List<dynamic>;
     
     final themeStr = map['theme_mode'] as String? ?? 'system';
     final themeMode = ThemeModePref.values.firstWhere(

@@ -15,6 +15,7 @@ import 'package:fitpilot/features/auth/presentation/welcome_screen.dart';
 import 'package:fitpilot/features/auth/presentation/otp_verify_screen.dart';
 import 'package:fitpilot/features/auth/presentation/forgot_password_screen.dart';
 import 'package:fitpilot/features/auth/presentation/update_password_screen.dart';
+import 'package:fitpilot/features/auth/presentation/change_password_screen.dart';
 import 'package:fitpilot/features/profile/presentation/profile_setup_screen.dart';
 import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/exercise_library_screen.dart';
@@ -77,6 +78,11 @@ final appRouter = GoRouter(
       path: '/update-password',
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const UpdatePasswordScreen(),
+    ),
+    GoRoute(
+      path: '/change-password',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const ChangePasswordScreen(),
     ),
     GoRoute(
       path: '/profile-setup',

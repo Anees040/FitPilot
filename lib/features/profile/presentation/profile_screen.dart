@@ -466,10 +466,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
+                    ref.read(syncTriggerManagerProvider)?.pause();
                     final db = await ref.read(databaseProvider.future);
                     await AppDatabase.clearUserData(db);
                     await ref.read(authRepositoryProvider).signOut();
                     resetApplicationState(ref);
+                    if (context.mounted) {
+                      context.go('/today');
+                    }
                   },
                   child: const Text('Sign Out'),
                 ),

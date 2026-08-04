@@ -69,4 +69,10 @@ class SyncTriggerManager with WidgetsBindingObserver {
   void onLocalWrite() {
     _trigger('local_write');
   }
+
+  /// Pauses sync background triggers (e.g. before sign-out)
+  void pause() {
+    _periodicTimer?.cancel();
+    _debounceTimer?.cancel();
+  }
 }

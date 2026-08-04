@@ -78,7 +78,17 @@ class MuscleDetailScreen extends ConsumerWidget {
           exercisesAsync.when(
             data: (allExercises) {
               // Filter exercises by primary muscle
-              final targetExercises = allExercises.where((e) => e.primaryMuscles.contains(muscleId)).toList();
+              final targetExercises = allExercises.where((e) {
+                final target = muscleId.toLowerCase();
+                return e.primaryMuscles.any((m) {
+                  final lower = m.toLowerCase();
+                  if (lower == target) return true;
+                  if (target == 'arms' && (lower == 'biceps' || lower == 'triceps')) return true;
+                  if (target == 'legs' && (lower == 'quads' || lower == 'hamstrings' || lower == 'calves' || lower == 'glutes')) return true;
+                  if (target == 'back' && lower == 'lower back') return true;
+                  return false;
+                });
+              }).toList();
               
               if (targetExercises.isEmpty) {
                 return SliverToBoxAdapter(
@@ -115,10 +125,10 @@ class MuscleDetailScreen extends ConsumerWidget {
                         children: [
                           ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            title: Text(subCat['title'], style: theme.textTheme.bodyStrong),
+                            title: Text(subCat['title'] as String, style: theme.textTheme.bodyStrong),
                             trailing: Text(
                               '${subCat['count']} Exercises',
-                              style: theme.textTheme.caption.copyWith(color: subCat['color'], fontWeight: FontWeight.bold),
+                              style: theme.textTheme.caption.copyWith(color: subCat['color'] as Color, fontWeight: FontWeight.bold),
                             ),
                             onTap: () {
                               // We could route to a filtered list view in ExerciseLibraryScreen here
