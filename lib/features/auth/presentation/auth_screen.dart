@@ -210,8 +210,54 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       resetApplicationState(ref);
       if (mounted) context.go('/today');
     } else {
-      await merger?.mergeGuestData(userId);
-      if (mounted) context.go('/profile-setup');
+      bool shouldMerge = true;
+      if (hasGuestData) {
+        if (!mounted) return;
+        final choice = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            title: Text('Keep your data?', style: Theme.of(context).textTheme.titleLarge),
+            content: const Text('Do you want to keep the data you created while using the app as a guest?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Start fresh'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Keep my data'),
+              ),
+            ],
+          ),
+        );
+        shouldMerge = choice == true;
+      }
+
+      if (!shouldMerge) {
+        await AppDatabase.clearUserData(db);
+        if (mounted) context.go('/profile-setup');
+      } else {
+        if (mounted) setState(() { _isLoading = true; });
+        try {
+          await merger?.mergeGuestData(userId);
+          if (mounted) context.go('/profile-setup');
+        } catch (e) {
+          if (mounted) {
+            setState(() { _isLoading = false; });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Failed to sync guest data to cloud. Your data is still saved locally.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                backgroundColor: Theme.of(context).colorScheme.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+            context.go('/profile-setup');
+          }
+        }
+      }
     }
   }
 

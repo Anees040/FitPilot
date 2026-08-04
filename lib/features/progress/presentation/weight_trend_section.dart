@@ -336,11 +336,11 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
   }
 
   Widget _buildBMISection(ThemeData theme, AppColors ext, double? weightKg, int? heightCm) {
-    if (weightKg == null || heightCm == null) {
+    if (weightKg == null || heightCm == null || heightCm == 0) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Add your height to calculate BMI', style: theme.textTheme.caption),
+          Text('Set your height to see BMI', style: theme.textTheme.caption),
           const SizedBox(height: 12),
           SecondaryButton(
             label: 'Add Height',
@@ -352,6 +352,7 @@ class _WeightTrendSectionState extends ConsumerState<WeightTrendSection> {
 
     final heightM = heightCm / 100;
     final bmi = weightKg / (heightM * heightM);
+    if (!bmi.isFinite) return const SizedBox();
 
     String status = 'Unknown';
     Color statusColor = ext.hairline;

@@ -220,19 +220,6 @@ class SyncService {
 
     final uniqueRows = deduplicateRows(table, rowsToUpsert);
 
-    // Fallback for older DB schema constraints
-    if (table == 'food_logs') {
-      for (final row in uniqueRows.values) {
-        if (row['source'] != null) {
-          final src = row['source'] as String;
-          const valid = ['catalog', 'search', 'manual', 'photo', 'label', 'labelScan', 'barcode', 'ai', 'custom'];
-          if (!valid.contains(src) || src == 'search' || src == 'labelScan' || src == 'label' || src == 'ai' || src == 'custom') {
-            row['source'] = 'manual';
-          }
-        }
-      }
-    }
-
     // Conflict Rule: last-write-wins by updated_at (Cloud wins if newer)
     final idsToCheck = uniqueRows.values.map((r) => r['id'].toString()).toList();
     final cloudUpdatedAts = await remote.fetchCloudUpdatedAts(_remoteTable(table), idsToCheck);
@@ -272,7 +259,8 @@ class SyncService {
     }
   }
 
-  Future<void> _pullPhase() async {
+  Future<void> _pullPhase({bool throwOnFailure = false}) async {
+    final failures = <String>[];
     // Local SQLite table names — _remoteTable() maps them to Supabase names.
     final tables = [
       'profile',
@@ -308,7 +296,8 @@ class SyncService {
               whereArgs: [rowId],
             );
             if (localRows.isNotEmpty) {
-              final localUpdatedStr = localRows.first['updated_at'] as String;
+              final rawUpdated = localRows.first['updated_at'];
+              final localUpdatedStr = rawUpdated is String ? rawUpdated : DateTime.fromMillisecondsSinceEpoch(0).toIso8601String();
               final localUpdated = DateTime.parse(localUpdatedStr);
               if (localUpdated.isAfter(remoteUpdated)) {
                 // Local is newer, ignore remote
@@ -414,19 +403,18 @@ class SyncService {
         await _setLastPull(table, maxUpdated.toIso8601String());
       } catch (e) {
         debugPrint('Sync pull failed for $table: $e');
+        failures.add(table);
       }
+    }
+
+    if (throwOnFailure && failures.isNotEmpty) {
+      throw Exception('Pull failed for tables: ${failures.join(", ")}');
     }
   }
 
-  /// Forces a complete fresh pull of all data from Supabase, ignoring local sync state.
-  /// Call this when overriding local guest data with a cloud account.
   Future<void> forcePullAll() async {
-    try {
-      await db.delete('sync_metadata');
-      await _pullPhase();
-    } catch (e) {
-      debugPrint('Force pull failed: $e');
-    }
+    await db.delete('sync_metadata');
+    await _pullPhase(throwOnFailure: true);
   }
 
   Future<void> _removeFromQueue(List<int> ids) async {
@@ -449,14 +437,7 @@ class SyncService {
   }
 
   Future<String> _getLastPull(String table) async {
-    // A simple metadata table could store this, but to avoid DDL changes,
-    // we can just query the max updated_at in the local table!
-    // But what if local table is empty? We default to epoch.
-    // Wait, if local table is empty because everything was deleted, max(updated_at) would be null,
-    // so we'd re-pull everything. It's safer to use an actual sync_metadata table.
-    // Did I create sync_metadata? No.
-    // Let's create it on the fly if it doesn't exist, or just use a small local shared_prefs-like table.
-    // Actually, SQLite allows creating tables on the fly.
+    // Create and query a simple key-value metadata table on the fly to track sync timestamps.
     await db.execute(
       'CREATE TABLE IF NOT EXISTS sync_metadata (key TEXT PRIMARY KEY, value TEXT)',
     );

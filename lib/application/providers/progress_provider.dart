@@ -52,9 +52,20 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     final db = await ref.watch(databaseProvider.future);
     final weightRows = await db.query(
       'weight_entries',
-      orderBy: 'for_date ASC',
+      orderBy: 'for_date ASC, updated_at DESC',
     );
-    final weightEntries = weightRows.map((r) {
+
+    final Map<String, Map<String, Object?>> uniqueWeights = {};
+    for (final r in weightRows) {
+      final date = r['for_date'] as String;
+      if (!uniqueWeights.containsKey(date)) {
+        uniqueWeights[date] = r;
+      } else {
+        await db.delete('weight_entries', where: 'id = ?', whereArgs: [r['id']]);
+      }
+    }
+
+    final weightEntries = uniqueWeights.values.map((r) {
       return WeightEntry(
         id: r['id'] as String,
         date: DateTime.parse(r['for_date'] as String),
@@ -62,6 +73,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
         updatedAt: DateTime.parse(r['updated_at'] as String),
       );
     }).toList();
+    weightEntries.sort((a, b) => a.date.compareTo(b.date));
 
     const calculator = RangeCalculator();
     final history = <DateTime, DayStatus>{};
@@ -107,13 +119,24 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
     final effectiveDate = date ?? now;
     final forDateStr = DateTime(effectiveDate.year, effectiveDate.month, effectiveDate.day).toIso8601String();
 
-    final id = const Uuid().v4();
-    await db.insert('weight_entries', {
-      'id': id,
-      'for_date': forDateStr,
-      'weight_kg': weightKg,
-      'updated_at': now.toIso8601String(),
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final existing = await db.query('weight_entries', where: 'for_date = ?', whereArgs: [forDateStr]);
+    final String id;
+    
+    if (existing.isNotEmpty) {
+      id = existing.first['id'] as String;
+      await db.update('weight_entries', {
+        'weight_kg': weightKg,
+        'updated_at': now.toIso8601String(),
+      }, where: 'id = ?', whereArgs: [id]);
+    } else {
+      id = const Uuid().v4();
+      await db.insert('weight_entries', {
+        'id': id,
+        'for_date': forDateStr,
+        'weight_kg': weightKg,
+        'updated_at': now.toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
 
     if (ref.read(currentUserProvider) != null) {
       await db.insert('sync_queue', {
@@ -122,20 +145,16 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
         'op': 'upsert',
         'payload': null,
         'queued_at': now.toIso8601String(),
-      }); // Upsert requires a UNIQUE constraint on for_date, which we have
+      });
     }
 
-    ref.invalidateSelf();
-    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
-    // Invalidate profile because weight might affect burn minutes
-    // Actually profile is separate, let's keep it separate or maybe update profile weight?
-    // The prompt says "changing weight in the profile changes burn minutes" which means the main source of truth is Profile.
-    // So if the user adds weight here, we should update the Profile too!
-    // So if the user adds weight here, we should update the Profile too!
     final currentProfile = await ref.read(profileProvider.future);
     final repo = await ref.read(profileRepositoryProvider.future);
     await repo.save(currentProfile.copyWith(weightKg: weightKg));
     ref.invalidate(profileProvider);
+
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+    ref.invalidateSelf();
   }
 
   Future<void> editWeight(String id, double newWeight) async {
@@ -159,15 +178,13 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       });
     }
 
-    ref.invalidateSelf();
-    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
-    
-    // Also update profile weight if it was the most recent entry? 
-    // We can just keep it simple and update profile weight to the new weight.
     final currentProfile = await ref.read(profileProvider.future);
     final repo = await ref.read(profileRepositoryProvider.future);
     await repo.save(currentProfile.copyWith(weightKg: newWeight));
     ref.invalidate(profileProvider);
+
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+    ref.invalidateSelf();
   }
 
   Future<void> deleteWeight(String id) async {
@@ -190,7 +207,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       });
     }
 
-    ref.invalidateSelf();
     ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+    ref.invalidateSelf();
   }
 }

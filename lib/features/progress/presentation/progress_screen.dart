@@ -9,8 +9,8 @@ import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/features/progress/presentation/weight_trend_section.dart';
+import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:intl/intl.dart';
-
 class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
 
@@ -217,7 +217,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   if (dateIndex >= sortedDates.length) return const SizedBox();
                   
                   final date = sortedDates[dateIndex];
-                  final status = last35Days[date]!;
+                  final status = last35Days[date] ?? DayStatus(total: KcalRange(0, 0), burnedKcal: 0, net: KcalRange(0, 0), toBurn: 0, wiggleRoomKcal: 0, state: DayState.noData);
                   final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
                   
                   Widget dot;
@@ -344,7 +344,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               ...dates.asMap().entries.map((entry) {
                 final index = entry.key;
                 final date = entry.value;
-                final status = last35Days[date]!;
+                final status = last35Days[date] ?? DayStatus(total: KcalRange(0, 0), burnedKcal: 0, net: KcalRange(0, 0), toBurn: 0, wiggleRoomKcal: 0, state: DayState.noData);
                 final isLast = index == dates.length - 1;
                 
                 final dayName = DateFormat('EEE, MMM d').format(date);

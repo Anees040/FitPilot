@@ -57,6 +57,7 @@ class GuestMergeService {
       debugPrint('Guest data successfully merged to cloud for user $userId');
     } catch (e) {
       debugPrint('Failed to merge guest data: $e');
+      rethrow;
     }
   }
 

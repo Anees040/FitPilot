@@ -40,6 +40,14 @@
 
 ## Last completed
 
+- J4.4 — Progress Screen Crash Fixes
+  - Fixed `last35Days[date]!` null assertions in `_buildHeatmap` and `_buildHistoryList` by providing a default `DayStatus`.
+  - Fixed duplicate weight row bug: `progress_provider.addWeight` now checks for existing entries by `for_date` and updates them instead of inserting new UUIDs, preventing `fl_chart` crashes.
+  - Added one-time deduplication cleanup to `ProgressNotifier.build` keeping the most recently updated weight entry.
+  - Reordered `addWeight`, `editWeight`, and `deleteWeight` to execute all profile modifications and database operations *before* calling `ref.invalidateSelf()`, preventing asynchronous `StateError` crashes when `ProgressScreen` is preserved via `skipLoadingOnReload: true`.
+  - Fixed BMI rendering crash (`AssertionError: !left.isNaN`) when height is 0 by guarding `!bmi.isFinite`.
+  - Removed leftover self-talk comments.
+
 - J4.3 — Sync Architecture Fixes (Data integrity & Guest mode shield)
   - Unified SQLite type reading using a new `TolerantReader` utility to prevent integer vs double/bool TypeErrors across all repositories.
   - Re-wrote `SyncService._pullPhase` to explicitly map columns with `toSqliteValue`, mitigating the risk of raw JSON dynamic spread.
