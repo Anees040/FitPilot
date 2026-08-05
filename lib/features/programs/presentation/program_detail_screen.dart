@@ -15,7 +15,6 @@ class ProgramDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
     
     final activeProgram = ref.watch(activeProgramProvider);
     final isEnrolled = activeProgram?.program.id == program.program.id;
@@ -109,7 +108,7 @@ class ProgramDetailScreen extends ConsumerWidget {
 class _WeekTileCard extends StatefulWidget {
   final int week;
   final bool initiallyExpanded;
-  final List<SessionWithExercise> sessions;
+  final List<ProgramSession> sessions;
 
   const _WeekTileCard({
     required this.week,
