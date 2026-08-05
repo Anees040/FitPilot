@@ -13,7 +13,7 @@ class NotificationService {
   bool _initialized = false;
 
   Future<void> init() async {
-    if (_initialized) return;
+    if (kIsWeb || _initialized) return;
 
     tz.initializeTimeZones();
 
@@ -57,6 +57,8 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
+    if (kIsWeb) return;
+
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'burn_reminder_channel',
@@ -83,7 +85,7 @@ class NotificationService {
     required String body,
     required Duration delay,
   }) async {
-    if (!_initialized) return;
+    if (kIsWeb || !_initialized) return;
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
