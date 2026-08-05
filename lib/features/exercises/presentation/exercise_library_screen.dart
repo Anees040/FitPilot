@@ -62,7 +62,7 @@ class ExerciseLibraryScreen extends ConsumerWidget {
                     return EmptyState(
                       message: 'No exercises match. Try removing a filter.',
                       buttonLabel: 'Clear filters',
-                      illustration: 'empty_exercises',
+                      illustration: 'empty_search',
                       onAction: () {
                         ref.read(exerciseCategoryFilterProvider.notifier).state = null;
                         ref.read(exercisePaceFilterProvider.notifier).state = null;

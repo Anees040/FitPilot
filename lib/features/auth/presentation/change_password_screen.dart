@@ -141,7 +141,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
             message: 'Your password has been successfully updated.',
             buttonLabel: 'Back to Settings',
             onAction: () => context.pop(),
-            illustration: 'success_check',
+            illustration: 'phone_check',
           ),
         ),
       );

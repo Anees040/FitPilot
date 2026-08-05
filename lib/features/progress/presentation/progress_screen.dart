@@ -62,20 +62,23 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
       });
     }
 
-    return ListView(
+    return SingleChildScrollView(
       key: const PageStorageKey('progress_scroll'),
       padding: const EdgeInsets.all(16.0),
-      children: [
-        KeyedSubtree(key: const ValueKey('streak_card'), child: _buildStreakCard(context, state.streak)),
-        const SizedBox(key: ValueKey('space_1'), height: 24),
-        KeyedSubtree(key: const ValueKey('heatmap_card'), child: _buildHeatmap(context, state.last35Days)),
-        const SizedBox(key: ValueKey('space_2'), height: 24),
-        KeyedSubtree(key: const ValueKey('history_list'), child: _buildHistoryList(context, state.last35Days)),
-        const SizedBox(key: ValueKey('space_3'), height: 24),
-        KeyedSubtree(key: const ValueKey('weekly_summary'), child: _buildWeeklySummary(context, state)),
-        const SizedBox(key: ValueKey('space_4'), height: 24),
-        WeightTrendSection(key: const ValueKey('weight_trend_section'), entries: state.weightEntries),
-      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildStreakCard(context, state.streak),
+          const SizedBox(height: 24),
+          _buildHeatmap(context, state.last35Days),
+          const SizedBox(height: 24),
+          _buildHistoryList(context, state.last35Days),
+          const SizedBox(height: 24),
+          _buildWeeklySummary(context, state),
+          const SizedBox(height: 24),
+          WeightTrendSection(key: const ValueKey('weight_trend_section'), entries: state.weightEntries),
+        ],
+      ),
     );
   }
 

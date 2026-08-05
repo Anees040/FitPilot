@@ -24,7 +24,7 @@ class ProgramsScreen extends ConsumerWidget {
         data: (programs) {
           if (programs.isEmpty) {
             return EmptyState(
-              illustration: 'empty_programs',
+              illustration: 'empty_plan',
               message: 'Check back later for curated plans.',
               buttonLabel: 'Refresh',
               onAction: () => ref.invalidate(programsProvider),

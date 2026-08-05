@@ -86,7 +86,7 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
             message: 'Your password has been successfully updated.',
             buttonLabel: 'Go to Log',
             onAction: () => context.go('/today'),
-            illustration: 'success_check',
+            illustration: 'phone_check',
           ),
         ),
       );

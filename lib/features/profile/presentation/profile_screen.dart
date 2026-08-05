@@ -315,7 +315,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, st) => EmptyState(
-            illustration: 'target',
+            illustration: '',
             message: e.toString(),
             buttonLabel: 'Retry',
             onAction: () => ref.invalidate(profileProvider),
