@@ -42,10 +42,20 @@
 - [x] J7 — Release Crash Fixes, Password Flow Polish, Snackbar & UI Refactor
 - [x] J8 — Burn Plan Empty Fix, UNDO Disposed Ref Fix, Offline Sign-Out & Auth Isolation
 - [x] J9 — Real Scanner Operational Guarantee, Device Exercise Seed Repair & Guest Profile Sync
+- [x] J10 — Web & Riverpod Runtime Stability (v16 DB migration, gemini-2.0-flash, Google auth metadata, Riverpod ref order, Web notification guard, SliverList layout, StatefulShellRoute keys)
 
 ## Last completed
 
-- J9 — Real Scanner Operational Guarantee, Device Exercise Seed Repair & Guest Profile Sync
+- J10 — Web & Riverpod Runtime Stability
+  - Fixed `v16` SQLite migration in `app_database.dart` (`if (oldVersion < 16)`) to drop non-null equipment constraints and seed all 60 exercises.
+  - Updated Render proxy server (`server/index.js`) to use `gemini-2.0-flash` AI model to fix 404 API model deprecation.
+  - Enforced Google Sign-In vs Sign-Up separation: first-time users clicking "Log In" via Google are prompted to use "Sign Up".
+  - Extracted Google user metadata (`full_name`, `avatar_url`) into profile and updated `ProfileScreen` to display user's Google profile picture and name.
+  - Fixed Riverpod `!_didChangeDependency` assertion in `profile_setup_screen.dart` and `progress_provider.dart` by hoisting database writes and `ref.read` calls before `ref.invalidate`.
+  - Added `kIsWeb` guards to `NotificationService` (`init`, `showBurnReminder`, `scheduleBurnReminder`) to prevent Chrome `zonedSchedule()` crash.
+  - Fixed `sliver_list.dart:315` assertion crash on Progress screen by replacing `ListView` with `SingleChildScrollView(child: Column(...))`.
+  - Fixed `Duplicate GlobalKey` exception on shell navigation by converting `StatefulShellRoute` to `StatefulShellRoute.indexedStack` with explicit `navigatorKey`s (`shellNavigatorTodayKey`, `shellNavigatorLogKey`, etc.).
+  - Replaced non-existent asset illustration paths with valid existing assets across `exercise_library_screen.dart`, `programs_screen.dart`, `update_password_screen.dart`, and `change_password_screen.dart`.
   - Removed all silent fallback mock data (`'Scanned Meal / Desi Portion (330 kcal)'`) from `capture_screen.dart`. Real Gemini AI results are displayed when valid, and explicit network/connection error notices appear if unreachable.
   - Added OCR validation in `_runOcrOnFile` requiring actual Nutrition Facts numbers (`kcal`, `servingSizeGrams`) to be recognized before presenting the review sheet.
   - Updated `SeedImporter._importExercises()` in `seed_importer.dart` to automatically populate the 60 exercise catalog if existing DB contains < 50 exercises, resolving empty Burn Plan cards on physical devices.
