@@ -5,13 +5,17 @@ class AuthUser extends Equatable {
   final String id;
   final String email;
   final bool emailConfirmed;
+  final DateTime? createdAt;
+  final Map<String, dynamic> metadata;
 
   const AuthUser({
     required this.id,
     required this.email,
     required this.emailConfirmed,
+    this.createdAt,
+    this.metadata = const {},
   });
 
   @override
-  List<Object?> get props => [id, email, emailConfirmed];
+  List<Object?> get props => [id, email, emailConfirmed, createdAt, metadata];
 }

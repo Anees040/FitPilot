@@ -32,6 +32,8 @@ class SupabaseAuthRepository implements AuthRepository {
       id: user.id,
       email: user.email ?? '',
       emailConfirmed: user.emailConfirmedAt != null,
+      createdAt: DateTime.tryParse(user.createdAt),
+      metadata: user.userMetadata ?? const {},
     );
   }
 

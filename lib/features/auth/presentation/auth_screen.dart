@@ -158,8 +158,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user != null) {
-        final createdAtStr = user.createdAt;
-        final createdAt = DateTime.tryParse(createdAtStr) ?? DateTime.now();
+        final createdAt = user.createdAt ?? DateTime.now();
         final isNew = DateTime.now().difference(createdAt).inSeconds.abs() < 15;
         
         if (_isLogin && isNew) {
@@ -287,8 +286,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     // Extract metadata from Supabase User (like Google Name/Avatar)
     final user = ref.read(authRepositoryProvider).currentUser;
     if (user != null && profile != null) {
-      final metaName = user.userMetadata?['full_name'] as String?;
-      final metaAvatar = user.userMetadata?['avatar_url'] as String?;
+      final metaName = user.metadata['full_name'] as String?;
       
       bool needsUpdate = false;
       var updatedProfile = profile;

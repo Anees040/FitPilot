@@ -488,6 +488,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildAuthSection(BuildContext context, ThemeData theme) {
     final session = ref.watch(currentUserProvider);
     final ext = theme.extension<AppColors>()!;
+    final currentProfile = ref.watch(profileProvider).value;
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -504,7 +505,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               children: [
                 Builder(
                   builder: (context) {
-                    final avatarUrl = session.userMetadata?['avatar_url'] as String?;
+                    final avatarUrl = session.metadata['avatar_url'] as String?;
                     if (avatarUrl != null && avatarUrl.isNotEmpty) {
                       return CircleAvatar(
                         backgroundImage: NetworkImage(avatarUrl),
@@ -521,9 +522,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(profile.name ?? 'Signed in', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)),
+                      Text(currentProfile?.name ?? 'Signed in', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)),
                       Text(
-                        session.email ?? '',
+                        session.email,
                         style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ],
