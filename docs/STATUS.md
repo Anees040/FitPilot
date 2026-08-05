@@ -38,8 +38,18 @@
 - [x] J3 — Splash & Welcome Screen Redesign (mockup-based)
 - [x] J4 — Theming, Progress & Workout Hub UI Polish
 - [x] J5 — Sign-out sequence, Password flow, and Workout Hub taxonomy fixes
+- [x] J6 — Chrome Debug Run & UI Exception Fixes (hero overflow, dropdowns, keys, step 5 riverpod, progress slivers, auth guest loophole, food log detail sheet)
 
 ## Last completed
+
+- J6 — Chrome Debug Run & UI Exception Fixes
+  - Fixed `_HeroSection` Column overflow in `workout_hub_screen.dart:290:24` inside 156px container.
+  - Resolved `dropdown.dart:1402` assertion by eliminating un-valued divider `DropdownMenuItem` and guarding value parameters in `plan_screen.dart` and `profile_screen.dart`.
+  - Fixed `Duplicate GlobalKey` and `_dependents.isEmpty` assertion on Plan tab by removing top-level `GlobalKey`s from `StatefulShellBranch` in `app_router.dart`.
+  - Fixed profile wizard step 5 Riverpod `!_didChangeDependency` assertion by hoisting `ref.read` calls before `await` and adding `mounted` guards.
+  - Fixed `sliver_list.dart:315` scroll flood in `progress_screen.dart` by assigning stable `ValueKey`s to children.
+  - Added `onboarding_complete` flag to `Profile` model and SQLite schema (v15) with `_onUpgrade` guard. Updated Auth screen to hide 'Continue as Guest' when called from Profile screen and route directly to `/today` if onboarded.
+  - Updated Today screen logged food tap handler to present read-only `_FoodLogDetailSheet` with portion edit and delete actions instead of reopening the search/add flow.
 
 - J5 — Targeted Engineering & Sync Fixes
   - Fixed map type downcasts and explicit casts for `strict-casts: true` compliance (`flutter analyze` -> 0 issues).

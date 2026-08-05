@@ -66,15 +66,15 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
       key: const PageStorageKey('progress_scroll'),
       padding: const EdgeInsets.all(16.0),
       children: [
-        _buildStreakCard(context, state.streak),
-        const SizedBox(height: 24),
-        _buildHeatmap(context, state.last35Days),
-        const SizedBox(height: 24),
-        _buildHistoryList(context, state.last35Days),
-        const SizedBox(height: 24),
-        _buildWeeklySummary(context, state),
-        const SizedBox(height: 24),
-        WeightTrendSection(entries: state.weightEntries),
+        KeyedSubtree(key: const ValueKey('streak_card'), child: _buildStreakCard(context, state.streak)),
+        const SizedBox(key: ValueKey('space_1'), height: 24),
+        KeyedSubtree(key: const ValueKey('heatmap_card'), child: _buildHeatmap(context, state.last35Days)),
+        const SizedBox(key: ValueKey('space_2'), height: 24),
+        KeyedSubtree(key: const ValueKey('history_list'), child: _buildHistoryList(context, state.last35Days)),
+        const SizedBox(key: ValueKey('space_3'), height: 24),
+        KeyedSubtree(key: const ValueKey('weekly_summary'), child: _buildWeeklySummary(context, state)),
+        const SizedBox(key: ValueKey('space_4'), height: 24),
+        WeightTrendSection(key: const ValueKey('weight_trend_section'), entries: state.weightEntries),
       ],
     );
   }
@@ -337,6 +337,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         child: Theme(
           data: theme.copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
+            key: const ValueKey('last_7_days_expansion_tile'),
             title: Text(title, style: theme.textTheme.h2.copyWith(fontSize: 18)),
             initiallyExpanded: false,
             children: [
@@ -373,6 +374,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                 }
 
                 return Column(
+                  key: ValueKey('day_history_${date.toIso8601String()}'),
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

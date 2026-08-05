@@ -283,17 +283,18 @@ class _HeroSectionState extends State<_HeroSection> with SingleTickerProviderSta
               ),
               // Text + chips on left
               Positioned(
-                left: 24,
-                top: 24,
-                bottom: 20,
-                right: 100,
+                left: 20,
+                top: 16,
+                bottom: 14,
+                right: 90,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Primary badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(20),
@@ -302,35 +303,41 @@ class _HeroSectionState extends State<_HeroSection> with SingleTickerProviderSta
                         'WORKOUT HUB',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
+                          letterSpacing: 1.0,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Train\nSmart.',
-                      style: Theme.of(context).textTheme.display.copyWith(
-                        fontSize: 32,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        height: 1.05,
+                    const SizedBox(height: 6),
+                    Flexible(
+                      child: Text(
+                        'Train Smart.',
+                        style: Theme.of(context).textTheme.display.copyWith(
+                          fontSize: 26,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 4),
                     Text(
                       'Workouts for every goal.',
                       style: Theme.of(context).textTheme.caption.copyWith(
                         color: Colors.white.withValues(alpha: 0.78),
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 14),
-                    Row(
+                    const SizedBox(height: 8),
+                    const Row(
                       children: [
                         _StatChip(label: '11 Categories'),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         _StatChip(label: '80+ Exercises'),
                       ],
                     ),

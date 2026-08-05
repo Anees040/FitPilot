@@ -27,7 +27,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 14,
+      version: 15,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -39,7 +39,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 14,
+      version: 15,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -144,6 +144,7 @@ class AppDatabase {
         active_program_id TEXT,
         active_program_week INTEGER,
         active_program_day INTEGER,
+        onboarding_complete INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL
       )
     ''');
@@ -441,6 +442,11 @@ class AppDatabase {
           minutes INTEGER NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 15) {
+      try {
+        await db.execute("ALTER TABLE profile ADD COLUMN onboarding_complete INTEGER NOT NULL DEFAULT 0");
+      } catch (_) {}
     }
   }
 

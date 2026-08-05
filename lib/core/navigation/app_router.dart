@@ -153,7 +153,6 @@ final appRouter = GoRouter(
       },
       branches: [
         StatefulShellBranch(
-          navigatorKey: shellNavigatorTodayKey,
           routes: [
             GoRoute(
               path: '/today',
@@ -162,7 +161,6 @@ final appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
-          navigatorKey: shellNavigatorLogKey,
           routes: [
             GoRoute(
               path: '/log',
@@ -171,7 +169,6 @@ final appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
-          navigatorKey: shellNavigatorPlanKey,
           routes: [
             GoRoute(
               path: '/plan',
@@ -180,7 +177,6 @@ final appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
-          navigatorKey: shellNavigatorProgressKey,
           routes: [
             GoRoute(
               path: '/progress',
@@ -189,12 +185,10 @@ final appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
-          navigatorKey: shellNavigatorProfileKey,
           routes: [
             GoRoute(
               path: '/profile',
               builder: (context, state) => const ProfileScreen(),
-
             ),
           ],
         ),

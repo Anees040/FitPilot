@@ -8,8 +8,6 @@ import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
 
 import 'package:fitpilot/features/log/presentation/widgets/kcal_range_text.dart';
-import 'package:fitpilot/features/log/presentation/quantity_sheet.dart';
-import 'package:fitpilot/domain/entities/food_item.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
@@ -408,22 +406,9 @@ class _LogListItem extends ConsumerWidget {
         variant: AppCardVariant.raised,
         padding: const EdgeInsets.all(12),
         onTap: () {
-          if (log.source == LogSource.manual) {
-            AppSnackbar.success(context, 'Cannot edit manual entry quantity.');
-            return;
-          }
-
-          final dummyFood = FoodItem(
-            id: log.foodId ?? '',
-            name: log.displayName ?? 'Unknown',
-            portionLabel: 'Portion',
-            kcalPerPortion: log.kcal.times(1 / log.quantity.toDouble()),
-            isVerified: false,
-          );
-
           AppBottomSheet.show(
             context,
-            child: QuantitySheet(food: dummyFood),
+            child: _FoodLogDetailSheet(log: log),
           );
         },
         child: Row(
@@ -494,6 +479,158 @@ class _LogListItem extends ConsumerWidget {
         ),
       ),
      );
+  }
+}
+
+class _FoodLogDetailSheet extends ConsumerStatefulWidget {
+  final FoodLog log;
+  const _FoodLogDetailSheet({required this.log});
+
+  @override
+  ConsumerState<_FoodLogDetailSheet> createState() => _FoodLogDetailSheetState();
+}
+
+class _FoodLogDetailSheetState extends ConsumerState<_FoodLogDetailSheet> {
+  late double _quantity;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantity = widget.log.quantity.toDouble();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final log = widget.log;
+
+    final unitKcal = log.kcal.times(1 / (log.quantity == 0 ? 1 : log.quantity));
+    final currentKcal = unitKcal.times(_quantity);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(Icons.fastfood, color: theme.colorScheme.primary, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    log.displayName ?? 'Unknown Food',
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Logged at ${DateFormat.jm().format(log.loggedAt.toLocal())}',
+                    style: theme.textTheme.caption,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        AppCard(
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Calories', style: theme.textTheme.bodyMedium),
+                  KcalRangeText(
+                    range: currentKcal,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Portion', style: theme.textTheme.bodyMedium),
+                  Text(
+                    '${_quantity.toStringAsFixed(1)} x portion',
+                    style: theme.textTheme.bodyStrong,
+                  ),
+                ],
+              ),
+              if (_isEditing) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: _quantity <= 0.5 ? null : () => setState(() => _quantity -= 0.5),
+                    ),
+                    Text(
+                      _quantity.toStringAsFixed(1),
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () => setState(() => _quantity += 0.5),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        if (!_isEditing) ...[
+          PrimaryButton(
+            label: 'Edit Portion',
+            onPressed: () => setState(() => _isEditing = true),
+          ),
+          const SizedBox(height: 12),
+          SecondaryButton(
+            label: 'Delete Log',
+            onPressed: () async {
+              await ref.read(todayProvider.notifier).deleteLog(log.id);
+              if (context.mounted) {
+                Navigator.of(context).pop();
+                AppSnackbar.success(context, 'Meal deleted');
+              }
+            },
+          ),
+        ] else ...[
+          PrimaryButton(
+            label: 'Save Changes',
+            onPressed: () async {
+              await ref.read(todayProvider.notifier).updateLogQuantity(log.id, _quantity);
+              if (context.mounted) {
+                Navigator.of(context).pop();
+                AppSnackbar.success(context, 'Portion updated');
+              }
+            },
+          ),
+          const SizedBox(height: 12),
+          SecondaryButton(
+            label: 'Cancel',
+            onPressed: () => setState(() {
+              _quantity = log.quantity.toDouble();
+              _isEditing = false;
+            }),
+          ),
+        ],
+      ],
+    );
   }
 }
 

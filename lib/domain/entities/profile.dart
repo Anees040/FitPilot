@@ -33,6 +33,7 @@ class Profile extends Equatable {
   final String unitKgLb;
   final bool weekStartsMon;
   final bool hapticsOn;
+  final bool onboardingComplete;
   final String? activeProgramId;
   final int? activeProgramWeek;
   final int? activeProgramDay;
@@ -59,6 +60,7 @@ class Profile extends Equatable {
     this.unitKgLb = 'kg',
     this.weekStartsMon = true,
     this.hapticsOn = true,
+    this.onboardingComplete = false,
     this.activeProgramId,
     this.activeProgramWeek,
     this.activeProgramDay,
@@ -132,6 +134,7 @@ class Profile extends Equatable {
     String? unitKgLb,
     bool? weekStartsMon,
     bool? hapticsOn,
+    bool? onboardingComplete,
     String? activeProgramId,
     int? activeProgramWeek,
     int? activeProgramDay,
@@ -158,6 +161,7 @@ class Profile extends Equatable {
       unitKgLb: unitKgLb ?? this.unitKgLb,
       weekStartsMon: weekStartsMon ?? this.weekStartsMon,
       hapticsOn: hapticsOn ?? this.hapticsOn,
+      onboardingComplete: onboardingComplete ?? this.onboardingComplete,
       activeProgramId: clearProgram ? null : (activeProgramId ?? this.activeProgramId),
       activeProgramWeek: clearProgram ? null : (activeProgramWeek ?? this.activeProgramWeek),
       activeProgramDay: clearProgram ? null : (activeProgramDay ?? this.activeProgramDay),
@@ -185,6 +189,7 @@ class Profile extends Equatable {
     unitKgLb,
     weekStartsMon,
     hapticsOn,
+    onboardingComplete,
     activeProgramId,
     activeProgramWeek,
     activeProgramDay,

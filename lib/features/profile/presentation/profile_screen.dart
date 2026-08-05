@@ -196,7 +196,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         contentPadding: EdgeInsets.zero,
                         title: Text('Theme Color', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                         trailing: DropdownButton<String>(
-                          value: profile.themeColor,
+                          value: const ['orange', 'blue', 'purple', 'green', 'red'].contains(profile.themeColor) ? profile.themeColor : 'orange',
                           underline: const SizedBox(),
                           items: const [
                             DropdownMenuItem(value: 'orange', child: Text('Orange')),
@@ -213,7 +213,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         contentPadding: EdgeInsets.zero,
                         title: Text('Plan Category', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                         trailing: DropdownButton<String>(
-                          value: profile.planCategoryPref,
+                          value: const ['recommended', 'cardio', 'strength', 'fun', 'core'].contains(profile.planCategoryPref) ? profile.planCategoryPref : 'recommended',
                           underline: const SizedBox(),
                           items: const [
                             DropdownMenuItem(value: 'recommended', child: Text('Recommended')),
@@ -230,7 +230,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         contentPadding: EdgeInsets.zero,
                         title: Text('Plan Pace', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                         trailing: DropdownButton<String>(
-                          value: profile.planPacePref,
+                          value: const ['any', 'easy', 'moderate', 'quick'].contains(profile.planPacePref) ? profile.planPacePref : 'any',
                           underline: const SizedBox(),
                           items: const [
                             DropdownMenuItem(value: 'any', child: Text('Any Pace')),
@@ -263,7 +263,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         contentPadding: EdgeInsets.zero,
                         title: Text('Unit', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                         trailing: DropdownButton<String>(
-                          value: profile.unitKgLb,
+                          value: const ['kg', 'lb'].contains(profile.unitKgLb) ? profile.unitKgLb : 'kg',
                           underline: const SizedBox(),
                           items: const [
                             DropdownMenuItem(value: 'kg', child: Text('Kilograms (kg)')),
@@ -506,7 +506,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 16),
           SecondaryButton(
             label: 'Change Password',
-            onPressed: _showChangePasswordDialog,
+            onPressed: () => context.push('/change-password'),
           ),
           const SizedBox(height: 8),
           SecondaryButton(
@@ -517,7 +517,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ] else ...[
           PrimaryButton(
             label: 'Sign In / Create Account',
-            onPressed: () => context.push('/auth'),
+            onPressed: () => context.push('/auth?hideGuest=true'),
           ),
           const SizedBox(height: 8),
           Text(
@@ -527,59 +527,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ],
-    );
-  }
-
-  void _showChangePasswordDialog() {
-    final passwordCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    bool loading = false;
-    AppBottomSheet.show(
-      context,
-      child: StatefulBuilder(
-        builder: (context, setModalState) {
-          return Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('Change Password', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 16),
-                AppTextField(
-                  label: 'New Password',
-                  controller: passwordCtrl,
-                  obscureText: true,
-                  validator: (v) {
-                    if (v == null || v.length < 8) return 'Min 8 chars required';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                PrimaryButton(
-                  label: loading ? 'Updating...' : 'Update Password',
-                  onPressed: loading ? null : () async {
-                    if (!formKey.currentState!.validate()) return;
-                    setModalState(() => loading = true);
-                    try {
-                      await ref.read(authRepositoryProvider).updatePassword(newPassword: passwordCtrl.text);
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        AppSnackbar.success(context, 'Password updated successfully!');
-                      }
-                    } catch (e) {
-                      setModalState(() => loading = false);
-                      if (context.mounted) {
-                        AppSnackbar.error(context, e.toString());
-                      }
-                    }
-                  },
-                )
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 

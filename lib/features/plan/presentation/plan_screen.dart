@@ -131,8 +131,10 @@ class PlanScreen extends ConsumerWidget {
     final todayState = ref.watch(todayProvider).valueOrNull;
     final logs = todayState?.logs ?? [];
     
-    // Total debt
     final totalToBurn = todayState?.dayStatus.toBurn ?? 0;
+    final validSelectedMealId = (state.selectedMealId != null && logs.any((l) => l.id == state.selectedMealId))
+        ? state.selectedMealId
+        : null;
 
     return AppCard(
       child: Column(
@@ -141,7 +143,7 @@ class PlanScreen extends ConsumerWidget {
           Text('TARGET', style: theme.textTheme.overline),
           const SizedBox(height: 8),
           DropdownButtonFormField<String?>(
-            initialValue: state.selectedMealId,
+            initialValue: validSelectedMealId,
             decoration: InputDecoration(
               filled: true,
               fillColor: ext.surfaceRaised,
@@ -159,11 +161,6 @@ class PlanScreen extends ConsumerWidget {
                 value: null,
                 child: Text('All of today ($totalToBurn kcal)'),
               ),
-              if (logs.isNotEmpty)
-                const DropdownMenuItem(
-                  enabled: false,
-                  child: Divider(),
-                ),
               ...logs.map((log) {
                 return DropdownMenuItem(
                   value: log.id,

@@ -119,13 +119,19 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     setState(() => _isSaving = true);
     
     try {
-      final repo = await ref.read(profileRepositoryProvider.future);
+      final repoFuture = ref.read(profileRepositoryProvider.future);
+      final progressNotifier = ref.read(progressProvider.notifier);
+
+      final repo = await repoFuture;
+      if (!mounted) return;
+      
       final existingProfile = await repo.get();
+      if (!mounted) return;
       
       Goal mappedGoal = Goal.lose;
       if (_goal == LocalGoal.build) mappedGoal = Goal.build;
       if (_goal == LocalGoal.maintain) mappedGoal = Goal.maintain;
-      if (_goal == LocalGoal.improve) mappedGoal = Goal.build; // Improve fitness maps to build in domain
+      if (_goal == LocalGoal.improve) mappedGoal = Goal.build;
       
       final profile = Profile(
         name: existingProfile?.name,
@@ -144,14 +150,17 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         unitKgLb: _isWeightKg ? 'kg' : 'lb',
         weekStartsMon: true,
         hapticsOn: true,
+        onboardingComplete: true,
         updatedAt: DateTime.now(),
       );
 
       await repo.save(profile);
+      if (!mounted) return;
+      
       ref.invalidate(profileProvider);
       
       // Log the initial weight
-      await ref.read(progressProvider.notifier).addWeight(_weightKg);
+      await progressNotifier.addWeight(_weightKg);
 
       if (mounted) context.go('/today');
     } catch (e) {

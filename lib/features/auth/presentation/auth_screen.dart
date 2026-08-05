@@ -9,14 +9,20 @@ import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/app_reset.dart';
 import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
+import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/config/env.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   final String? initialMode;
+  final bool hideGuestOption;
 
-  const AuthScreen({super.key, this.initialMode});
+  const AuthScreen({
+    super.key,
+    this.initialMode,
+    this.hideGuestOption = false,
+  });
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
@@ -237,12 +243,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
       if (!shouldMerge) {
         await AppDatabase.clearUserData(db);
-        if (mounted) context.go('/profile-setup');
+        if (mounted) await _navigatePostAuth();
       } else {
         if (mounted) setState(() { _isLoading = true; });
         try {
           await merger?.mergeGuestData(userId);
-          if (mounted) context.go('/profile-setup');
+          if (mounted) await _navigatePostAuth();
         } catch (e) {
           if (mounted) {
             setState(() { _isLoading = false; });
@@ -254,9 +260,21 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             );
-            context.go('/profile-setup');
+            await _navigatePostAuth();
           }
         }
+      }
+    }
+  }
+
+  Future<void> _navigatePostAuth() async {
+    final repo = await ref.read(profileRepositoryProvider.future);
+    final profile = await repo.get();
+    if (mounted) {
+      if (profile != null && (profile.onboardingComplete || profile.gender != Gender.unspecified)) {
+        context.go('/today');
+      } else {
+        context.go('/profile-setup');
       }
     }
   }
@@ -599,7 +617,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         onPressed: _submitGoogle,
                       ),
 
-                      if (_isLogin) ...[
+                      if (_isLogin &&
+                          !widget.hideGuestOption &&
+                          GoRouterState.of(context).uri.queryParameters['hideGuest'] != 'true' &&
+                          GoRouterState.of(context).uri.queryParameters['fromProfile'] != 'true') ...[
                         const SizedBox(height: 12),
                         _SocialButton(
                           label: 'Continue as Guest',
