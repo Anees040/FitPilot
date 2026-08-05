@@ -422,27 +422,27 @@ class _CategoryTile extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Opacity(
-              opacity: 0.6,
+              opacity: 0.75,
               child: Image.asset(
                 imagePath,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(color: color),
               ),
             ),
-              // Darker overlay so text is clearly readable
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0x66000000),
-                      Color(0xCC000000),
-                    ],
-                    stops: [0.0, 1.0],
-                  ),
+            // Soft gradient overlay so text is crisp and background artwork pops
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x22000000),
+                    Color(0xAA000000),
+                  ],
+                  stops: [0.0, 1.0],
                 ),
               ),
+            ),
             Padding(
               padding: const EdgeInsets.all(14.0),
               child: Column(

@@ -64,6 +64,11 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> signIn({required String email, required String password}) async {
     try {
       await _client.auth.signInWithPassword(email: email, password: password);
+      final user = _client.auth.currentUser;
+      if (user != null && user.userMetadata?['deleted'] == true) {
+        await signOut();
+        throw const UnknownAuthFailure('This account has been deleted. You cannot log in.');
+      }
     } catch (e) {
       throw _mapException(e);
     }
@@ -142,6 +147,11 @@ class SupabaseAuthRepository implements AuthRepository {
           idToken: idToken,
         );
       }
+      final user = _client.auth.currentUser;
+      if (user != null && user.userMetadata?['deleted'] == true) {
+        await signOut();
+        throw const UnknownAuthFailure('This account has been deleted. You cannot log in.');
+      }
     } catch (e) {
       if (e is UnknownAuthFailure) rethrow;
       throw _mapException(e);
@@ -160,7 +170,23 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<void> deleteAccount() async {
     try {
-      await _client.rpc('delete_account');
+      final user = currentUser;
+      if (user != null) {
+        try {
+          await _client.rpc('delete_account');
+        } catch (rpcE) {
+          if (kDebugMode) debugPrint('[SupabaseAuthRepo] RPC delete_account warning: $rpcE');
+          try {
+            await _client.from('profiles').delete().eq('id', user.id);
+            await _client.from('food_logs').delete().eq('user_id', user.id);
+            await _client.from('weight_entries').delete().eq('user_id', user.id);
+            await _client.from('burn_completions').delete().eq('user_id', user.id);
+          } catch (_) {}
+        }
+        try {
+          await _client.auth.updateUser(supa.UserAttributes(data: {'deleted': true}));
+        } catch (_) {}
+      }
       await signOut();
     } catch (e) {
       throw _mapException(e);
@@ -177,7 +203,8 @@ class SupabaseAuthRepository implements AuthRepository {
       }
       await _client.auth.signOut();
     } catch (e) {
-      throw _mapException(e);
+      if (kDebugMode) debugPrint('[SupabaseAuthRepo] Remote signOut offline notice: $e');
+      // DO NOT throw on offline sign-out — local sign-out must always proceed
     }
   }
 }

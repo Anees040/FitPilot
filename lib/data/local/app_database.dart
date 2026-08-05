@@ -18,6 +18,8 @@ import 'package:sqflite/sqflite.dart';
 /// 12 — added updated_at to burn_completions; added theme_color + goal_weight_kg guards
 /// 13 — added name to profile
 /// 14 — added programs, program_sessions tables and active program profile fields
+/// 15 — added some features
+/// 16 — recreated exercises table to remove equipment NOT NULL constraint
 class AppDatabase {
   static Database? _db;
 
@@ -27,7 +29,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 15,
+      version: 16,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -39,7 +41,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 15,
+      version: 16,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );

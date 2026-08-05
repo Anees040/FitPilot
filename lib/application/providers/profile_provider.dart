@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 
+import 'package:fitpilot/application/providers/auth_provider.dart';
+
 /// Provides the user profile, falling back to sensible defaults
 /// (70 kg, 300 kcal allowance) if the user has not completed onboarding.
 final profileProvider = AsyncNotifierProvider<ProfileNotifier, Profile>(
@@ -11,6 +13,7 @@ final profileProvider = AsyncNotifierProvider<ProfileNotifier, Profile>(
 class ProfileNotifier extends AsyncNotifier<Profile> {
   @override
   Future<Profile> build() async {
+    ref.watch(currentUserProvider);
     final repo = await ref.watch(profileRepositoryProvider.future);
     final profile = await repo.get();
 

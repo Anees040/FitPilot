@@ -198,12 +198,24 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       final inputImage = InputImage.fromFilePath(filePath);
       final recognizedText = await _textRecognizer?.processImage(inputImage);
 
-      if (recognizedText == null) {
-        throw Exception('Text recognizer not initialized');
+      if (recognizedText == null || recognizedText.text.trim().isEmpty) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          AppSnackbar.error(context, 'No text detected. Point camera at Nutrition Facts table.');
+        }
+        return;
       }
 
       final parser = NutritionLabelParser();
       final result = parser.parse(recognizedText.text);
+
+      if (result.kcal == null && result.servingSizeGrams == null) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          AppSnackbar.error(context, 'No Nutrition Facts numbers found in image.');
+        }
+        return;
+      }
 
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -216,7 +228,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       if (kDebugMode) debugPrint('[CaptureScreen] OCR error: $e');
       if (mounted) {
         setState(() => _isProcessing = false);
-        AppSnackbar.success(context, 'Error analyzing label');
+        AppSnackbar.error(context, 'Error analyzing label. Retry with clearer lighting.');
       }
     }
   }
@@ -226,41 +238,41 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       final bytes = await File(filePath).readAsBytes();
       final base64Image = base64Encode(bytes);
       final aiService = AiFoodService();
+
       final result = await aiService.estimateFood(base64Image);
 
-      if (mounted) {
-        setState(() => _isProcessing = false);
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
 
-        if (result == null) {
-          AppSnackbar.success(context, 'Failed to estimate food from AI.');
-          return;
-        }
-
-        final name = result['name'] as String? ?? 'AI Identified Food';
-        final minKcal = (result['minKcal'] as num?)?.toInt() ?? 0;
-        final maxKcal = (result['maxKcal'] as num?)?.toInt() ?? 0;
-        final kcalRange = KcalRange(minKcal, maxKcal);
-
-        final mockOffResult = OffFound(
-          productName: name,
-          kcalPer100g: kcalRange.midpoint,
-          netWeightGrams: 100,
-          isLocal: true,
-        );
-
-        await AppBottomSheet.show(
-          context,
-          child: BarcodeQuantitySheet(
-            barcode: 'ai_scan',
-            offResult: mockOffResult,
-          ),
-        );
+      if (result == null || result['name'] == null) {
+        AppSnackbar.error(context, 'AI Service Error: Could not identify food in image.');
+        return;
       }
+
+      final name = result['name'] as String;
+      final minKcal = (result['minKcal'] as num).toInt();
+      final maxKcal = (result['maxKcal'] as num).toInt();
+      final kcalRange = KcalRange(minKcal, maxKcal);
+
+      final offResult = OffFound(
+        productName: name,
+        kcalPer100g: kcalRange.midpoint,
+        netWeightGrams: (result['portionGrams'] as num?)?.toDouble() ?? 100.0,
+        isLocal: true,
+      );
+
+      await AppBottomSheet.show(
+        context,
+        child: BarcodeQuantitySheet(
+          barcode: 'ai_scan',
+          offResult: offResult,
+        ),
+      );
     } catch (e) {
       if (kDebugMode) debugPrint('[CaptureScreen] AI error: $e');
       if (mounted) {
         setState(() => _isProcessing = false);
-        AppSnackbar.success(context, _friendlyError(e));
+        AppSnackbar.error(context, _friendlyError(e));
       }
     }
   }

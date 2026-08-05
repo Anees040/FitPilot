@@ -28,17 +28,21 @@ class BurnPlanner {
 
     // Find walking
     final walkingEx = candidates.firstWhere(
-      (e) => e.name.contains('Walking'),
+      (e) => e.name.toLowerCase().contains('walk'),
       orElse: () => candidates.first,
     );
     final walkingOpt = _createOption(walkingEx, kcalOver, weightKg, true);
 
     // Filter out walking for the pool
-    var pool = candidates.where((e) => !e.name.contains('Walking')).toList();
+    var pool = candidates.where((e) => !e.name.toLowerCase().contains('walk')).toList();
+    if (pool.isEmpty) pool = List<Exercise>.from(candidates);
 
-    // Apply pace filter
+    // Apply pace filter (with fallback if no exercises match pace)
     if (pacePref != 'any') {
-      pool = pool.where((e) => e.paceTier == pacePref).toList();
+      final paceFiltered = pool.where((e) => e.paceTier == pacePref).toList();
+      if (paceFiltered.isNotEmpty) {
+        pool = paceFiltered;
+      }
     }
 
     final options = <BurnOption>[];
@@ -59,10 +63,20 @@ class BurnPlanner {
         options.add(_createOption(easyExercises.first, kcalOver, weightKg, false));
       }
     } else {
-      // Category mode
-      var catPool = pool
-          .where((e) => e.category.name == categoryPref)
-          .toList();
+      final pref = categoryPref.toLowerCase().trim();
+      var catPool = pool.where((e) {
+        final catName = e.category.name.toLowerCase();
+        if (catName == pref) return true;
+        if (pref == 'cardio' && (catName == 'outdoor' || e.met >= 7.0)) return true;
+        if (pref == 'strength' && (catName == 'gym' || catName == 'calisthenics')) return true;
+        if (pref == 'fun' && (catName == 'outdoor' || catName == 'indoor')) return true;
+        if (pref == 'core' && (catName == 'calisthenics' || e.primaryMuscles.contains('Core') || e.secondaryMuscles.contains('Core'))) return true;
+        return false;
+      }).toList();
+
+      if (catPool.isEmpty) {
+        catPool = List<Exercise>.from(pool);
+      }
       catPool.sort((a, b) => b.met.compareTo(a.met)); // fastest first
 
       for (var ex in catPool.take(4)) {
@@ -81,6 +95,14 @@ class BurnPlanner {
     for (var opt in options) {
       if (seen.add(opt.activity)) {
         uniqueOptions.add(opt);
+      }
+    }
+
+    // Guarantee fallback if pool filtering yielded nothing
+    if (uniqueOptions.isEmpty && candidates.isNotEmpty) {
+      final fallbackEx = candidates.take(3);
+      for (var ex in fallbackEx) {
+        uniqueOptions.add(_createOption(ex, kcalOver, weightKg, false));
       }
     }
 

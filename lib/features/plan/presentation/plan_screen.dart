@@ -46,7 +46,7 @@ class PlanScreen extends ConsumerWidget {
   }
 
   Widget _buildBody(BuildContext context, WidgetRef ref, BurnPlanState state) {
-    if (state.frame == BurnPlanFrame.allClear) {
+    if (state.frame == BurnPlanFrame.allClear && state.options.isEmpty) {
       return EmptyState(
         message: 'No burn plan needed today. You have a cheat tolerance if you go a bit over.',
         buttonLabel: 'Looking good!',
@@ -56,7 +56,7 @@ class PlanScreen extends ConsumerWidget {
       );
     }
 
-    if (state.frame == BurnPlanFrame.cleanDay) {
+    if (state.frame == BurnPlanFrame.cleanDay && state.options.isEmpty) {
       return EmptyState(
         message: 'A perfect clean day with no logged meals. Keep it up!',
         buttonLabel: 'Great job!',

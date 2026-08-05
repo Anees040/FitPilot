@@ -49,7 +49,7 @@ class SeedImporter {
     final count = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM exercises'),
     );
-    if (count != null && count > 0) return;
+    if (count != null && count >= 50) return;
 
     final jsonStr = await rootBundle.loadString('assets/seed/exercises.json');
     final List<dynamic> exercises = json.decode(jsonStr) as List<dynamic>;

@@ -29,6 +29,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _ageFocusNode = FocusNode();
 
   late TextEditingController _goalWeightCtrl;
   late TextEditingController _ageCtrl;
@@ -49,25 +50,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _ageCtrl.dispose();
     _toleranceCtrl.dispose();
     _overrideCtrl.dispose();
+    _ageFocusNode.dispose();
     super.dispose();
   }
 
+  int? _lastProfileHash;
+
   void _initForm(Profile profile) {
-    if (_initialized) return;
-    _goalWeightCtrl = TextEditingController(text: profile.goalWeightKg?.toString() ?? '');
-    _ageCtrl = TextEditingController(text: profile.age.toString());
-    _toleranceCtrl = TextEditingController(text: profile.allowanceKcal.toString());
-    _overrideCtrl = TextEditingController(text: profile.targetOverride?.toString() ?? '');
+    if (_initialized && _lastProfileHash == profile.hashCode) return;
+
+    if (!_initialized) {
+      _goalWeightCtrl = TextEditingController(text: profile.goalWeightKg?.toString() ?? '');
+      _ageCtrl = TextEditingController(text: profile.age.toString());
+      _toleranceCtrl = TextEditingController(text: profile.allowanceKcal.toString());
+      _overrideCtrl = TextEditingController(text: profile.targetOverride?.toString() ?? '');
+
+      _ageCtrl.addListener(() => setState(() {}));
+      _toleranceCtrl.addListener(() => setState(() {}));
+      _overrideCtrl.addListener(() => setState(() {}));
+    } else {
+      _goalWeightCtrl.text = profile.goalWeightKg?.toString() ?? '';
+      _ageCtrl.text = profile.age.toString();
+      _toleranceCtrl.text = profile.allowanceKcal.toString();
+      _overrideCtrl.text = profile.targetOverride?.toString() ?? '';
+    }
 
     _gender = profile.gender;
     _activityLevel = profile.activityLevel;
     _goal = profile.goal;
     _equipment = Set.from(profile.equipment);
-
-    _ageCtrl.addListener(() => setState(() {}));
-    _toleranceCtrl.addListener(() => setState(() {}));
-    _overrideCtrl.addListener(() => setState(() {}));
-
+    _lastProfileHash = profile.hashCode;
     _initialized = true;
   }
 
@@ -85,9 +97,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       body: SafeArea(
         child: profileAsync.when(
           data: (profile) {
-            if (!_initialized) {
-              _initForm(profile);
-            } else if (!_isSaving) {
+            _initForm(profile);
+            if (!_isSaving && !_ageFocusNode.hasFocus) {
               final ageStr = profile.age.toString();
               if (_ageCtrl.text != ageStr) {
                 _ageCtrl.text = ageStr;
@@ -113,56 +124,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         _buildSectionTitle('BODY', theme),
                         Row(
                           children: [
-                            Expanded(child: _buildTextField('AGE', _ageCtrl, _validateInt)),
+                            Expanded(child: _buildTextField('AGE', _ageCtrl, _validateInt, focusNode: _ageFocusNode)),
                             const SizedBox(width: 16),
                             Expanded(child: _buildTextField('GOAL WT (OPT)', _goalWeightCtrl, _validateOptDouble)),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Text('GENDER', style: theme.textTheme.labelSmall),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: Gender.values.map((g) {
-                            final label = g.name[0].toUpperCase() + g.name.substring(1);
-                            return SelectChip(
-                              label: label,
-                              isSelected: _gender == g,
-                              onSelected: () => setState(() => _gender = g),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildSectionTitle('LIFESTYLE', theme),
-                        Text('ACTIVITY LEVEL', style: theme.textTheme.labelSmall),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: ActivityLevel.values.map((a) {
-                            final label = a.name[0].toUpperCase() + a.name.substring(1);
-                            return SelectChip(
-                              label: label,
-                              isSelected: _activityLevel == a,
-                              onSelected: () => setState(() => _activityLevel = a),
-                            );
-                          }).toList(),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<Gender>(
+                                initialValue: _gender,
+                                decoration: const InputDecoration(labelText: 'GENDER'),
+                                items: Gender.values.map((g) => DropdownMenuItem(value: g, child: Text(g.name[0].toUpperCase() + g.name.substring(1)))).toList(),
+                                onChanged: (g) { if (g != null) setState(() => _gender = g); },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: DropdownButtonFormField<Goal>(
+                                initialValue: _goal,
+                                decoration: const InputDecoration(labelText: 'GOAL'),
+                                items: Goal.values.map((g) => DropdownMenuItem(value: g, child: Text(g.name[0].toUpperCase() + g.name.substring(1)))).toList(),
+                                onChanged: (g) { if (g != null) setState(() => _goal = g); },
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
-                        Text('GOAL', style: theme.textTheme.labelSmall),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: Goal.values.map((g) {
-                            final label = g.name[0].toUpperCase() + g.name.substring(1);
-                            return SelectChip(
-                              label: label,
-                              isSelected: _goal == g,
-                              onSelected: () => setState(() => _goal = g),
-                            );
-                          }).toList(),
+                        DropdownButtonFormField<ActivityLevel>(
+                          initialValue: _activityLevel,
+                          decoration: const InputDecoration(labelText: 'ACTIVITY LEVEL'),
+                          items: ActivityLevel.values.map((a) => DropdownMenuItem(value: a, child: Text(a.name[0].toUpperCase() + a.name.substring(1)))).toList(),
+                          onChanged: (a) { if (a != null) setState(() => _activityLevel = a); },
                         ),
                         const SizedBox(height: 16),
                         _buildTextField('WIGGLE ROOM (KCAL)', _toleranceCtrl, _validateTolerance),
@@ -192,6 +186,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   icon: Icons.tune,
                   child: Column(
                     children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('Theme Mode', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                        trailing: DropdownButton<ThemeModePref>(
+                          value: profile.themeMode,
+                          underline: const SizedBox(),
+                          items: const [
+                            DropdownMenuItem(value: ThemeModePref.system, child: Text('System')),
+                            DropdownMenuItem(value: ThemeModePref.light, child: Text('Light')),
+                            DropdownMenuItem(value: ThemeModePref.dark, child: Text('Dark')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) _updateProfile(profile.copyWith(themeMode: v));
+                          },
+                        ),
+                      ),
+                      Divider(color: theme.dividerColor, height: 1),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text('Theme Color', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
@@ -362,12 +373,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
 
   Widget _buildComputedTargetDisplay(ThemeData theme, Profile profile) {
+    final ext = theme.extension<AppColors>()!;
     return AppCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('METABOLIC REFERENCE', style: theme.textTheme.labelSmall),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.local_fire_department_rounded, color: theme.colorScheme.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'DAILY CALORIE BASELINE',
+                      style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 0.8, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Total Daily Energy Expenditure (TDEE)',
+                      style: theme.textTheme.caption,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -375,25 +414,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Text(
                 '${profile.tdee}',
                 style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   color: theme.colorScheme.primary,
-                  height: 1,
+                  height: 1.0,
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               Text(
-                'kcal TDEE',
+                'kcal / day',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            'Your app operates on a "debt" model. Every meal you log is debt you have to burn off. However, your first ${profile.allowanceKcal} kcal each day are "wiggle room" and won\'t trigger a burn plan.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: ext.surfaceRaised,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ext.hairline),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded, size: 18, color: theme.colorScheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Your first ${profile.allowanceKcal} kcal each day are "wiggle room" before burn plans trigger.',
+                    style: theme.textTheme.caption.copyWith(height: 1.3),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -414,7 +468,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String? Function(String?) validator) {
+  Widget _buildTextField(String label, TextEditingController controller, String? Function(String?) validator, {FocusNode? focusNode}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -423,6 +477,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         AppTextField(
           label: "",
           controller: controller,
+          focusNode: focusNode,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           validator: validator,
         ),
@@ -466,13 +521,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Sign Out'),
+                        content: const Text('Are you sure you want to sign out? Your progress will be securely saved in the cloud.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Sign Out'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm != true) return;
+                    
                     ref.read(syncTriggerManagerProvider)?.pause();
                     final db = await ref.read(databaseProvider.future);
                     await AppDatabase.clearUserData(db);
                     await ref.read(authRepositoryProvider).signOut();
                     resetApplicationState(ref);
                     if (context.mounted) {
-                      context.go('/today');
+                      context.go('/welcome');
                     }
                   },
                   child: const Text('Sign Out'),
@@ -548,23 +622,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: const Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: loading ? null : () async {
-                    setDialogState(() => loading = true);
-                    try {
-                      final db = await ref.read(databaseProvider.future);
-                      await AppDatabase.clearUserData(db);
-                      await ref.read(authRepositoryProvider).deleteAccount();
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        AppSnackbar.success(context, 'Account deleted successfully.');
+                    onPressed: loading ? null : () async {
+                      setDialogState(() => loading = true);
+                      try {
+                        ref.read(syncTriggerManagerProvider)?.pause();
+                        final db = await ref.read(databaseProvider.future);
+                        await AppDatabase.clearUserData(db);
+                        try {
+                          await ref.read(authRepositoryProvider).deleteAccount();
+                        } catch (_) {
+                          await ref.read(authRepositoryProvider).signOut();
+                        }
+                        resetApplicationState(ref);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          AppSnackbar.success(context, 'Account deleted successfully.');
+                          context.go('/welcome');
+                        }
+                      } catch (e) {
+                        setDialogState(() => loading = false);
+                        if (context.mounted) {
+                          AppSnackbar.error(context, e.toString());
+                        }
                       }
-                    } catch (e) {
-                      setDialogState(() => loading = false);
-                      if (context.mounted) {
-                        AppSnackbar.error(context, e.toString());
-                      }
-                    }
-                  },
+                    },
                   child: loading 
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text('Delete Permanently', style: TextStyle(color: Theme.of(context).colorScheme.error)),

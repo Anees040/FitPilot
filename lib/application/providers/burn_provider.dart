@@ -73,12 +73,30 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
 
     final allExercises = await exerciseRepo.all();
     final profileEq = profile.equipment;
-    // Filter candidates by equipment
-    final candidates = allExercises.where((e) {
-      if (e.equipment == null) return true;
-      if (e.equipment == 'none') return true;
-      return profileEq.contains(e.equipment);
+    // Filter candidates by equipment (always include equipment-free/bodyweight exercises)
+    var candidates = allExercises.where((e) {
+      if (e.equipment == null || e.equipment!.trim().isEmpty) return true;
+      final eqLower = e.equipment!.toLowerCase().trim();
+      if (eqLower == 'none' ||
+          eqLower == 'bodyweight' ||
+          eqLower == 'body weight' ||
+          eqLower == 'no equipment' ||
+          eqLower.contains('none') ||
+          eqLower.contains('bodyweight') ||
+          eqLower.contains('body weight') ||
+          eqLower.contains('no equipment')) {
+        return true;
+      }
+      if (profileEq.isEmpty) return true;
+      return profileEq.any((userEq) {
+        final u = userEq.toLowerCase().trim();
+        return u.isNotEmpty && eqLower.contains(u);
+      });
     }).toList();
+
+    if (candidates.isEmpty) {
+      candidates = allExercises;
+    }
 
     final activeCategoryPref = categoryFilter ?? profile.planCategoryPref;
     final activePacePref = paceFilter ?? profile.planPacePref;
@@ -103,47 +121,44 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
       );
     }
 
-    // Is there a surplus today?
-    if (todayStatus.toBurn > 0) {
-      int targetKcal = todayStatus.toBurn;
-      
-      // If a specific meal is selected, target is that meal's midpoint
+    // Is there a surplus today or selected meal or logged meals?
+    if (todayState.logs.isNotEmpty || todayStatus.toBurn > 0 || selectedMealId != null) {
+      int calcTarget = todayStatus.toBurn;
+
       if (selectedMealId != null) {
         final meal = todayState.logs.where((l) => l.id == selectedMealId).firstOrNull;
         if (meal != null) {
-          targetKcal = meal.kcal.midpoint;
+          calcTarget = meal.kcal.midpoint;
         }
       }
 
+      if (calcTarget <= 0) {
+        calcTarget = todayStatus.net.midpoint > 0 
+            ? todayStatus.net.midpoint 
+            : (todayState.logs.firstOrNull?.kcal.midpoint ?? 300);
+      }
+
       final options = const BurnPlanner().planFor(
-        kcalOver: targetKcal,
+        kcalOver: calcTarget,
         weightKg: profile.weightKg,
         candidates: candidates,
         categoryPref: activeCategoryPref,
         pacePref: activePacePref,
       );
+
       return BurnPlanState(
         frame: BurnPlanFrame.burnToday,
-        kcalToBurnOrEat: targetKcal,
+        kcalToBurnOrEat: calcTarget,
         options: options,
         targetDate: today,
         selectedMealId: selectedMealId,
       );
     }
 
-    if (todayStatus.state == DayState.noData) {
-      return BurnPlanState(
-        frame: BurnPlanFrame.cleanDay,
-        kcalToBurnOrEat: 0,
-        options: [],
-        targetDate: today,
-      );
-    }
-
     return BurnPlanState(
-      frame: BurnPlanFrame.allClear,
+      frame: BurnPlanFrame.cleanDay,
       kcalToBurnOrEat: 0,
-      options: [],
+      options: const [],
       targetDate: today,
     );
   }

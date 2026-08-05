@@ -392,13 +392,15 @@ class _LogListItem extends ConsumerWidget {
         child: Icon(Icons.delete, color: theme.colorScheme.onPrimary),
       ),
       onDismissed: (_) {
-        ref.read(todayProvider.notifier).deleteLog(log.id);
+        final container = ProviderScope.containerOf(context);
+        final notifier = ref.read(todayProvider.notifier);
+        notifier.deleteLog(log.id);
         AppSnackbar.success(
           context,
           'Meal deleted',
           actionLabel: 'UNDO',
           onAction: () {
-            ref.read(todayProvider.notifier).addLog(log.copyWith(deletedAt: null));
+            container.read(todayProvider.notifier).restoreLog(log);
           },
         );
       },
@@ -576,15 +578,15 @@ class _FoodLogDetailSheetState extends ConsumerState<_FoodLogDetailSheet> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: _quantity <= 0.5 ? null : () => setState(() => _quantity -= 0.5),
+                      onPressed: _quantity <= 0.25 ? null : () => setState(() => _quantity = (_quantity - 0.25).clamp(0.25, 20.0)),
                     ),
                     Text(
-                      _quantity.toStringAsFixed(1),
+                      _quantity.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), ''),
                       style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () => setState(() => _quantity += 0.5),
+                      onPressed: () => setState(() => _quantity = (_quantity + 0.25).clamp(0.25, 20.0)),
                     ),
                   ],
                 ),

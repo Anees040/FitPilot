@@ -132,7 +132,8 @@ class SyncService {
     for (final row in rowsToUpsert) {
       final String conflictKey;
       if (table == 'weight_entries') {
-        conflictKey = '${row['user_id']}_${row['for_date']}';
+        final uid = row['user_id'] ?? 'user';
+        conflictKey = '${uid}_${row['for_date']}';
       } else {
         conflictKey = row['id'].toString();
       }
@@ -192,9 +193,13 @@ class SyncService {
             data.remove('active_program_id');
             data.remove('active_program_week');
             data.remove('active_program_day');
+            data.remove('onboarding_complete');
             data['id'] = userId;
             // Convert equipment JSON string → Dart List for Postgres text[] column
             _fixProfileArrayFields(data);
+          } else if (table == 'weight_entries') {
+            if (data['weight_kg'] == null) continue;
+            data['user_id'] = userId;
           } else {
             data['user_id'] = userId;
           }

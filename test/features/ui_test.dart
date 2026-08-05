@@ -70,15 +70,15 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'Test Food');
 
       // Enter 0
-      await tester.enterText(find.byType(TextField).last, '0');
-      await tester.tap(find.text('Add'));
+      await tester.enterText(find.byType(TextField).at(1), '0');
+      await tester.tap(find.text('Add Meal'));
       await tester.pump();
 
       expect(find.text('Calories must be between 1 and 5000'), findsOneWidget);
 
       // Enter 5001
-      await tester.enterText(find.byType(TextField).last, '5001');
-      await tester.tap(find.text('Add'));
+      await tester.enterText(find.byType(TextField).at(1), '5001');
+      await tester.tap(find.text('Add Meal'));
       await tester.pump();
 
       expect(find.text('Calories must be between 1 and 5000'), findsOneWidget);
@@ -176,6 +176,9 @@ class MockTodayNotifier extends AsyncNotifier<TodayState>
 
   @override
   Future<void> updateLogQuantity(String logId, num newQuantity) async {}
+
+  @override
+  Future<void> restoreLog(log) async {}
 }
 
 class MockFoodSearchNotifier extends AutoDisposeAsyncNotifier<List<FoodItem>>

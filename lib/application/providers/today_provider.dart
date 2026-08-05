@@ -5,6 +5,7 @@ import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/domain/engines/range_calculator.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
+import 'package:fitpilot/core/services/notification_service.dart';
 
 class TodayState {
   final List<FoodLog> logs;
@@ -45,6 +46,15 @@ class TodayNotifier extends AsyncNotifier<TodayState> {
   Future<void> addLog(FoodLog log) async {
     final logRepo = await ref.read(logRepositoryProvider.future);
     await logRepo.add(log);
+    
+    // Schedule a reminder 1 hour from now for this meal
+    NotificationService().scheduleBurnReminder(
+      id: log.hashCode, // Unique ID per log
+      title: 'Burn Plan Reminder 🔥',
+      body: 'You recently logged ${log.foodName}. Check your Burn Plan to see how to work it off!',
+      delay: const Duration(hours: 1),
+    );
+
     ref.invalidateSelf();
     ref.read(syncTriggerManagerProvider)?.onLocalWrite();
   }
@@ -79,6 +89,15 @@ class TodayNotifier extends AsyncNotifier<TodayState> {
 
     final logRepo = await ref.read(logRepositoryProvider.future);
     await logRepo.softDelete(logId, DateTime.now());
+    ref.invalidateSelf();
+    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+  }
+
+  /// Restores a soft-deleted log and refreshes state.
+  Future<void> restoreLog(FoodLog log) async {
+    final logRepo = await ref.read(logRepositoryProvider.future);
+    final restored = log.copyWith(deletedAt: null);
+    await logRepo.update(restored);
     ref.invalidateSelf();
     ref.read(syncTriggerManagerProvider)?.onLocalWrite();
   }

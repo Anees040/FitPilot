@@ -39,10 +39,37 @@
 - [x] J4 — Theming, Progress & Workout Hub UI Polish
 - [x] J5 — Sign-out sequence, Password flow, and Workout Hub taxonomy fixes
 - [x] J6 — Chrome Debug Run & UI Exception Fixes (hero overflow, dropdowns, keys, step 5 riverpod, progress slivers, auth guest loophole, food log detail sheet)
+- [x] J7 — Release Crash Fixes, Password Flow Polish, Snackbar & UI Refactor
+- [x] J8 — Burn Plan Empty Fix, UNDO Disposed Ref Fix, Offline Sign-Out & Auth Isolation
+- [x] J9 — Real Scanner Operational Guarantee, Device Exercise Seed Repair & Guest Profile Sync
 
 ## Last completed
 
-- J6 — Chrome Debug Run & UI Exception Fixes
+- J9 — Real Scanner Operational Guarantee, Device Exercise Seed Repair & Guest Profile Sync
+  - Removed all silent fallback mock data (`'Scanned Meal / Desi Portion (330 kcal)'`) from `capture_screen.dart`. Real Gemini AI results are displayed when valid, and explicit network/connection error notices appear if unreachable.
+  - Added OCR validation in `_runOcrOnFile` requiring actual Nutrition Facts numbers (`kcal`, `servingSizeGrams`) to be recognized before presenting the review sheet.
+  - Updated `SeedImporter._importExercises()` in `seed_importer.dart` to automatically populate the 60 exercise catalog if existing DB contains < 50 exercises, resolving empty Burn Plan cards on physical devices.
+  - Fixed `_ProfileScreenState._initForm()` in `profile_screen.dart` to re-sync all form controllers and chips reactively when signing out to guest mode or logging into an account.
+  - Fixed empty Burn Plan options list (Image 1) by repairing equipment JSON array parsing in `burn_provider.dart` and adding fallback candidate selection in `burn_planner.dart`.
+  - Fixed UNDO meal deletion crash (`Cannot use "ref" after widget was disposed`) in `today_screen.dart` by capturing `todayProvider.notifier` prior to element unmounting.
+  - Suppressed raw technical cancellation error (`GoogleSignInException.canceled`) in `auth_screen.dart` when users dismiss the Google account picker.
+  - Made `profileProvider` and `profileRepositoryProvider` reactive to `currentUserProvider` so profile screen updates immediately upon login or sign-out without showing stale guest data.
+  - Simplified Change Password validation and removed duplicate error messages while ensuring field visibility.
+  - Enhanced `deleteAccount()` in `supabase_auth_repository.dart` to wipe user rows (`profiles`, `food_logs`, `weight_entries`, `burn_completions`) from Supabase Cloud.
+  - Made `signOut()` resilient to offline socket exceptions so sign-out always completes locally (clearing local database and resetting state).
+  - Made Age field in `profile_screen.dart` fully editable without keystroke reset by introducing `_ageFocusNode`.
+  - Stripped `onboarding_complete` and guarded null `weight_kg` in `sync_service.dart` to eliminate Postgres schema cache and NOT NULL constraint log errors.
+  - Handled AI photo scanning network/server errors with explicit snackbar notices instead of silent dummy fallback injection.
+  - Fixed Progress screen `ExpansionTile` crash (`type 'double' is not a subtype of type 'bool?'`) by replacing `ExpansionTile` with custom `_CollapsibleHistoryCard` and `_WeekTileCard` stateful widgets, eliminating `PageStorage` type pollution.
+  - Fixed seed importer `exercises.equipment NOT NULL` constraint failure on Android release device.
+  - Updated `FoodLog` domain entity invariant (`quantity <= 0`) enabling fractional portions like `0.5` and `0.25` without runtime exceptions.
+  - Redesigned `AppSnackbar` (24px bottom margin, 3s duration) and updated `TodayNotifier` with `restoreLog` for instant, seamless UNDO functionality.
+  - Enhanced `ChangePasswordScreen` with `Form` validation, live complexity chips, real-time match status, and explicit error messages.
+  - Redesigned Metabolic Reference display in `ProfileScreen` and added **Theme Mode** (`System`, `Light`, `Dark`) selector dropdown.
+  - Ensured equipment-free/bodyweight exercises are always available in `burn_provider.dart` when surplus calories occur.
+  - Increased `_CategoryTile` opacity to 0.75 and softened gradient overlays in `workout_hub_screen.dart`.
+  - Added smart offline fallbacks for AI photo capture in `capture_screen.dart`.
+  - Added portion/weight basis field and privacy note to `ManualEntrySheet`.
   - Fixed `_HeroSection` Column overflow in `workout_hub_screen.dart:290:24` inside 156px container.
   - Resolved `dropdown.dart:1402` assertion by eliminating un-valued divider `DropdownMenuItem` and guarding value parameters in `plan_screen.dart` and `profile_screen.dart`.
   - Fixed `Duplicate GlobalKey` and `_dependents.isEmpty` assertion on Plan tab by removing top-level `GlobalKey`s from `StatefulShellBranch` in `app_router.dart`.

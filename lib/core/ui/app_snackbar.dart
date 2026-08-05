@@ -32,8 +32,9 @@ class AppSnackbar {
         break;
     }
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: [
@@ -51,8 +52,8 @@ class AppSnackbar {
         ),
         backgroundColor: ext.surfaceRaised,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
-        duration: const Duration(milliseconds: 3500),
+        margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
+        duration: const Duration(milliseconds: 3000),
         dismissDirection: DismissDirection.horizontal,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -62,7 +63,10 @@ class AppSnackbar {
             ? SnackBarAction(
                 label: actionLabel,
                 textColor: theme.colorScheme.primary,
-                onPressed: onAction,
+                onPressed: () {
+                  messenger.hideCurrentSnackBar();
+                  onAction();
+                },
               )
             : null,
       ),

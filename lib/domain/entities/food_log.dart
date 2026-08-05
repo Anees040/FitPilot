@@ -34,8 +34,8 @@ class FoodLog extends Equatable {
         'provide foodId, foodName, or customName',
       );
     }
-    if (quantity < 1 || quantity > 20) {
-      throw ArgumentError('quantity must be 1–20 inclusive, got $quantity');
+    if (quantity <= 0 || quantity > 20) {
+      throw ArgumentError('quantity must be positive up to 20, got $quantity');
     }
   }
 

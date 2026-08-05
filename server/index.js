@@ -5,7 +5,7 @@ const { GoogleGenAI, Type } = require('@google/genai');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '4mb' }));
+app.use(express.json({ limit: '20mb' }));
 
 // ---------------------------------------------------------------------------
 // Gemini client
@@ -24,7 +24,7 @@ const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 // ---------------------------------------------------------------------------
 // Daily quota: 3 photo estimates per device per day (in-memory)
 // ---------------------------------------------------------------------------
-const DAILY_LIMIT = 3;
+const DAILY_LIMIT = 20;
 const usage = new Map(); // deviceId -> { day: 'YYYY-MM-DD', count: number }
 
 function quota(req, res, next) {
@@ -72,12 +72,13 @@ app.post('/api/estimate-food', quota, async (req, res) => {
     };
 
     const prompt =
-      'Analyze this food image. Identify the food and estimate the calorie range ' +
-      'for the portion shown. Be honest about uncertainty: the range must span at ' +
-      'least plus/minus 15 percent around your central estimate. Keep the name concise.';
+      'Analyze this image. If it does NOT clearly show food or a beverage, return name="Not food" and 0 for calories. ' +
+      'If it is food, identify it and estimate the calorie range for the portion shown. ' +
+      'Be honest about uncertainty: the range must span at least plus/minus 15 percent around your central estimate. ' +
+      'Keep the name concise.';
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: [
         {
           role: 'user',
@@ -98,7 +99,13 @@ app.post('/api/estimate-food', quota, async (req, res) => {
       return res.status(502).json({ error: 'Model did not return a result.' });
     }
 
-    const data = JSON.parse(response.text);
+    let responseText = response.text;
+    // Strip markdown formatting if the model wrapped the JSON
+    if (responseText.startsWith('```')) {
+      responseText = responseText.replace(/^```(?:json)?\n?/g, '').replace(/\n?```$/g, '');
+    }
+
+    const data = JSON.parse(responseText);
 
     // Enforce range honesty server-side: widen degenerate ranges to +/-15%.
     if (
@@ -114,7 +121,10 @@ app.post('/api/estimate-food', quota, async (req, res) => {
     return res.json(data);
   } catch (error) {
     console.error('Error estimating food:', error && error.message ? error.message : error);
-    return res.status(500).json({ error: 'Failed to estimate food calories.' });
+    return res.status(500).json({ 
+      error: 'Failed to estimate food calories.',
+      details: error && error.message ? error.message : String(error)
+    });
   }
 });
 

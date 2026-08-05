@@ -46,7 +46,8 @@ final profileRepositoryProvider = FutureProvider<ProfileRepository>((
   ref,
 ) async {
   final db = await ref.watch(databaseProvider.future);
-  bool isGuest() => ref.read(currentUserProvider) == null;
+  final user = ref.watch(currentUserProvider);
+  bool isGuest() => user == null;
   return ProfileRepository(db, isGuest: isGuest);
 });
 

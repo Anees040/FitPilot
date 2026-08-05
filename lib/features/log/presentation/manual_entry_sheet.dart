@@ -19,12 +19,14 @@ class ManualEntrySheet extends ConsumerStatefulWidget {
 class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
   final _nameController = TextEditingController();
   final _kcalController = TextEditingController();
+  final _portionController = TextEditingController();
   String? _errorText;
 
   @override
   void dispose() {
     _nameController.dispose();
     _kcalController.dispose();
+    _portionController.dispose();
     super.dispose();
   }
 
@@ -42,11 +44,14 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
       return;
     }
 
+    final portionBasis = _portionController.text.trim();
+    final displayName = portionBasis.isNotEmpty ? '$name ($portionBasis)' : name;
+
     setState(() => _errorText = null);
 
     final log = FoodLog(
       id: const Uuid().v4(),
-      customName: name,
+      customName: displayName,
       quantity: 1,
       kcal: KcalRange.exact(kcal),
       source: LogSource.manual,
@@ -79,7 +84,13 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
             style: theme.textTheme.h2,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          Text(
+            'Manual entries are saved privately to your daily personal log.',
+            style: theme.textTheme.caption,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
           AppTextField(
             label: 'FOOD NAME',
             controller: _nameController,
@@ -90,12 +101,18 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
             label: 'CALORIES (KCAL)',
             controller: _kcalController,
             keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            label: 'PORTION / WEIGHT BASIS (OPTIONAL, e.g. 100g, 1 plate)',
+            controller: _portionController,
             errorText: _errorText,
             onSubmitted: (_) => _validateAndSubmit(),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           PrimaryButton(
-            label: 'Add',
+            label: 'Add Meal',
             onPressed: _validateAndSubmit,
           ),
         ],

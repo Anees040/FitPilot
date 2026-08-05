@@ -162,6 +162,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       }
     } catch (e, stack) {
       debugPrint('Error in _submitGoogle: $e\n$stack');
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('cancel') || errStr.contains('canceled') || errStr.contains('cancelled') || errStr.contains('user_cancelled')) {
+        // User voluntarily dismissed account selection dialog — do not present error
+        return;
+      }
       if (mounted) setState(() => _formError = _mapError(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);

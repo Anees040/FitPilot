@@ -85,18 +85,30 @@ void main() {
       );
     });
 
-    test('quantity 0.9 throws', () {
+    test('quantity 0 throws', () {
       expect(
         () => FoodLog(
           id: 'log-1',
           customName: 'Test',
-          quantity: 0.9,
+          quantity: 0,
           kcal: KcalRange(100, 200),
           source: LogSource.manual,
           loggedAt: now,
         ),
         throwsArgumentError,
       );
+    });
+
+    test('quantity 0.5 passes', () {
+      final log = FoodLog(
+        id: 'log-1',
+        customName: 'Test',
+        quantity: 0.5,
+        kcal: KcalRange(100, 200),
+        source: LogSource.manual,
+        loggedAt: now,
+      );
+      expect(log.quantity, 0.5);
     });
 
     test('quantity 20.1 throws', () {
