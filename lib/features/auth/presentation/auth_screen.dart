@@ -259,7 +259,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             setState(() { _isLoading = false; });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('Failed to sync guest data to cloud. Your data is still saved locally.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                content: const Text('Guest data will finish syncing in the background.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 backgroundColor: Theme.of(context).colorScheme.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

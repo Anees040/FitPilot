@@ -450,6 +450,21 @@ class AppDatabase {
         await db.execute("ALTER TABLE profile ADD COLUMN onboarding_complete INTEGER NOT NULL DEFAULT 0");
       } catch (_) {}
     }
+    if (oldVersion < 16) {
+      // Recreate exercises table to drop equipment NOT NULL constraint
+      await db.execute('DROP TABLE IF EXISTS exercises');
+      await db.execute('''
+        CREATE TABLE exercises (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          muscle_group TEXT NOT NULL,
+          equipment TEXT,
+          burn_rate_per_min REAL NOT NULL,
+          video_url TEXT,
+          thumbnail_url TEXT
+        )
+      ''');
+    }
   }
 
   static Future<void> _repairLogs(Database db) async {
