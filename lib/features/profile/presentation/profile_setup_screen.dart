@@ -157,10 +157,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       await repo.save(profile);
       if (!mounted) return;
       
-      ref.invalidate(profileProvider);
-      
       // Log the initial weight
       await progressNotifier.addWeight(_weightKg);
+
+      ref.invalidate(profileProvider);
 
       if (mounted) context.go('/today');
     } catch (e) {

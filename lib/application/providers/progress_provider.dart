@@ -148,12 +148,16 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       });
     }
 
-    final currentProfile = await ref.read(profileProvider.future);
     final repo = await ref.read(profileRepositoryProvider.future);
-    await repo.save(currentProfile.copyWith(weightKg: weightKg));
-    ref.invalidate(profileProvider);
+    final currentProfile = await repo.get();
+    if (currentProfile != null) {
+      await repo.save(currentProfile.copyWith(weightKg: weightKg));
+    }
 
-    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+    final syncTrigger = ref.read(syncTriggerManagerProvider);
+    syncTrigger?.onLocalWrite();
+
+    ref.invalidate(profileProvider);
     ref.invalidateSelf();
   }
 
@@ -178,12 +182,16 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       });
     }
 
-    final currentProfile = await ref.read(profileProvider.future);
     final repo = await ref.read(profileRepositoryProvider.future);
-    await repo.save(currentProfile.copyWith(weightKg: newWeight));
-    ref.invalidate(profileProvider);
+    final currentProfile = await repo.get();
+    if (currentProfile != null) {
+      await repo.save(currentProfile.copyWith(weightKg: newWeight));
+    }
 
-    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+    final syncTrigger = ref.read(syncTriggerManagerProvider);
+    syncTrigger?.onLocalWrite();
+
+    ref.invalidate(profileProvider);
     ref.invalidateSelf();
   }
 
