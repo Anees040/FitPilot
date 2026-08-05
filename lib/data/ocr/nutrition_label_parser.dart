@@ -15,12 +15,14 @@ class NutritionLabelResult {
   final ParsedField<NutritionBasis>? basis;
   final ParsedField<double>? servingSizeGrams;
   final ParsedField<double>? servingsPerPack;
+  final String? subtitle;
 
   NutritionLabelResult({
     this.kcal,
     this.basis,
     this.servingSizeGrams,
     this.servingsPerPack,
+    this.subtitle,
   });
 }
 
@@ -32,19 +34,19 @@ class NutritionLabelParser {
     ParsedField<NutritionBasis>? parsedBasis;
     ParsedField<double>? parsedServingSize;
     ParsedField<double>? parsedServings;
+    String? subtitle;
 
     // 1. Kcal / Energy
-    // Look for exact kcal matches first.
     final kcalMatch = RegExp(
       r'(?<!\d)(\d+(?:[.,]\d+)?)[ \t]*(?:kcal|kilocalories)\b',
     ).firstMatch(normalized);
+    
     if (kcalMatch != null) {
       final val = _parseDouble(kcalMatch.group(1)!);
       if (val != null) {
         parsedKcal = ParsedField<int>(val.round(), 0.9);
       }
     } else {
-      // Look for kJ and convert
       final kjMatch = RegExp(
         r'(?<!\d)(\d+(?:[.,]\d+)?)[ \t]*(?:kj|kilojoules)\b',
       ).firstMatch(normalized);
@@ -54,7 +56,6 @@ class NutritionLabelParser {
           parsedKcal = ParsedField<int>((val / 4.184).round(), 0.8);
         }
       } else {
-        // Fallback: look for "energy" or "tawanai" and a number nearby
         final fallbackMatch = RegExp(
           r'(?:energy|calories|calori|tawanai|hararay)[ \t\n]*[:=-]?[ \t\n]*(\d+(?:[.,]\d+)?)',
         ).firstMatch(normalized);
@@ -68,18 +69,22 @@ class NutritionLabelParser {
     }
 
     // 2. Basis
-    if (RegExp(r'(?:per|fi|har)\s*100\s*g').hasMatch(normalized)) {
-      parsedBasis = ParsedField(NutritionBasis.per100g, 0.9);
-    } else if (RegExp(r'(?:per|fi|har)\s*100\s*ml').hasMatch(normalized)) {
-      parsedBasis = ParsedField(NutritionBasis.per100ml, 0.9);
-    } else if (RegExp(
-      r'(?:per\s*serving|fi\s*hissa|har\s*hissa|per\s*portion)',
-    ).hasMatch(normalized)) {
+    bool has100g = RegExp(r'(?:per|fi|har)\s*100\s*g').hasMatch(normalized) || RegExp(r'(?:per|fi|har)\s*100\s*ml').hasMatch(normalized);
+    bool hasPiece = RegExp(r'(?:per\s*piece|fi\s*dana|fi\s*adad)').hasMatch(normalized);
+    bool hasServing = RegExp(r'(?:per\s*serving|fi\s*hissa|har\s*hissa|per\s*portion)').hasMatch(normalized);
+
+    if (hasPiece) {
+      parsedBasis = ParsedField(NutritionBasis.perPiece, 0.9);
+      if (has100g) subtitle = "Preferred per-piece over per-100g";
+    } else if (hasServing) {
       parsedBasis = ParsedField(NutritionBasis.perServing, 0.9);
-    } else if (RegExp(
-      r'(?:per\s*piece|fi\s*dana|fi\s*adad)',
-    ).hasMatch(normalized)) {
-      parsedBasis = ParsedField(NutritionBasis.perPiece, 0.8);
+      if (has100g) subtitle = "Preferred per-serving over per-100g";
+    } else if (has100g) {
+      if (RegExp(r'(?:per|fi|har)\s*100\s*g').hasMatch(normalized)) {
+        parsedBasis = ParsedField(NutritionBasis.per100g, 0.9);
+      } else {
+        parsedBasis = ParsedField(NutritionBasis.per100ml, 0.9);
+      }
     }
 
     // 3. Serving Size
@@ -109,6 +114,7 @@ class NutritionLabelParser {
       basis: parsedBasis,
       servingSizeGrams: parsedServingSize,
       servingsPerPack: parsedServings,
+      subtitle: subtitle,
     );
   }
 

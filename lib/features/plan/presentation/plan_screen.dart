@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
+import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/domain/entities/burn_option.dart';
 
 import 'package:fitpilot/core/ui/states.dart';
@@ -46,13 +47,46 @@ class PlanScreen extends ConsumerWidget {
   }
 
   Widget _buildBody(BuildContext context, WidgetRef ref, BurnPlanState state) {
+    if (!state.hasExercises) {
+      return ErrorState(
+        reason: 'Exercise library didn\'t load.\n${ref.watch(seedStatusProvider) ?? "Please try reloading."}',
+        onRetry: () async {
+          ref.invalidate(databaseProvider);
+        },
+      );
+    }
+
     if (state.frame == BurnPlanFrame.allClear && state.options.isEmpty) {
-      return EmptyState(
-        message: 'No burn plan needed today. You have a cheat tolerance if you go a bit over.',
-        buttonLabel: 'Looking good!',
-        illustration: 'burn_smart',
-        isColoredImage: true,
-        onAction: () => context.go('/today'),
+      final theme = Theme.of(context);
+      final ext = theme.extension<AppColors>()!;
+      return ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          AppCard(
+            child: Column(
+              children: [
+                Icon(Icons.local_fire_department, size: 64, color: ext.warning),
+                const SizedBox(height: 16),
+                Text('All burned off!', style: theme.textTheme.h1),
+                const SizedBox(height: 8),
+                Text(
+                  "You've cleared today's surplus - ${state.burnedToday} kcal burned",
+                  style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  label: 'See progress',
+                  onPressed: () => context.go('/progress'),
+                ),
+              ],
+            ),
+          ),
+          if (state.todayBurns.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            _buildDoneTodaySection(context, state),
+          ],
+        ],
       );
     }
 
@@ -120,6 +154,51 @@ class PlanScreen extends ConsumerWidget {
         const SizedBox(height: 8),
         ...state.options.map(
           (option) => _ExpandableOptionCard(option: option),
+        ),
+        if (state.todayBurns.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          _buildDoneTodaySection(context, state),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDoneTodaySection(BuildContext context, BurnPlanState state) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('DONE TODAY', style: theme.textTheme.overline),
+        const SizedBox(height: 12),
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              ...state.todayBurns.take(5).map((burn) {
+                return ListTile(
+                  title: Text(burn.activity, style: theme.textTheme.bodyStrong),
+                  trailing: Text(
+                    '${burn.kcal} kcal',
+                    style: theme.textTheme.bodyMedium!.copyWith(color: ext.success),
+                  ),
+                );
+              }),
+              if (state.todayBurns.length > 5)
+                ListTile(
+                  title: Text('...and ${state.todayBurns.length - 5} more', style: theme.textTheme.caption),
+                ),
+              const Divider(height: 1),
+              ListTile(
+                title: Text('Total Burned', style: theme.textTheme.bodyStrong),
+                trailing: Text(
+                  '${state.burnedToday} kcal',
+                  style: theme.textTheme.bodyStrong.copyWith(color: ext.success),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -369,13 +448,29 @@ class _ExpandableOptionCardState extends ConsumerState<_ExpandableOptionCard> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: PrimaryButton(
-                      label: 'Mark Done',
-                      onPressed: () {
-                        HapticFeedback.heavyImpact();
-                        ref.read(burnPlanProvider.notifier).markDone(option);
-                        AppSnackbar.success(context, 'Marked ${option.activity} as done!');
-                        context.go('/today'); // Return to Today to see the ring fill
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final isBusy = ref.watch(burnPlanProvider).valueOrNull?.busyOptionIds.contains(option.activity) ?? false;
+                        
+                        return PrimaryButton(
+                          label: isBusy ? 'Saving...' : 'Mark Done',
+                          onPressed: isBusy
+                              ? null
+                              : () async {
+                                  HapticFeedback.heavyImpact();
+                                  await ref.read(burnPlanProvider.notifier).markDone(option);
+                                  if (!context.mounted) return;
+                                  
+                                  // Read the new state directly without waiting for a re-build
+                                  final newState = ref.read(burnPlanProvider).valueOrNull;
+                                  if (newState != null && newState.kcalToBurnOrEat > 0) {
+                                    AppSnackbar.success(
+                                      context,
+                                      '+${option.kcal} kcal burned - ${newState.kcalToBurnOrEat} to go',
+                                    );
+                                  }
+                                },
+                        );
                       },
                     ),
                   ),

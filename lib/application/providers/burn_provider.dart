@@ -7,6 +7,7 @@ import 'package:fitpilot/domain/engines/burn_planner.dart';
 import 'package:fitpilot/domain/engines/range_calculator.dart';
 import 'package:fitpilot/domain/engines/streak_engine.dart';
 import 'package:fitpilot/domain/entities/burn_option.dart';
+import 'package:fitpilot/domain/entities/burn_completion.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
 
 
@@ -18,6 +19,10 @@ class BurnPlanState {
   final List<BurnOption> options;
   final DateTime targetDate;
   final String? selectedMealId;
+  final Set<String> busyOptionIds;
+  final int burnedToday;
+  final List<BurnCompletion> todayBurns;
+  final bool hasExercises;
 
   const BurnPlanState({
     required this.frame,
@@ -25,7 +30,35 @@ class BurnPlanState {
     this.options = const [],
     required this.targetDate,
     this.selectedMealId,
+    this.busyOptionIds = const {},
+    this.burnedToday = 0,
+    this.todayBurns = const [],
+    this.hasExercises = true,
   });
+
+  BurnPlanState copyWith({
+    BurnPlanFrame? frame,
+    int? kcalToBurnOrEat,
+    List<BurnOption>? options,
+    DateTime? targetDate,
+    String? selectedMealId,
+    Set<String>? busyOptionIds,
+    int? burnedToday,
+    List<BurnCompletion>? todayBurns,
+    bool? hasExercises,
+  }) {
+    return BurnPlanState(
+      frame: frame ?? this.frame,
+      kcalToBurnOrEat: kcalToBurnOrEat ?? this.kcalToBurnOrEat,
+      options: options ?? this.options,
+      targetDate: targetDate ?? this.targetDate,
+      selectedMealId: selectedMealId ?? this.selectedMealId,
+      busyOptionIds: busyOptionIds ?? this.busyOptionIds,
+      burnedToday: burnedToday ?? this.burnedToday,
+      todayBurns: todayBurns ?? this.todayBurns,
+      hasExercises: hasExercises ?? this.hasExercises,
+    );
+  }
 }
 
 final burnCategoryFilterProvider = StateProvider<String?>((ref) => null);
@@ -67,6 +100,9 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     );
 
     final history = {today: todayStatus, yesterday: yesterdayStatus};
+
+    final todayBurnsList = await burnRepo.getCompletionsForDay(today);
+    final burnedToday = await burnRepo.burnedKcalForDay(today);
 
     const streakEngine = StreakEngine();
     final streakState = streakEngine.evaluate(dayHistory: history, now: now);
@@ -118,11 +154,24 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
         kcalToBurnOrEat: kcalOver,
         options: options,
         targetDate: yesterday,
+        hasExercises: allExercises.isNotEmpty,
       );
     }
 
     // Is there a surplus today or selected meal or logged meals?
     if (todayState.logs.isNotEmpty || todayStatus.toBurn > 0 || selectedMealId != null) {
+      if (selectedMealId == null && todayStatus.toBurn <= 0) {
+        return BurnPlanState(
+          frame: BurnPlanFrame.allClear,
+          kcalToBurnOrEat: 0,
+          options: const [],
+          targetDate: today,
+          burnedToday: burnedToday,
+          todayBurns: todayBurnsList,
+          hasExercises: allExercises.isNotEmpty,
+        );
+      }
+
       int calcTarget = todayStatus.toBurn;
 
       if (selectedMealId != null) {
@@ -152,6 +201,9 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
         options: options,
         targetDate: today,
         selectedMealId: selectedMealId,
+        burnedToday: burnedToday,
+        todayBurns: todayBurnsList,
+        hasExercises: allExercises.isNotEmpty,
       );
     }
 
@@ -160,21 +212,37 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
       kcalToBurnOrEat: 0,
       options: const [],
       targetDate: today,
+      burnedToday: burnedToday,
+      todayBurns: todayBurnsList,
+      hasExercises: allExercises.isNotEmpty,
     );
   }
 
   Future<void> markDone(BurnOption option) async {
     final stateValue = state.value;
     if (stateValue == null) return;
+    
+    if (stateValue.busyOptionIds.contains(option.activity)) {
+      return;
+    }
 
-    final burnRepo = await ref.read(burnRepositoryProvider.future);
+    state = AsyncData(stateValue.copyWith(
+      busyOptionIds: {...stateValue.busyOptionIds, option.activity},
+    ));
 
-    await burnRepo.add(option, stateValue.targetDate, DateTime.now());
+    try {
+      final burnRepo = await ref.read(burnRepositoryProvider.future);
+      await burnRepo.add(option, stateValue.targetDate, DateTime.now());
 
-    // Refresh state
-    ref.invalidateSelf();
-    // Also invalidate todayProvider so Today UI refreshes
-    ref.invalidate(todayProvider);
-    ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+      ref.invalidateSelf();
+      ref.invalidate(todayProvider);
+      ref.read(syncTriggerManagerProvider)?.onLocalWrite();
+    } catch (e) {
+      if (state.value != null) {
+        final newBusy = Set<String>.from(state.value!.busyOptionIds)..remove(option.activity);
+        state = AsyncData(state.value!.copyWith(busyOptionIds: newBusy));
+      }
+      rethrow;
+    }
   }
 }

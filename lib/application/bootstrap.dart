@@ -43,6 +43,7 @@ class FitPilotBootstrap {
       await importer.importAll();
     } catch (e) {
       debugPrint('Seed import failed: $e');
+      rethrow;
     }
   }
 }

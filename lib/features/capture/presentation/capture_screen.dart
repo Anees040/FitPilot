@@ -1,11 +1,12 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:convert';
 import 'package:fitpilot/data/ocr/nutrition_label_parser.dart';
 import 'package:fitpilot/application/providers/capture_provider.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
@@ -13,6 +14,7 @@ import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/data/ai/ai_food_service.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
+import 'package:fitpilot/domain/entities/food_log.dart';
 
 import 'package:image_picker/image_picker.dart';
 
@@ -36,6 +38,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
   bool _isProcessing = false;
   bool _isTorchOn = false;
+  
+  String? _capturedImagePath;
+  String _processingPhase = '';
+  String? _processingError;
 
   // Debounce barcode: track the last scanned value to avoid duplicate processing
   String? _lastScannedBarcode;
@@ -194,27 +200,27 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
   // ── Shared helpers ─────────────────────────────────────────────────────────
   Future<void> _runOcrOnFile(String filePath) async {
+    if (_isProcessing) return;
+    setState(() {
+      _isProcessing = true;
+      _capturedImagePath = filePath;
+      _processingPhase = '';
+      _processingError = null;
+    });
+
     try {
       final inputImage = InputImage.fromFilePath(filePath);
       final recognizedText = await _textRecognizer?.processImage(inputImage);
 
       if (recognizedText == null || recognizedText.text.trim().isEmpty) {
-        if (mounted) {
-          setState(() => _isProcessing = false);
-          AppSnackbar.error(context, 'No text detected. Point camera at Nutrition Facts table.');
-        }
-        return;
+        throw Exception('No text detected. Point camera at Nutrition Facts table.');
       }
 
       final parser = NutritionLabelParser();
       final result = parser.parse(recognizedText.text);
 
       if (result.kcal == null && result.servingSizeGrams == null) {
-        if (mounted) {
-          setState(() => _isProcessing = false);
-          AppSnackbar.error(context, 'No Nutrition Facts numbers found in image.');
-        }
-        return;
+        throw Exception('No Nutrition Facts numbers found in image.');
       }
 
       if (mounted) {
@@ -227,26 +233,60 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     } catch (e) {
       if (kDebugMode) debugPrint('[CaptureScreen] OCR error: $e');
       if (mounted) {
-        setState(() => _isProcessing = false);
-        AppSnackbar.error(context, 'Error analyzing label. Retry with clearer lighting.');
+        setState(() {
+          _processingError = "Couldn't read the label. Fill the frame with the Nutrition Facts table, avoid glare, hold steady.";
+        });
       }
     }
   }
 
   Future<void> _runAiOnFile(String filePath) async {
+    if (_isProcessing) return;
+    setState(() {
+      _isProcessing = true;
+      _capturedImagePath = filePath;
+      _processingPhase = 'uploading';
+      _processingError = null;
+    });
+
     try {
-      final bytes = await File(filePath).readAsBytes();
-      final base64Image = base64Encode(bytes);
       final aiService = AiFoodService();
 
-      final result = await aiService.estimateFood(base64Image);
+      Uint8List bytes = await File(filePath).readAsBytes();
+      final originalSize = bytes.length;
+      
+      if (!kIsWeb) {
+        try {
+          final compressed = await FlutterImageCompress.compressWithList(
+            bytes,
+            minWidth: 1280,
+            minHeight: 1280,
+            quality: 78,
+            format: CompressFormat.jpeg,
+          );
+          if (compressed.isNotEmpty) {
+            bytes = compressed;
+          }
+        } catch (e) {
+          debugPrint('Compression failed, falling back to original: $e');
+        }
+      }
+      
+      debugPrint('Upload size: ${originalSize}B -> ${bytes.length}B');
+      final base64Image = base64Encode(bytes);
+
+      final result = await aiService.estimateFood(
+        base64Image,
+        onPhase: (phase) {
+          if (mounted) setState(() => _processingPhase = phase);
+        },
+      );
 
       if (!mounted) return;
       setState(() => _isProcessing = false);
 
       if (result == null || result['name'] == null) {
-        AppSnackbar.error(context, 'AI Service Error: Could not identify food in image.');
-        return;
+        throw Exception('Could not identify food in image.');
       }
 
       final name = result['name'] as String;
@@ -271,8 +311,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     } catch (e) {
       if (kDebugMode) debugPrint('[CaptureScreen] AI error: $e');
       if (mounted) {
-        setState(() => _isProcessing = false);
-        AppSnackbar.error(context, _friendlyError(e));
+        setState(() {
+          _processingError = _friendlyError(e);
+        });
       }
     }
   }
@@ -396,7 +437,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                     ),
                   ],
 
-                  if (_isProcessing)
+                  if (_isProcessing && _capturedImagePath != null)
+                    _buildProcessingOverlay(theme)
+                  else if (_isProcessing)
                     Center(
                       child: CircularProgressIndicator(color: theme.colorScheme.primary),
                     ),
@@ -432,6 +475,88 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProcessingOverlay(ThemeData theme) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.file(File(_capturedImagePath!), fit: BoxFit.cover),
+        Container(color: theme.colorScheme.shadow.withValues(alpha: 0.54)),
+        Center(
+          child: Card(
+            margin: const EdgeInsets.all(32),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_processingError == null) ...[
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(
+                      _mode == CaptureMode.foodLabel ? 'Reading label...' : 'Analyzing your food...',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    if (_mode != CaptureMode.foodLabel && _processingPhase == 'waking') ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Waking the server (free hosting) - up to a minute...',
+                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isProcessing = false;
+                          _capturedImagePath = null;
+                        });
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                  ] else ...[
+                    Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
+                    const SizedBox(height: 16),
+                    Text(_processingError!, textAlign: TextAlign.center),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _isProcessing = false;
+                              _capturedImagePath = null;
+                            });
+                          },
+                          child: const Text('Retake'),
+                        ),
+                        if (_mode == CaptureMode.foodLabel)
+                          ElevatedButton(
+                            onPressed: () {
+                              context.push('/log/manual', extra: {'source': LogSource.labelScan});
+                            },
+                            child: const Text('Enter Manually'),
+                          )
+                        else
+                          ElevatedButton(
+                            onPressed: () {
+                              _runAiOnFile(_capturedImagePath!);
+                            },
+                            child: const Text('Try Again'),
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -31,16 +31,13 @@ function quota(req, res, next) {
   const deviceId = req.header('X-Device-Id') || req.ip || 'unknown';
   const today = new Date().toISOString().slice(0, 10);
   const entry = usage.get(deviceId);
-  if (!entry || entry.day !== today) {
-    usage.set(deviceId, { day: today, count: 1 });
-    return next();
-  }
-  if (entry.count >= DAILY_LIMIT) {
+  if (entry && entry.day === today && entry.count >= DAILY_LIMIT) {
     return res.status(429).json({
       error: 'Daily photo limit reached (' + DAILY_LIMIT + '/day). Try again tomorrow.',
     });
   }
-  entry.count += 1;
+  req.deviceId = deviceId;
+  req.today = today;
   return next();
 }
 
@@ -116,6 +113,13 @@ app.post('/api/estimate-food', quota, async (req, res) => {
       const mid = Math.round((data.minKcal + data.maxKcal) / 2);
       data.minKcal = Math.round(mid * 0.85);
       data.maxKcal = Math.round(mid * 1.15);
+    }
+
+    const entry = usage.get(req.deviceId);
+    if (!entry || entry.day !== req.today) {
+      usage.set(req.deviceId, { day: req.today, count: 1 });
+    } else {
+      entry.count += 1;
     }
 
     return res.json(data);

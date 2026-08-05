@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
@@ -12,18 +13,18 @@ class SeedImporter {
 
   const SeedImporter(this.db);
 
-  /// Imports all seed data. Safe to call multiple times.
   Future<void> importAll() async {
-    await _importFoods();
-    await _importExercises();
-    await _importPrograms();
+    int foods = await _importFoods();
+    int exercises = await _importExercises();
+    int programs = await _importPrograms();
+    debugPrint('[Seed] foods=$foods exercises=$exercises programs=$programs');
   }
 
-  Future<void> _importFoods() async {
+  Future<int> _importFoods() async {
     final count = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM food_catalog'),
     );
-    if (count != null && count > 0) return;
+    if (count != null && count > 0) return count;
 
     final jsonStr = await rootBundle.loadString('assets/seed/foods.json');
     final List<dynamic> foods = json.decode(jsonStr) as List<dynamic>;
@@ -43,13 +44,18 @@ class SeedImporter {
       });
     }
     await batch.commit(noResult: true);
+    
+    final finalCount = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM food_catalog'),
+    );
+    return finalCount ?? 0;
   }
 
-  Future<void> _importExercises() async {
+  Future<int> _importExercises() async {
     final count = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM exercises'),
     );
-    if (count != null && count >= 50) return;
+    if (count != null && count >= 50) return count;
 
     final jsonStr = await rootBundle.loadString('assets/seed/exercises.json');
     final List<dynamic> exercises = json.decode(jsonStr) as List<dynamic>;
@@ -83,13 +89,18 @@ class SeedImporter {
     } catch (e) {
       // Ignore duplicate or constraint conflicts during seed import
     }
+    
+    final finalCount = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM exercises'),
+    );
+    return finalCount ?? 0;
   }
 
-  Future<void> _importPrograms() async {
+  Future<int> _importPrograms() async {
     final count = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM programs'),
     );
-    if (count != null && count > 0) return;
+    if (count != null && count > 0) return count;
 
     final jsonStr = await rootBundle.loadString('assets/seed/programs.json');
     final List<dynamic> programs = json.decode(jsonStr) as List<dynamic>;
@@ -130,5 +141,10 @@ class SeedImporter {
       }
     }
     await batch.commit(noResult: true);
+
+    final finalCount = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM programs'),
+    );
+    return finalCount ?? 0;
   }
 }

@@ -16,9 +16,16 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 final databaseProvider = FutureProvider<Database>((ref) async {
   final db = await AppDatabase.instance();
   // Ensure seed data is always loaded if missing (e.g. after migration)
-  await FitPilotBootstrap.importSeedData();
+  try {
+    await FitPilotBootstrap.importSeedData();
+  } catch (e) {
+    ref.read(seedStatusProvider.notifier).state = e.toString();
+  }
   return db;
 });
+
+/// Exposes any error message that occurred during the last seed import.
+final seedStatusProvider = StateProvider<String?>((ref) => null);
 
 /// Exposes the FoodRepository.
 final foodRepositoryProvider = FutureProvider<FoodRepository>((ref) async {

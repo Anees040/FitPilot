@@ -46,6 +46,14 @@
 
 ## Last completed
 
+- J11 — Burn Plan Lifecycle Refactor & UI Polish
+  - Updated `BurnProvider` to correctly handle `BurnPlanFrame.allClear` state when total target calories are fully burned or eaten.
+  - Implemented idempotent `markDone` using `busyOptionIds` state to guard against duplicate button presses and infinite logging glitches.
+  - Added `BurnCompletion` entity and tracked `todayBurns` to persist completed exercise logs in SQLite.
+  - Added Celebration UI and "Done Today" exercise history list on the `PlanScreen` for the `allClear` state.
+  - Exposed database seeding errors via `seedStatusProvider` and created a Reload button in `ErrorState` widget for `PlanScreen` and `WorkoutHubScreen` when the exercise library fails to load.
+  - Repaired OCR nutrition label parsing for 'per piece' versus 'per serving' metrics.
+  - Fixed `capture_screen.dart` to strictly use theme properties (removed `Colors.black54`) enforcing dark contrast tests.
 - J10 — Web & Riverpod Runtime Stability
   - Fixed `v16` SQLite migration in `app_database.dart` (`if (oldVersion < 16)`) to drop non-null equipment constraints and seed all 60 exercises.
   - Updated Render proxy server (`server/index.js`) to use `gemini-2.0-flash` AI model to fix 404 API model deprecation.

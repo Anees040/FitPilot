@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/states.dart';
+import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/application/providers/exercise_provider.dart';
 
 class WorkoutHubScreen extends ConsumerWidget {
   const WorkoutHubScreen({super.key});
@@ -9,6 +12,19 @@ class WorkoutHubScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final exercises = ref.watch(exerciseListProvider).valueOrNull ?? [];
+    
+    if (exercises.isEmpty && ref.watch(seedStatusProvider) != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Workout Hub')),
+        body: SafeArea(
+          child: ErrorState(
+            reason: 'Exercise library didn\'t load.\n${ref.watch(seedStatusProvider)}',
+            onRetry: () => ref.invalidate(databaseProvider),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,

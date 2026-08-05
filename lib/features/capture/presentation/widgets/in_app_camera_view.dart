@@ -60,7 +60,7 @@ class _InAppCameraViewState extends State<InAppCameraView> with WidgetsBindingOb
 
       _controller = CameraController(
         backCamera,
-        ResolutionPreset.high,
+        ResolutionPreset.medium,
         enableAudio: false,
       );
 
@@ -95,7 +95,8 @@ class _InAppCameraViewState extends State<InAppCameraView> with WidgetsBindingOb
 
     try {
       final file = await _controller!.takePicture();
-      await widget.onCapture(file.path);
+      // Hand the path back but don't await the parent's work here
+      widget.onCapture(file.path);
     } catch (e) {
       debugPrint('Error taking picture: $e');
     } finally {

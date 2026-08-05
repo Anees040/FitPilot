@@ -124,6 +124,13 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
             'Verify Label',
             style: theme.textTheme.h2,
           ),
+          if (widget.result.subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              widget.result.subtitle!,
+              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary),
+            ),
+          ],
           const SizedBox(height: 24),
           _buildField(
             label: 'Energy (kcal)',

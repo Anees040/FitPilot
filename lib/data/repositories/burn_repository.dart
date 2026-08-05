@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../domain/entities/burn_option.dart';
+import '../../domain/entities/burn_completion.dart';
 
 /// Repository for burn completion records.
 class BurnRepository {
@@ -47,6 +48,21 @@ class BurnRepository {
       [dayStr],
     );
     return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<List<BurnCompletion>> getCompletionsForDay(DateTime day) async {
+    final dayStr = DateTime(
+      day.year,
+      day.month,
+      day.day,
+    ).toIso8601String().split('T').first;
+    final result = await db.query(
+      'burn_completions',
+      where: 'for_date = ?',
+      whereArgs: [dayStr],
+      orderBy: 'completed_at DESC',
+    );
+    return result.map((m) => BurnCompletion.fromMap(m)).toList();
   }
 
   Future<void> _enqueue(String table, String rowId, String op) async {
