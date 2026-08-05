@@ -43,8 +43,19 @@
 - [x] J8 — Burn Plan Empty Fix, UNDO Disposed Ref Fix, Offline Sign-Out & Auth Isolation
 - [x] J9 — Real Scanner Operational Guarantee, Device Exercise Seed Repair & Guest Profile Sync
 - [x] J10 — Web & Riverpod Runtime Stability (v16 DB migration, gemini-2.0-flash, Google auth metadata, Riverpod ref order, Web notification guard, SliverList layout, StatefulShellRoute keys)
+- [x] J12 — Account Identity & Profile Avatar Fix
 
 ## Last completed
+
+- J12 — Account Identity & Profile Avatar Fix
+  - Fixed `hasCloudData` to return true if the user has a cloud `profiles` row, correctly treating them as an existing user.
+  - Updated `guest_merge_service.dart` to prevent clobbering existing cloud profiles during guest data merge.
+  - Ensured all branches in `_handlePostSignIn` deterministically clean up local DB, pull cloud data, and reset Riverpod state.
+  - Refactored `_signOut` and `_deleteAccount` in `profile_screen.dart` to pause background sync and kill the Auth session *before* wiping the local SQLite database.
+  - Fixed `_submitGoogle` to behave consistently for both Log In and Sign Up by removing the 15-second Google one-tap account restriction.
+  - Added v17 SQLite migration to support `avatar_url` in the `profile` table and integrated it throughout the entity and sync pipeline.
+  - Read Google Auth `avatar_url` / `picture` upon login and map it to `Profile`.
+  - Created `ProfileAvatar` UI widget and added it to the `TodayScreen` header and `ProfileScreen` header.
 
 - J11 — Burn Plan Lifecycle Refactor & UI Polish
   - Updated `BurnProvider` to correctly handle `BurnPlanFrame.allClear` state when total target calories are fully burned or eaten.

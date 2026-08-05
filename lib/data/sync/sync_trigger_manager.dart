@@ -75,4 +75,10 @@ class SyncTriggerManager with WidgetsBindingObserver {
     _periodicTimer?.cancel();
     _debounceTimer?.cancel();
   }
+
+  /// Pauses triggers and waits for any in-flight sync to finish
+  Future<void> pauseAndDrain() async {
+    pause();
+    await _syncService.drain();
+  }
 }

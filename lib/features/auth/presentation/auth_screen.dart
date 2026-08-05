@@ -158,13 +158,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user != null) {
-        final createdAt = user.createdAt ?? DateTime.now();
-        final isNew = DateTime.now().difference(createdAt).inSeconds.abs() < 15;
-        
-        if (_isLogin && isNew) {
-          await ref.read(authRepositoryProvider).signOut();
-          throw Exception("Account doesn't exist. Please switch to Sign Up to create an account.");
-        }
         await _handlePostSignIn(user.id);
       }
     } catch (e, stack) {
@@ -255,11 +248,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
       if (!shouldMerge) {
         await AppDatabase.clearUserData(db);
+        if (!await _pullWithRetry()) return;
+        resetApplicationState(ref);
         if (mounted) await _navigatePostAuth();
       } else {
         if (mounted) setState(() { _isLoading = true; });
         try {
           await merger?.mergeGuestData(userId);
+          if (!await _pullWithRetry()) return;
+          resetApplicationState(ref);
           if (mounted) await _navigatePostAuth();
         } catch (e) {
           if (mounted) {
@@ -272,7 +269,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             );
-            await _navigatePostAuth();
+            if (!await _pullWithRetry()) return;
+            resetApplicationState(ref);
+            if (mounted) await _navigatePostAuth();
           }
         }
       }
@@ -296,8 +295,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         needsUpdate = true;
       }
       
-      // We'll save the avatar URL in the SyncMetadata since Profile doesn't have an avatar field,
-      // or we can just fetch it in the ProfileScreen on-the-fly.
+      final metaAvatar = user.metadata['avatar_url'] as String? ?? user.metadata['picture'] as String?;
+      if (metaAvatar != null && metaAvatar.isNotEmpty && profile.avatarUrl != metaAvatar) {
+        updatedProfile = updatedProfile.copyWith(avatarUrl: metaAvatar);
+        needsUpdate = true;
+      }
       if (needsUpdate) {
         await repo.save(updatedProfile);
         profile = updatedProfile;

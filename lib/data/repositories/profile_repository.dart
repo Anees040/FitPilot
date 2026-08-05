@@ -24,6 +24,7 @@ class ProfileRepository {
     final data = {
       'id': 1,
       'name': profile.name,
+      'avatar_url': profile.avatarUrl,
       'weight_kg': profile.weightKg,
       'goal_weight_kg': profile.goalWeightKg,
       'height_cm': profile.heightCm,
@@ -68,6 +69,7 @@ class ProfileRepository {
 
     return Profile(
       name: map['name'] as String?,
+      avatarUrl: map['avatar_url'] as String?,
       weightKg: TolerantReader.readDouble(map['weight_kg']) ?? 70.0,
       goalWeightKg: TolerantReader.readDouble(map['goal_weight_kg']),
       heightCm: TolerantReader.readInt(map['height_cm']) ?? 170,

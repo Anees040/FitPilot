@@ -16,6 +16,7 @@ enum ThemeModePref { system, light, dark }
 /// User profile — single-row entity.
 class Profile extends Equatable {
   final String? name;
+  final String? avatarUrl;
   final double weightKg;
   final double? goalWeightKg;
   final int heightCm;
@@ -43,6 +44,7 @@ class Profile extends Equatable {
 
   Profile({
     this.name,
+    this.avatarUrl,
     required this.weightKg,
     this.goalWeightKg,
     required this.heightCm,
@@ -117,6 +119,7 @@ class Profile extends Equatable {
 
   Profile copyWith({
     String? name,
+    String? avatarUrl,
     double? weightKg,
     double? goalWeightKg,
     int? heightCm,
@@ -144,6 +147,7 @@ class Profile extends Equatable {
   }) {
     return Profile(
       name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
       weightKg: weightKg ?? this.weightKg,
       goalWeightKg: goalWeightKg ?? this.goalWeightKg,
       heightCm: heightCm ?? this.heightCm,
@@ -171,15 +175,16 @@ class Profile extends Equatable {
 
   @override
   List<Object?> get props => [
-    name,
-    weightKg,
-    goalWeightKg,
-    heightCm,
-    age,
-    gender,
-    goal,
-    activityLevel,
-    allowanceKcal,
+        name,
+        avatarUrl,
+        weightKg,
+        goalWeightKg,
+        heightCm,
+        age,
+        gender,
+        goal,
+        activityLevel,
+        allowanceKcal,
     targetOverride,
     equipment,
     themeMode,

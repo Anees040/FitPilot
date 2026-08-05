@@ -18,6 +18,8 @@ import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/staggered_list.dart';
 import 'package:intl/intl.dart';
 import 'package:fitpilot/core/ui/semicircle_progress.dart';
+import 'package:fitpilot/core/ui/profile_avatar.dart';
+
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -44,6 +46,7 @@ class TodayScreen extends ConsumerWidget {
                     child: _HeroSection(
                       status: state.dayStatus,
                       userName: name,
+                      avatarUrl: profile?.avatarUrl,
                     ),
                   ),
                 ),
@@ -128,8 +131,9 @@ class TodayScreen extends ConsumerWidget {
 class _HeroSection extends ConsumerWidget {
   final DayStatus status;
   final String? userName;
+  final String? avatarUrl;
 
-  const _HeroSection({required this.status, this.userName});
+  const _HeroSection({required this.status, this.userName, this.avatarUrl});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -161,7 +165,7 @@ class _HeroSection extends ConsumerWidget {
                       style: theme.textTheme.caption,
                     ),
                     Text(
-                      '${userName ?? 'Pilot'} 👋',
+                      '${userName?.split(' ').first ?? 'Pilot'} 👋',
                       style: theme.textTheme.h1.copyWith(color: theme.colorScheme.onSurface),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -169,11 +173,24 @@ class _HeroSection extends ConsumerWidget {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.notifications_none),
-                onPressed: () {
-                  context.push('/notifications');
-                },
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none),
+                    onPressed: () {
+                      context.push('/notifications');
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => context.push('/profile'),
+                    child: ProfileAvatar(
+                      avatarUrl: avatarUrl,
+                      name: userName,
+                      radius: 18.0,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

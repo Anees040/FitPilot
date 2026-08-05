@@ -13,15 +13,22 @@ class GuestMergeService {
     try {
       final profiles = await _db.query('profile');
       if (profiles.isNotEmpty) {
-        final profile = Map<String, dynamic>.from(profiles.first);
-        profile.remove('id');
-        profile.remove('active_program_id');
-        profile.remove('active_program_week');
-        profile.remove('active_program_day');
-        profile['id'] = userId;
-        // Convert equipment JSON string → Dart List for Postgres text[] column
-        _fixProfileArrayFields(profile);
-        await _remote.upsertRows('profiles', [profile]);
+        // STEP 2: Do not clobber existing cloud profile
+        final hasCloudProfile = await _remote.hasCloudProfile(userId);
+        
+        if (!hasCloudProfile) {
+          final profile = Map<String, dynamic>.from(profiles.first);
+          profile.remove('id');
+          profile.remove('active_program_id');
+          profile.remove('active_program_week');
+          profile.remove('active_program_day');
+          profile['id'] = userId;
+          // Convert equipment JSON string → Dart List for Postgres text[] column
+          _fixProfileArrayFields(profile);
+          await _remote.upsertRows('profiles', [profile]);
+        } else {
+          debugPrint('Cloud profile exists for $userId, skipping guest profile merge.');
+        }
       }
 
       final logs = await _db.query('food_logs');

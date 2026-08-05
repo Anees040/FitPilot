@@ -61,8 +61,20 @@ class SyncService {
     );
   }
 
+  Future<void>? _activeSync;
+
   /// The main entry point to trigger a sync (push then pull).
-  Future<void> syncNow() async {
+  Future<void> syncNow() {
+    if (_activeSync != null) return _activeSync!;
+    _activeSync = _syncInternal();
+    return _activeSync!;
+  }
+
+  Future<void> drain() async {
+    await _activeSync;
+  }
+
+  Future<void> _syncInternal() async {
     if (_isSyncing) return;
     _isSyncing = true;
     _emitStatus();
@@ -75,6 +87,7 @@ class SyncService {
       _emitStatus(state: SyncState.error, error: e.toString());
     } finally {
       _isSyncing = false;
+      _activeSync = null;
       if (!_statusController.isClosed) {
         _emitStatus();
       }
@@ -337,6 +350,7 @@ class SyncService {
                 'active_program_id': row['active_program_id'],
                 'active_program_week': row['active_program_week'],
                 'active_program_day': row['active_program_day'],
+                'avatar_url': row['avatar_url'],
                 'updated_at': row['updated_at'],
               };
             } else if (table == 'food_logs') {

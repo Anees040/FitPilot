@@ -42,6 +42,12 @@ class RemoteDataSource {
     return map;
   }
 
+  Future<bool> hasCloudProfile(String userId) async {
+    if (_client == null) return false;
+    final res = await _client.from('profiles').select('id').eq('id', userId).maybeSingle();
+    return res != null;
+  }
+
   /// Checks if the cloud account has meaningful data by querying tables.
   Future<bool> hasCloudData(String userId) async {
     if (_client == null) return false;
@@ -52,12 +58,10 @@ class RemoteDataSource {
         if (res.isNotEmpty) return true;
       }
       
-      // Also check profile if they ever entered weight or changed allowance
-      final profile = await _client.from('profiles').select('weight_kg, allowance_kcal').maybeSingle();
+      // Also check profile: if they have any profiles row, count it as cloud data
+      final profile = await _client.from('profiles').select('id').maybeSingle();
       if (profile != null) {
-        if (profile['weight_kg'] != null || profile['allowance_kcal'] != 300) {
-          return true;
-        }
+        return true;
       }
     } catch (e) {
       // In case of error, err on the side of caution and assume data exists to trigger the dialog

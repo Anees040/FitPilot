@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/collapsible_group.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
+import 'package:fitpilot/core/ui/profile_avatar.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
@@ -336,23 +337,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     
     return Column(
       children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
-            shape: BoxShape.circle,
-            border: Border.all(color: ext.hairline, width: 2),
-          ),
-          child: Center(
-            child: Text(
-              hasName ? profile.name![0].toUpperCase() : 'U',
-              style: theme.textTheme.displayMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+        ProfileAvatar(
+          avatarUrl: profile.avatarUrl,
+          name: profile.name,
+          radius: 48.0,
         ),
         const SizedBox(height: 16),
         Text(
@@ -552,10 +540,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
                     if (confirm != true) return;
                     
-                    ref.read(syncTriggerManagerProvider)?.pause();
+                    await ref.read(syncTriggerManagerProvider)?.pauseAndDrain();
+                    await ref.read(authRepositoryProvider).signOut();
                     final db = await ref.read(databaseProvider.future);
                     await AppDatabase.clearUserData(db);
-                    await ref.read(authRepositoryProvider).signOut();
                     resetApplicationState(ref);
                     if (context.mounted) {
                       context.go('/welcome');
@@ -637,14 +625,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     onPressed: loading ? null : () async {
                       setDialogState(() => loading = true);
                       try {
-                        ref.read(syncTriggerManagerProvider)?.pause();
-                        final db = await ref.read(databaseProvider.future);
-                        await AppDatabase.clearUserData(db);
+                        await ref.read(syncTriggerManagerProvider)?.pauseAndDrain();
                         try {
                           await ref.read(authRepositoryProvider).deleteAccount();
                         } catch (_) {
                           await ref.read(authRepositoryProvider).signOut();
                         }
+                        final db = await ref.read(databaseProvider.future);
+                        await AppDatabase.clearUserData(db);
                         resetApplicationState(ref);
                         if (context.mounted) {
                           Navigator.pop(context);
