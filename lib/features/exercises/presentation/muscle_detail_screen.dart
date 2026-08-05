@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/exercise_provider.dart';
+import 'package:fitpilot/features/exercises/presentation/widgets/exercise_card.dart';
 
 class MuscleDetailScreen extends ConsumerWidget {
   final String muscleId;
@@ -20,7 +21,7 @@ class MuscleDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
-    final exercisesAsync = ref.watch(exerciseListProvider);
+    final exercisesAsync = ref.watch(hubMuscleExercisesProvider(muscleId));
     
     // Map muscleId to Title and Image
     String title = customTitle ?? (muscleId.substring(0, 1).toUpperCase() + muscleId.substring(1));
@@ -75,83 +76,35 @@ class MuscleDetailScreen extends ConsumerWidget {
             ),
           ),
           
-          exercisesAsync.when(
-            data: (allExercises) {
-              // Filter exercises by primary muscle
-              final targetExercises = allExercises.where((e) {
-                final target = muscleId.toLowerCase();
-                return e.primaryMuscles.any((m) {
-                  final lower = m.toLowerCase();
-                  if (lower == target) return true;
-                  if (target == 'arms' && (lower == 'biceps' || lower == 'triceps')) return true;
-                  if (target == 'legs' && (lower == 'quads' || lower == 'hamstrings' || lower == 'calves' || lower == 'glutes')) return true;
-                  if (target == 'back' && lower == 'lower back') return true;
-                  return false;
-                });
-              }).toList();
-              
-              if (targetExercises.isEmpty) {
-                return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Center(child: Text('No exercises found for $title.')),
+            exercisesAsync.when(
+              data: (targetExercises) {
+                if (targetExercises.isEmpty) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Center(child: Text('No exercises found for $title.')),
+                    ),
+                  );
+                }
+                
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      mainAxisExtent: 200,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return ExerciseCard(exercise: targetExercises[index]);
+                      },
+                      childCount: targetExercises.length,
+                    ),
                   ),
                 );
-              }
-
-              // Categorize them by equipment or type
-              final barbellCount = targetExercises.where((e) => e.name.toLowerCase().contains('barbell') || e.equipment == 'barbell').length;
-              final dumbbellCount = targetExercises.where((e) => e.name.toLowerCase().contains('dumbbell') || e.equipment == 'dumbbell').length;
-              final machineCount = targetExercises.where((e) => e.name.toLowerCase().contains('machine') || e.equipment == 'machine').length;
-              final bodyweightCount = targetExercises.where((e) => e.equipment == 'body_only' || e.equipment == null).length;
-              final cableCount = targetExercises.where((e) => e.name.toLowerCase().contains('cable') || e.equipment == 'cable').length;
-
-              final List<Map<String, dynamic>> subCategories = [
-                {'title': 'All $title Exercises', 'count': targetExercises.length, 'color': ext.energy},
-                if (barbellCount > 0) {'title': 'Barbell Exercises', 'count': barbellCount, 'color': theme.colorScheme.onSurface.withValues(alpha: 0.6)},
-                if (dumbbellCount > 0) {'title': 'Dumbbell Exercises', 'count': dumbbellCount, 'color': theme.colorScheme.onSurface.withValues(alpha: 0.6)},
-                if (machineCount > 0) {'title': 'Machine Exercises', 'count': machineCount, 'color': theme.colorScheme.onSurface.withValues(alpha: 0.6)},
-                if (bodyweightCount > 0) {'title': 'Bodyweight Exercises', 'count': bodyweightCount, 'color': theme.colorScheme.onSurface.withValues(alpha: 0.6)},
-                if (cableCount > 0) {'title': 'Cable Exercises', 'count': cableCount, 'color': theme.colorScheme.onSurface.withValues(alpha: 0.6)},
-              ];
-
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final subCat = subCategories[index];
-                      return Column(
-                        children: [
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            title: Text(subCat['title'] as String, style: theme.textTheme.bodyStrong),
-                            trailing: Text(
-                              '${subCat['count']} Exercises',
-                              style: theme.textTheme.caption.copyWith(color: subCat['color'] as Color, fontWeight: FontWeight.bold),
-                            ),
-                            onTap: () {
-                              // We could route to a filtered list view in ExerciseLibraryScreen here
-                              // For now, route to the general exercises list and set a search query or filter.
-                              if (index == 0) {
-                                ref.read(exerciseSearchQueryProvider.notifier).state = muscleId;
-                              } else {
-                                final keyword = subCat['title'].toString().split(' ')[0].toLowerCase();
-                                ref.read(exerciseSearchQueryProvider.notifier).state = '$muscleId $keyword';
-                              }
-                              context.push('/exercises');
-                            },
-                          ),
-                          if (index < subCategories.length - 1)
-                            Divider(color: ext.hairline),
-                        ],
-                      );
-                    },
-                    childCount: subCategories.length,
-                  ),
-                ),
-              );
-            },
+              },
             loading: () => const SliverToBoxAdapter(
               child: Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator())),
             ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/application/providers/exercise_provider.dart';
+import 'package:fitpilot/features/exercises/presentation/widgets/exercise_card.dart';
 
 /// Maps each category route ID → its hero image and display data.
 const _categoryData = <String, Map<String, dynamic>>{
@@ -23,98 +25,6 @@ const _categoryData = <String, Map<String, dynamic>>{
     'muscles': [
       {'id': 'legs',   'title': 'Legs',   'subtitle': 'Powerful legs, better mobility', 'image': 'assets/illustrations/legs_hero.png'},
       {'id': 'glutes', 'title': 'Glutes', 'subtitle': 'Stronger glutes and hips',       'image': 'assets/illustrations/legs_hero.png'},
-      {'id': 'calves', 'title': 'Calves', 'subtitle': 'Lower leg strength',             'image': 'assets/illustrations/legs_hero.png'},
-    ],
-  },
-  'cardio': {
-    'title': 'Cardio',
-    'subtitle': 'Burn fat and boost cardiovascular endurance.',
-    'imagePath': 'assets/illustrations/cardio_hero.png',
-    'muscles': [
-      {'id': 'running',  'title': 'Running',   'subtitle': 'Build stamina and burn fat',   'image': 'assets/illustrations/cardio_hero.png'},
-      {'id': 'cycling',  'title': 'Cycling',   'subtitle': 'Low-impact endurance training','image': 'assets/illustrations/cardio_hero.png'},
-      {'id': 'rowing',   'title': 'Rowing',    'subtitle': 'Full-body cardio workout',     'image': 'assets/illustrations/cardio_hero.png'},
-    ],
-  },
-  'calisthenics': {
-    'title': 'Calisthenics',
-    'subtitle': 'Master your bodyweight, no equipment needed.',
-    'imagePath': 'assets/illustrations/calisthenics_hero.png',
-    'muscles': [
-      {'id': 'chest',     'title': 'Push',   'subtitle': 'Push-ups, dips and more',      'image': 'assets/illustrations/calisthenics_hero.png'},
-      {'id': 'back',      'title': 'Pull',   'subtitle': 'Pull-ups, rows and more',      'image': 'assets/illustrations/calisthenics_hero.png'},
-      {'id': 'core',      'title': 'Core',   'subtitle': 'Planks, L-sits and more',      'image': 'assets/illustrations/core_hero.png'},
-      {'id': 'legs',      'title': 'Legs',   'subtitle': 'Squats, lunges and jumps',     'image': 'assets/illustrations/legs_hero.png'},
-    ],
-  },
-  'powerlifting': {
-    'title': 'Powerlifting',
-    'subtitle': 'Squat, bench, deadlift — the big three.',
-    'imagePath': 'assets/illustrations/powerlifting_hero.png',
-    'muscles': [
-      {'id': 'legs',  'title': 'Squat',     'subtitle': 'Build leg and glute power', 'image': 'assets/illustrations/lower_body_hero.png'},
-      {'id': 'chest', 'title': 'Bench',     'subtitle': 'Upper body pushing power',  'image': 'assets/illustrations/chest_hero.png'},
-      {'id': 'back',  'title': 'Deadlift',  'subtitle': 'Total body posterior chain', 'image': 'assets/illustrations/powerlifting_hero.png'},
-    ],
-  },
-  'gymnastics': {
-    'title': 'Gymnastics',
-    'subtitle': 'Strength, balance and flexibility combined.',
-    'imagePath': 'assets/illustrations/gymnastics_hero.png',
-    'muscles': [
-      {'id': 'shoulders', 'title': 'Handstands',   'subtitle': 'Overhead balance and strength', 'image': 'assets/illustrations/gymnastics_hero.png'},
-      {'id': 'core',      'title': 'Hollow Body',  'subtitle': 'Core tension and control',      'image': 'assets/illustrations/core_hero.png'},
-      {'id': 'arms',      'title': 'Ring Work',    'subtitle': 'Upper body stability',           'image': 'assets/illustrations/gymnastics_hero.png'},
-    ],
-  },
-  'mobility': {
-    'title': 'Stretching & Mobility',
-    'subtitle': 'Prevent injury and improve your range of motion.',
-    'imagePath': 'assets/illustrations/stretching_hero.png',
-    'muscles': [
-      {'id': 'legs',      'title': 'Lower Body', 'subtitle': 'Hip flexors, hamstrings, calves', 'image': 'assets/illustrations/stretching_hero.png'},
-      {'id': 'shoulders', 'title': 'Upper Body', 'subtitle': 'Shoulders, chest, lats',          'image': 'assets/illustrations/stretching_hero.png'},
-      {'id': 'core',      'title': 'Spine',      'subtitle': 'Thoracic and lumbar mobility',    'image': 'assets/illustrations/stretching_hero.png'},
-    ],
-  },
-  'hiit': {
-    'title': 'HIIT',
-    'subtitle': 'Maximum calorie burn in minimum time.',
-    'imagePath': 'assets/illustrations/hiit_hero.png',
-    'muscles': [
-      {'id': 'core', 'title': 'Full Body HIIT', 'subtitle': 'Burpees, mountain climbers', 'image': 'assets/illustrations/hiit_hero.png'},
-      {'id': 'legs', 'title': 'Lower HIIT',     'subtitle': 'Jump squats, lunge jumps',   'image': 'assets/illustrations/hiit_hero.png'},
-      {'id': 'arms', 'title': 'Upper HIIT',     'subtitle': 'Push-up variations, punches','image': 'assets/illustrations/hiit_hero.png'},
-    ],
-  },
-  'athletic': {
-    'title': 'Athletic Performance',
-    'subtitle': 'Build speed, power and agility like an athlete.',
-    'imagePath': 'assets/illustrations/athletic_hero.png',
-    'muscles': [
-      {'id': 'legs',  'title': 'Speed & Power',   'subtitle': 'Sprints, box jumps, bounds',  'image': 'assets/illustrations/athletic_hero.png'},
-      {'id': 'core',  'title': 'Agility',          'subtitle': 'Ladder drills, lateral work', 'image': 'assets/illustrations/athletic_hero.png'},
-      {'id': 'chest', 'title': 'Explosive Power',  'subtitle': 'Med ball, plyometric push',   'image': 'assets/illustrations/athletic_hero.png'},
-    ],
-  },
-  'recovery': {
-    'title': 'Recovery',
-    'subtitle': 'Rest smart and recover faster between sessions.',
-    'imagePath': 'assets/illustrations/recovery_hero.png',
-    'muscles': [
-      {'id': 'core', 'title': 'Foam Rolling',   'subtitle': 'Myofascial release',          'image': 'assets/illustrations/recovery_hero.png'},
-      {'id': 'legs', 'title': 'Active Recovery','subtitle': 'Light movement and stretches', 'image': 'assets/illustrations/stretching_hero.png'},
-      {'id': 'core', 'title': 'Breathing',      'subtitle': 'Diaphragmatic breathing work', 'image': 'assets/illustrations/recovery_hero.png'},
-    ],
-  },
-  'ppl': {
-    'title': 'Push Pull Legs',
-    'subtitle': 'The classic 3-day split for balanced muscle growth.',
-    'imagePath': 'assets/illustrations/arms_hero.png',
-    'muscles': [
-      {'id': 'chest',     'title': 'Push Day', 'subtitle': 'Chest, shoulders, triceps', 'image': 'assets/illustrations/chest_hero.png'},
-      {'id': 'back',      'title': 'Pull Day', 'subtitle': 'Back, biceps, rear delts',  'image': 'assets/illustrations/back_hero.png'},
-      {'id': 'legs',      'title': 'Leg Day',  'subtitle': 'Quads, hamstrings, glutes', 'image': 'assets/illustrations/legs_hero.png'},
     ],
   },
 };
@@ -128,6 +38,7 @@ class CategoryDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
+    final exercisesAsync = ref.watch(hubCategoryExercisesProvider(categoryId));
 
     final data = _categoryData[categoryId] ?? {
       'title': categoryId[0].toUpperCase() + categoryId.substring(1),
@@ -306,6 +217,47 @@ class CategoryDetailScreen extends ConsumerWidget {
                 ),
               ),
             ),
+          
+          exercisesAsync.when(
+            data: (allExercises) {
+              if (allExercises.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+              
+              return SliverPadding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 32.0),
+                sliver: SliverMainAxisGroup(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: Text('All $title Exercises', style: theme.textTheme.bodyStrong),
+                      ),
+                    ),
+                    SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        mainAxisExtent: 200,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return ExerciseCard(exercise: allExercises[index]);
+                        },
+                        childCount: allExercises.length,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            loading: () => const SliverToBoxAdapter(
+              child: Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator())),
+            ),
+            error: (e, _) => SliverToBoxAdapter(
+              child: Padding(padding: const EdgeInsets.all(32), child: Center(child: Text('Error: $e'))),
+            ),
+          ),
+          
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),

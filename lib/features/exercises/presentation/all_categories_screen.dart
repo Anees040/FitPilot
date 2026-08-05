@@ -24,60 +24,6 @@ class AllCategoriesScreen extends ConsumerWidget {
         'imagePath': 'assets/illustrations/lower_body_hero.png',
         'route': '/workout-hub/category/lower_body',
       },
-      {
-        'title': 'Cardio',
-        'subtitle': 'Burn fat, boost endurance',
-        'imagePath': 'assets/illustrations/cardio_hero.png',
-        'route': '/workout-hub/category/cardio',
-      },
-      {
-        'title': 'Calisthenics',
-        'subtitle': 'Bodyweight mastery',
-        'imagePath': 'assets/illustrations/calisthenics_hero.png',
-        'route': '/workout-hub/category/calisthenics',
-      },
-      {
-        'title': 'Powerlifting',
-        'subtitle': 'Squat, bench, deadlift',
-        'imagePath': 'assets/illustrations/powerlifting_hero.png',
-        'route': '/workout-hub/category/powerlifting',
-      },
-      {
-        'title': 'Gymnastics',
-        'subtitle': 'Strength, balance & flexibility',
-        'imagePath': 'assets/illustrations/gymnastics_hero.png',
-        'route': '/workout-hub/category/gymnastics',
-      },
-      {
-        'title': 'Stretching & Mobility',
-        'subtitle': 'Prevent injury, improve range',
-        'imagePath': 'assets/illustrations/stretching_hero.png',
-        'route': '/workout-hub/category/mobility',
-      },
-      {
-        'title': 'HIIT',
-        'subtitle': 'Maximum burn in minimum time',
-        'imagePath': 'assets/illustrations/hiit_hero.png',
-        'route': '/workout-hub/category/hiit',
-      },
-      {
-        'title': 'Athletic Performance',
-        'subtitle': 'Speed, power & agility',
-        'imagePath': 'assets/illustrations/athletic_hero.png',
-        'route': '/workout-hub/category/athletic',
-      },
-      {
-        'title': 'Recovery',
-        'subtitle': 'Rest smart, recover faster',
-        'imagePath': 'assets/illustrations/recovery_hero.png',
-        'route': '/workout-hub/category/recovery',
-      },
-      {
-        'title': 'Push Pull Legs',
-        'subtitle': 'Classic 3-day split',
-        'imagePath': 'assets/illustrations/arms_hero.png',
-        'route': '/workout-hub/category/ppl',
-      },
     ];
 
     return Scaffold(
