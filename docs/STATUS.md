@@ -47,6 +47,14 @@
 
 ## Last completed
 
+- J13 — Workout Hub Accuracy Fix
+  - Disconnected Hub screens (`muscle_detail_screen` and `category_detail_screen`) from the Exercise Library's `exerciseListProvider` to isolate their state from sticky user search filters.
+  - Created `hubMuscleExercisesProvider` and `hubCategoryExercisesProvider` to query the `ExerciseRepository` directly, ensuring stable lists regardless of library state.
+  - Removed empty placeholder categories (`cardio`, `calisthenics`, etc.) and non-existent muscles (`calves`) from `all_categories_screen.dart` and `_categoryData` that mapped to 0 database exercises.
+  - Extracted `_ExerciseCard` from `exercise_library_screen.dart` into `lib/features/exercises/presentation/widgets/exercise_card.dart` for reuse.
+  - Updated `muscle_detail_screen.dart` and `category_detail_screen.dart` to use `SliverGrid` and render actual `ExerciseCard`s instead of dummy string tiles.
+  - Created `hub_coverage_test.dart` to assert that every visible category/muscle tile maps to `> 0` exercises in the database.
+
 - J12 — Account Identity & Profile Avatar Fix
   - Fixed `hasCloudData` to return true if the user has a cloud `profiles` row, correctly treating them as an existing user.
   - Updated `guest_merge_service.dart` to prevent clobbering existing cloud profiles during guest data merge.
