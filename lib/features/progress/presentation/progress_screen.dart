@@ -332,86 +332,77 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
 
     Widget buildTileList(String title, List<DateTime> dates) {
       if (dates.isEmpty) return const SizedBox();
-      return AppCard(
-        padding: EdgeInsets.zero,
-        child: Theme(
-          data: theme.copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            key: const ValueKey('last_7_days_expansion_tile'),
-            title: Text(title, style: theme.textTheme.h2.copyWith(fontSize: 18)),
-            initiallyExpanded: false,
-            children: [
-              Divider(height: 1, color: ext.hairline),
-              ...dates.asMap().entries.map((entry) {
-                final index = entry.key;
-                final date = entry.value;
-                final status = last35Days[date] ?? DayStatus(total: KcalRange(0, 0), burnedKcal: 0, net: KcalRange(0, 0), toBurn: 0, wiggleRoomKcal: 0, state: DayState.noData);
-                final isLast = index == dates.length - 1;
-                
-                final dayName = DateFormat('EEE, MMM d').format(date);
+      return _CollapsibleHistoryCard(
+        title: title,
+        children: [
+          ...dates.asMap().entries.map((entry) {
+            final index = entry.key;
+            final date = entry.value;
+            final status = last35Days[date] ?? DayStatus(total: KcalRange(0, 0), burnedKcal: 0, net: KcalRange(0, 0), toBurn: 0, wiggleRoomKcal: 0, state: DayState.noData);
+            final isLast = index == dates.length - 1;
+            
+            final dayName = DateFormat('EEE, MMM d').format(date);
 
-                Widget pill;
-                if (status.state == DayState.noData) {
-                  pill = Text('-', style: theme.textTheme.bodyStrong.copyWith(color: theme.textTheme.caption.color));
-                } else if (status.state == DayState.unburned) {
-                  pill = Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: ext.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text('Unburned', style: theme.textTheme.caption.copyWith(color: ext.error, fontWeight: FontWeight.w600)),
-                  );
-                } else {
-                  pill = Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: ext.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text('Safe', style: theme.textTheme.caption.copyWith(color: ext.success, fontWeight: FontWeight.w600)),
-                  );
-                }
+            Widget pill;
+            if (status.state == DayState.noData) {
+              pill = Text('-', style: theme.textTheme.bodyStrong.copyWith(color: theme.textTheme.caption.color));
+            } else if (status.state == DayState.unburned) {
+              pill = Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: ext.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text('Unburned', style: theme.textTheme.caption.copyWith(color: ext.error, fontWeight: FontWeight.w600)),
+              );
+            } else {
+              pill = Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: ext.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text('Safe', style: theme.textTheme.caption.copyWith(color: ext.success, fontWeight: FontWeight.w600)),
+              );
+            }
 
-                return Column(
-                  key: ValueKey('day_history_${date.toIso8601String()}'),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 100,
-                            child: Text(dayName, style: theme.textTheme.body),
-                          ),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Text(
-                                  status.state == DayState.noData ? 'No logs' : '≤${status.total.format()}',
-                                  style: theme.textTheme.caption.copyWith(
-                                    fontFeatures: const [FontFeature.tabularFigures()],
-                                  ),
-                                ),
-                                if (status.burnedKcal > 0) ...[
-                                  const SizedBox(width: 4),
-                                  Icon(Icons.local_fire_department, size: 14, color: theme.colorScheme.primary),
-                                ],
-                              ],
-                            ),
-                          ),
-                          pill,
-                        ],
+            return Column(
+              key: ValueKey('day_history_${date.toIso8601String()}'),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: Text(dayName, style: theme.textTheme.body),
                       ),
-                    ),
-                    if (!isLast)
-                      Divider(height: 1, color: ext.hairline, indent: 16, endIndent: 16),
-                  ],
-                );
-              }),
-            ],
-          ),
-        ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Text(
+                              status.state == DayState.noData ? 'No logs' : '≤${status.total.format()}',
+                              style: theme.textTheme.caption.copyWith(
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                            if (status.burnedKcal > 0) ...[
+                              const SizedBox(width: 4),
+                              Icon(Icons.local_fire_department, size: 14, color: theme.colorScheme.primary),
+                            ],
+                          ],
+                        ),
+                      ),
+                      pill,
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  Divider(height: 1, color: ext.hairline, indent: 16, endIndent: 16),
+              ],
+            );
+          }),
+        ],
       );
     }
 
@@ -535,6 +526,60 @@ class _DayDetailSheet extends StatelessWidget {
         ),
         const SizedBox(height: 32),
       ],
+    );
+  }
+}
+
+class _CollapsibleHistoryCard extends StatefulWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _CollapsibleHistoryCard({
+    required this.title,
+    required this.children,
+  });
+
+  @override
+  State<_CollapsibleHistoryCard> createState() => _CollapsibleHistoryCardState();
+}
+
+class _CollapsibleHistoryCardState extends State<_CollapsibleHistoryCard> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(widget.title, style: theme.textTheme.h2.copyWith(fontSize: 18)),
+                  Icon(
+                    _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_isExpanded) ...[
+            Divider(height: 1, color: ext.hairline),
+            ...widget.children,
+          ],
+        ],
+      ),
     );
   }
 }

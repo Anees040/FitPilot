@@ -88,23 +88,10 @@ class ProgramDetailScreen extends ConsumerWidget {
                   final sessions = program.getSessionsForWeek(week);
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: AppCard(
-                      variant: AppCardVariant.standard,
-                      child: Theme(
-                        data: theme.copyWith(dividerColor: Colors.transparent),
-                        child: ExpansionTile(
-                          initiallyExpanded: index == 0,
-                          title: Text('Week $week', style: theme.textTheme.bodyStrong),
-                          subtitle: Text('${sessions.length} sessions', style: theme.textTheme.caption),
-                          children: sessions.map((s) {
-                            return ListTile(
-                              title: Text('Day ${s.dayNumber}'),
-                              subtitle: Text('${s.minutes} min'),
-                              trailing: Icon(Icons.fitness_center, color: ext.textDisabled),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                    child: _WeekTileCard(
+                      week: week,
+                      initiallyExpanded: index == 0,
+                      sessions: sessions,
                     ),
                   );
                 },
@@ -113,6 +100,83 @@ class ProgramDetailScreen extends ConsumerWidget {
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 48)),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeekTileCard extends StatefulWidget {
+  final int week;
+  final bool initiallyExpanded;
+  final List<SessionWithExercise> sessions;
+
+  const _WeekTileCard({
+    required this.week,
+    required this.initiallyExpanded,
+    required this.sessions,
+  });
+
+  @override
+  State<_WeekTileCard> createState() => _WeekTileCardState();
+}
+
+class _WeekTileCardState extends State<_WeekTileCard> {
+  late bool _isExpanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = widget.initiallyExpanded;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return AppCard(
+      variant: AppCardVariant.standard,
+      padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Week ${widget.week}', style: theme.textTheme.bodyStrong),
+                        const SizedBox(height: 2),
+                        Text('${widget.sessions.length} sessions', style: theme.textTheme.caption),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_isExpanded) ...[
+            Divider(height: 1, color: ext.hairline),
+            ...widget.sessions.map((s) {
+              return ListTile(
+                title: Text('Day ${s.dayNumber}'),
+                subtitle: Text('${s.minutes} min'),
+                trailing: Icon(Icons.fitness_center, color: ext.textDisabled),
+              );
+            }),
+          ],
         ],
       ),
     );

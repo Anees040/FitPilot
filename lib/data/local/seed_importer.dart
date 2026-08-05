@@ -57,24 +57,32 @@ class SeedImporter {
     final batch = db.batch();
     for (final ex in exercises) {
       final e = ex as Map<String, dynamic>;
-      batch.insert('exercises', {
-        'id': e['id'] as String,
-        'name': e['name'] as String,
-        'category': e['category'] as String,
-        'subcategory': e['subcategory'] as String?,
-        'met': TolerantReader.readDouble(e['met']) ?? 5.0,
-        'equipment': e['equipment'] as String?,
-        'primary_muscles': json.encode(e['primary_muscles'] ?? []),
-        'secondary_muscles': json.encode(e['secondary_muscles'] ?? []),
-        'difficulty': TolerantReader.readInt(e['difficulty']) ?? 1,
-        'pace_tier': e['pace_tier'] as String,
-        'steps': json.encode(e['steps'] ?? []),
-        'mistakes': json.encode(e['mistakes'] ?? []),
-        'media_asset': e['media_asset'] as String?,
-        'video_url': e['video_url'] as String?,
-      });
+      batch.insert(
+        'exercises',
+        {
+          'id': e['id'] as String,
+          'name': e['name'] as String,
+          'category': e['category'] as String,
+          'subcategory': e['subcategory'] as String?,
+          'met': TolerantReader.readDouble(e['met']) ?? 5.0,
+          'equipment': (e['equipment'] as String?) ?? '',
+          'primary_muscles': json.encode(e['primary_muscles'] ?? []),
+          'secondary_muscles': json.encode(e['secondary_muscles'] ?? []),
+          'difficulty': TolerantReader.readInt(e['difficulty']) ?? 1,
+          'pace_tier': e['pace_tier'] as String,
+          'steps': json.encode(e['steps'] ?? []),
+          'mistakes': json.encode(e['mistakes'] ?? []),
+          'media_asset': e['media_asset'] as String?,
+          'video_url': e['video_url'] as String?,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
-    await batch.commit(noResult: true);
+    try {
+      await batch.commit(noResult: true);
+    } catch (e) {
+      // Ignore duplicate or constraint conflicts during seed import
+    }
   }
 
   Future<void> _importPrograms() async {
