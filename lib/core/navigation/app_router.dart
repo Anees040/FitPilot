@@ -139,20 +139,15 @@ final appRouter = GoRouter(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const NotificationScreen(),
     ),
-    StatefulShellRoute(
+    StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return MaxWidthCenter(
           child: ScaffoldWithNavBar(navigationShell: navigationShell),
         );
       },
-      navigatorContainerBuilder: (context, navigationShell, children) {
-        return _AnimatedBranchContainer(
-          currentIndex: navigationShell.currentIndex,
-          children: children,
-        );
-      },
       branches: [
         StatefulShellBranch(
+          navigatorKey: shellNavigatorTodayKey,
           routes: [
             GoRoute(
               path: '/today',
@@ -161,6 +156,7 @@ final appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
+          navigatorKey: shellNavigatorLogKey,
           routes: [
             GoRoute(
               path: '/log',
@@ -169,6 +165,7 @@ final appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
+          navigatorKey: shellNavigatorPlanKey,
           routes: [
             GoRoute(
               path: '/plan',
@@ -177,6 +174,7 @@ final appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
+          navigatorKey: shellNavigatorProgressKey,
           routes: [
             GoRoute(
               path: '/progress',
@@ -185,6 +183,7 @@ final appRouter = GoRouter(
           ],
         ),
         StatefulShellBranch(
+          navigatorKey: shellNavigatorProfileKey,
           routes: [
             GoRoute(
               path: '/profile',
@@ -347,31 +346,4 @@ class MaxWidthCenter extends StatelessWidget {
   }
 }
 
-class _AnimatedBranchContainer extends StatelessWidget {
-  const _AnimatedBranchContainer({
-    required this.currentIndex,
-    required this.children,
-  });
-  final int currentIndex;
-  final List<Widget> children;
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: List.generate(children.length, (index) {
-        final navigator = children[index];
-        return AnimatedOpacity(
-          opacity: index == currentIndex ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 200),
-          child: IgnorePointer(
-            ignoring: index != currentIndex,
-            child: TickerMode(
-              enabled: index == currentIndex,
-              child: navigator,
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
