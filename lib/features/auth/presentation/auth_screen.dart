@@ -158,6 +158,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user != null) {
+        final createdAtStr = user.createdAt;
+        final createdAt = DateTime.tryParse(createdAtStr) ?? DateTime.now();
+        final isNew = DateTime.now().difference(createdAt).inSeconds.abs() < 15;
+        
+        if (_isLogin && isNew) {
+          await ref.read(authRepositoryProvider).signOut();
+          throw Exception("Account doesn't exist. Please switch to Sign Up to create an account.");
+        }
         await _handlePostSignIn(user.id);
       }
     } catch (e, stack) {
@@ -274,7 +282,30 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _navigatePostAuth() async {
     final repo = await ref.read(profileRepositoryProvider.future);
-    final profile = await repo.get();
+    var profile = await repo.get();
+    
+    // Extract metadata from Supabase User (like Google Name/Avatar)
+    final user = ref.read(authRepositoryProvider).currentUser;
+    if (user != null && profile != null) {
+      final metaName = user.userMetadata?['full_name'] as String?;
+      final metaAvatar = user.userMetadata?['avatar_url'] as String?;
+      
+      bool needsUpdate = false;
+      var updatedProfile = profile;
+      
+      if (metaName != null && metaName.isNotEmpty && (profile.name == null || profile.name!.isEmpty)) {
+        updatedProfile = updatedProfile.copyWith(name: metaName);
+        needsUpdate = true;
+      }
+      
+      // We'll save the avatar URL in the SyncMetadata since Profile doesn't have an avatar field,
+      // or we can just fetch it in the ProfileScreen on-the-fly.
+      if (needsUpdate) {
+        await repo.save(updatedProfile);
+        profile = updatedProfile;
+      }
+    }
+
     if (mounted) {
       if (profile != null && (profile.onboardingComplete || profile.gender != Gender.unspecified)) {
         context.go('/today');

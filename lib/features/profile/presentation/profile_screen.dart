@@ -502,22 +502,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  child: Icon(Icons.person, color: theme.colorScheme.primary),
+                Builder(
+                  builder: (context) {
+                    final avatarUrl = session.userMetadata?['avatar_url'] as String?;
+                    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+                      return CircleAvatar(
+                        backgroundImage: NetworkImage(avatarUrl),
+                      );
+                    }
+                    return CircleAvatar(
+                      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      child: Icon(Icons.person, color: theme.colorScheme.primary),
+                    );
+                  },
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Signed in', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)),
+                      Text(profile.name ?? 'Signed in', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)),
                       Text(
-                        session.email,
+                        session.email ?? '',
                         style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
+
                 ),
                 TextButton(
                   onPressed: () async {
