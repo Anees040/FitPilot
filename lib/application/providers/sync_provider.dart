@@ -4,6 +4,7 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/data/remote/remote_data_source.dart';
 import 'package:fitpilot/data/sync/sync_service.dart';
 import 'package:fitpilot/data/sync/sync_trigger_manager.dart';
+import 'package:fitpilot/application/providers/network_provider.dart';
 import 'package:fitpilot/data/sync/guest_merge_service.dart';
 import 'package:fitpilot/core/config/env.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -41,6 +42,12 @@ final syncTriggerManagerProvider = Provider<SyncTriggerManager?>((ref) {
 
   final authRepo = ref.watch(authRepositoryProvider);
   final manager = SyncTriggerManager(service, authRepo);
+
+  ref.listen(isOnlineProvider, (prev, next) {
+    if (next.valueOrNull == true) {
+      manager.triggerNetworkRegained();
+    }
+  });
 
   ref.onDispose(() => manager.dispose());
   return manager;

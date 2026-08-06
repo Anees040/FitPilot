@@ -7,6 +7,7 @@ import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
+import 'package:fitpilot/core/utils/require_online.dart';
 
 class OtpVerifyScreen extends ConsumerStatefulWidget {
   final String email;
@@ -58,6 +59,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   }
 
   Future<void> _submit() async {
+    if (!requireOnline(context, ref, feature: 'Verify OTP')) return;
     final code = _codeCtrl.text.trim();
     if (code.length != 6) return;
 
@@ -94,6 +96,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   }
 
   Future<void> _resend() async {
+    if (!requireOnline(context, ref, feature: 'Resend OTP')) return;
     if (_resendCooldown > 0) return;
 
     try {

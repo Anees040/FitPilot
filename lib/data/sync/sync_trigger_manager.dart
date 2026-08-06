@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fitpilot/core/config/env.dart';
 import 'package:fitpilot/data/sync/sync_service.dart';
 import 'package:fitpilot/domain/repositories/auth_repository.dart';
@@ -9,7 +8,6 @@ class SyncTriggerManager with WidgetsBindingObserver {
   final SyncService _syncService;
   final AuthRepository _authRepo;
 
-  StreamSubscription? _connectivitySub;
   StreamSubscription? _authSub;
   Timer? _periodicTimer;
   Timer? _debounceTimer;
@@ -18,12 +16,6 @@ class SyncTriggerManager with WidgetsBindingObserver {
 
   SyncTriggerManager(this._syncService, this._authRepo) {
     WidgetsBinding.instance.addObserver(this);
-
-    // Listen to network changes
-    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
-      if (results.contains(ConnectivityResult.none)) return;
-      _trigger('network_regained');
-    });
 
     // Auth state changes
     _authSub = _authRepo.authStateChanges.listen((user) {
@@ -40,7 +32,6 @@ class SyncTriggerManager with WidgetsBindingObserver {
 
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _connectivitySub?.cancel();
     _authSub?.cancel();
     _periodicTimer?.cancel();
     _debounceTimer?.cancel();
@@ -52,6 +43,10 @@ class SyncTriggerManager with WidgetsBindingObserver {
     if (_isForeground) {
       _trigger('app_resume');
     }
+  }
+
+  void triggerNetworkRegained() {
+    _trigger('network_regained');
   }
 
   /// Triggers a sync with a short debounce

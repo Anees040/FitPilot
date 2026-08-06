@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/utils/require_online.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
@@ -33,6 +34,7 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
   }
 
   Future<void> _submit() async {
+    if (!requireOnline(context, ref, feature: 'Update Password')) return;
     final pass = _passCtrl.text;
     final confirmPass = _confirmPassCtrl.text;
     

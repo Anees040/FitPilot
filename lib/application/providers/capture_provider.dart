@@ -21,6 +21,16 @@ class CaptureNotifier extends Notifier<void> {
   @override
   void build() {}
 
+  Future<bool> isBarcodeLocal(String barcode) async {
+    final db = await ref.read(databaseProvider.future);
+    final localMatches = await db.query(
+      'food_catalog',
+      where: 'id = ?',
+      whereArgs: [barcode],
+    );
+    return localMatches.isNotEmpty;
+  }
+
   Future<OffResult?> lookupBarcode(String barcode) async {
     final client = ref.read(openFoodFactsClientProvider);
     final db = await ref.read(databaseProvider.future);

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
+import 'package:fitpilot/core/utils/require_online.dart';
+import 'package:fitpilot/application/providers/network_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/data/local/app_database.dart';
@@ -521,6 +523,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
+                    final isOnline = ref.read(isOnlineProvider).value ?? true;
+                    if (!isOnline) {
+                      final syncService = ref.read(syncServiceProvider);
+                      final count = await syncService?.getPendingQueueCount() ?? 0;
+                      if (count > 0) {
+                        if (!context.mounted) return;
+                        final proceed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Unsaved Changes'),
+                            content: Text('You have $count changes that haven\'t synced. If you sign out now they\'ll be lost.'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true), 
+                                child: Text('Sign Out Anyway', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (proceed != true) return;
+                      }
+                    }
+                    
+                    if (!context.mounted) return;
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
@@ -558,6 +585,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Consumer(
             builder: (context, ref, _) {
               final syncState = ref.watch(syncStatusProvider).valueOrNull;
+              final isOnline = ref.watch(isOnlineProvider).value ?? true;
+              
+              if (!isOnline) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.wifi_off, size: 14, color: theme.textTheme.bodySmall?.color),
+                    const SizedBox(width: 8),
+                    Text('Offline', style: theme.textTheme.bodySmall),
+                  ],
+                );
+              }
+
               return Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -605,6 +645,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _showDeleteAccountDialog() {
+    if (!requireOnline(context, ref, feature: 'Delete Account')) return;
     bool loading = false;
     showDialog(
       context: context,

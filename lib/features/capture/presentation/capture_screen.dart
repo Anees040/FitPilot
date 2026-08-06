@@ -11,6 +11,7 @@ import 'package:fitpilot/data/ocr/nutrition_label_parser.dart';
 import 'package:fitpilot/application/providers/capture_provider.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
+import 'package:fitpilot/core/utils/require_online.dart';
 import 'package:fitpilot/data/ai/ai_food_service.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
@@ -108,6 +109,17 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
     // G2.2: Pause camera immediately after first detection
     await _cameraController?.stop();
+
+    final isLocal = await ref.read(captureProvider.notifier).isBarcodeLocal(barcode);
+    if (!mounted) return;
+    
+    if (!isLocal) {
+      if (!requireOnline(context, ref, feature: 'barcode lookup')) {
+        await _cameraController?.start();
+        setState(() => _isProcessing = false);
+        return;
+      }
+    }
 
     final result = await ref
         .read(captureProvider.notifier)
@@ -242,6 +254,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
   Future<void> _runAiOnFile(String filePath) async {
     if (_isProcessing) return;
+    if (!requireOnline(context, ref, feature: 'Scan Food')) return;
+
     setState(() {
       _isProcessing = true;
       _capturedImagePath = filePath;

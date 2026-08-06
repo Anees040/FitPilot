@@ -63,6 +63,13 @@ class SyncService {
 
   Future<void>? _activeSync;
 
+  Future<int> getPendingQueueCount() async {
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) as c FROM sync_queue'),
+    );
+    return count ?? 0;
+  }
+
   /// The main entry point to trigger a sync (push then pull).
   Future<void> syncNow() {
     if (_activeSync != null) return _activeSync!;

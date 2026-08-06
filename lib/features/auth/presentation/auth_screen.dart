@@ -8,6 +8,7 @@ import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/app_reset.dart';
 import 'package:fitpilot/data/local/app_database.dart';
+import 'package:fitpilot/core/utils/require_online.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
@@ -80,6 +81,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   Future<void> _submit() async {
+    if (!requireOnline(context, ref, feature: _isLogin ? 'Login' : 'Sign up')) return;
     if (!_formKey.currentState!.validate()) return;
 
     if (!_isLogin && !_agreedToTerms) {
@@ -146,6 +148,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   Future<void> _submitGoogle() async {
+    if (!requireOnline(context, ref, feature: 'Continue with Google')) return;
     setState(() {
       _isLoading = true;
       _formError = null;

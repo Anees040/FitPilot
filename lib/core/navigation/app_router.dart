@@ -26,6 +26,7 @@ import 'package:fitpilot/features/exercises/presentation/category_detail_screen.
 import 'package:fitpilot/features/exercises/presentation/muscle_detail_screen.dart';
 import 'package:fitpilot/features/today/presentation/notification_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/offline_banner.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final shellNavigatorTodayKey = GlobalKey<NavigatorState>(debugLabel: 'today');
@@ -217,7 +218,12 @@ class ScaffoldWithNavBar extends StatelessWidget {
     final ext = theme.extension<AppColors>()!;
 
     return Scaffold(
-      body: navigationShell,
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(child: navigationShell),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(

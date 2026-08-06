@@ -119,6 +119,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     setState(() => _isSaving = true);
     
     try {
+      final container = ProviderScope.containerOf(context, listen: false);
       final repoFuture = ref.read(profileRepositoryProvider.future);
       final progressNotifier = ref.read(progressProvider.notifier);
 
@@ -160,7 +161,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       // Log the initial weight
       await progressNotifier.addWeight(_weightKg);
 
-      ref.invalidate(profileProvider);
+      container.invalidate(profileProvider);
 
       if (mounted) context.go('/today');
     } catch (e) {
