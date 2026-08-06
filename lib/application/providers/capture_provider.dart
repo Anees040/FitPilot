@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:fitpilot/core/utils/food_image_resolver.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
@@ -12,6 +13,11 @@ import 'package:sqflite/sqflite.dart';
 final openFoodFactsClientProvider = Provider<OpenFoodFactsClient>((ref) {
   return HttpOpenFoodFactsClient(http.Client());
 });
+
+/// Sentinel `barcode` used by the AI photo scan, which has no real barcode.
+/// Logs carrying it are recorded as [LogSource.aiPhoto] and keep the user's
+/// own photo in `photo_path`.
+const String aiScanBarcode = 'ai_scan';
 
 final captureProvider = NotifierProvider<CaptureNotifier, void>(() {
   return CaptureNotifier();
@@ -66,6 +72,9 @@ class CaptureNotifier extends Notifier<void> {
           'kcal_min': result.kcalPer100g,
           'kcal_max': result.kcalPer100g,
           'image_url': result.imageUrl,
+          // Fallback art if the OFF photo is missing or fails to download —
+          // "Lays Masala" still resolves to the bundled chips photo.
+          'image_key': resolveImageKey(result.productName),
           'is_verified': 0, // Externally sourced
         }, conflictAlgorithm: ConflictAlgorithm.replace);
         // Download & cache image locally (fire-and-forget, non-blocking)
@@ -106,11 +115,13 @@ class CaptureNotifier extends Notifier<void> {
     required String name,
     required int kcal,
     required double grams,
+    String? photoPath,
   }) async {
     // Add a 5% spread to the exact computed kcal
     final spread = (kcal * 0.05).round();
     final kcalRange = KcalRange(kcal - spread, kcal + spread);
 
+    final isAiScan = barcode == aiScanBarcode;
     final log = FoodLog(
       id: const Uuid().v4(),
       foodId: barcode, // null if OCR
@@ -119,8 +130,13 @@ class CaptureNotifier extends Notifier<void> {
       quantity:
           1.0, // Quantity is 1 because we pre-computed the final kcal based on grams
       kcal: kcalRange,
-      source: barcode == null ? LogSource.labelScan : LogSource.search,
+      source: barcode == null
+          ? LogSource.labelScan
+          : isAiScan
+          ? LogSource.aiPhoto
+          : LogSource.search,
       loggedAt: DateTime.now(),
+      photoPath: photoPath,
     );
 
     ref.read(todayProvider.notifier).addLog(log);

@@ -1,0 +1,639 @@
+{
+  "apple": {
+    "file": "Gala apples on cloth.jpg",
+    "article": "Gala (apple)",
+    "license": "CC BY-SA 4.0",
+    "author": "Nerd271",
+    "source": "https://commons.wikimedia.org/wiki/File:Gala_apples_on_cloth.jpg"
+  },
+  "banana": {
+    "file": "Bananavarieties.jpg",
+    "article": "Banana",
+    "license": "CC BY-SA 3.0",
+    "author": "TimothyPilgrim",
+    "source": "https://commons.wikimedia.org/wiki/File:Bananavarieties.jpg"
+  },
+  "biryani": {
+    "file": "\"Hyderabadi_Dum_Biryani\".jpg",
+    "article": "Biryani",
+    "license": "CC BY-SA 4.0",
+    "author": "Mahi Tatavarty",
+    "source": "https://commons.wikimedia.org/wiki/File:%22Hyderabadi_Dum_Biryani%22.jpg"
+  },
+  "biscuit": {
+    "file": "Bourbon_and_Custard_Cream.jpeg",
+    "article": "Biscuit",
+    "license": "Public domain",
+    "author": "GOLDIEM J",
+    "source": "https://commons.wikimedia.org/wiki/File:Bourbon_and_Custard_Cream.jpeg"
+  },
+  "bread": {
+    "file": "Toast-3.jpg",
+    "article": "Toast (food)",
+    "license": "CC BY-SA 3.0",
+    "author": "Rainer Z ...",
+    "source": "https://commons.wikimedia.org/wiki/File:Toast-3.jpg"
+  },
+  "brownie": {
+    "file": "Chocolatebrownie.JPG",
+    "article": "Chocolate brownie",
+    "license": "CC BY-SA 3.0",
+    "author": "Ɱ",
+    "source": "https://commons.wikimedia.org/wiki/File:Chocolatebrownie.JPG"
+  },
+  "bubble_tea": {
+    "file": "Bubble Tea.png",
+    "article": "Bubble tea",
+    "license": "CC BY-SA 3.0",
+    "author": "Howief",
+    "source": "https://commons.wikimedia.org/wiki/File:Bubble_Tea.png"
+  },
+  "bun_kebab": {
+    "file": "Bun Kabab.JPG",
+    "article": "Bun kebab",
+    "license": "CC BY-SA 4.0",
+    "author": "LunaticFringe97",
+    "source": "https://commons.wikimedia.org/wiki/File:Bun_Kabab.JPG"
+  },
+  "burger": {
+    "file": "Cheeseburger.jpg",
+    "article": "Cheeseburger",
+    "license": "Public domain",
+    "author": "Renee Comet (photographer)",
+    "source": "https://commons.wikimedia.org/wiki/File:Cheeseburger.jpg"
+  },
+  "cake": {
+    "file": "Pound layer cake.jpg",
+    "article": "Cake",
+    "license": "Public domain",
+    "author": "Scheinwerfermann",
+    "source": "https://commons.wikimedia.org/wiki/File:Pound_layer_cake.jpg"
+  },
+  "cake_rusk": {
+    "file": "Zwieback-1.jpg",
+    "article": "Rusk",
+    "license": "CC BY-SA 3.0",
+    "author": "No machine-readable author provided. Rainer Zenz assumed (based on copyright claims).",
+    "source": "https://commons.wikimedia.org/wiki/File:Zwieback-1.jpg"
+  },
+  "candy": {
+    "file": "Candy_in_Damascus.jpg",
+    "article": "Candy",
+    "license": "CC BY 2.0",
+    "author": "Elisa Azzali",
+    "source": "https://commons.wikimedia.org/wiki/File:Candy_in_Damascus.jpg"
+  },
+  "chaat": {
+    "file": "Dahi puri, Doi phuchka.jpg",
+    "article": "Chaat",
+    "license": "CC BY-SA 4.0",
+    "author": "Rupamdas75",
+    "source": "https://commons.wikimedia.org/wiki/File:Dahi_puri,_Doi_phuchka.jpg"
+  },
+  "chai": {
+    "file": "Chai In Sakora.jpg",
+    "article": "Masala chai",
+    "license": "CC BY-SA 4.0",
+    "author": "Dadhichbittu007",
+    "source": "https://commons.wikimedia.org/wiki/File:Chai_In_Sakora.jpg"
+  },
+  "chana": {
+    "file": "Chana masala.jpg",
+    "article": "Chana masala",
+    "license": "CC BY-SA 2.0",
+    "author": "Simon Law (sfllaw) from Montréal, QC, Canada",
+    "source": "https://commons.wikimedia.org/wiki/File:Chana_masala.jpg"
+  },
+  "chips": {
+    "file": "Potato-Chips.jpg",
+    "article": "Potato chip",
+    "license": "Public domain",
+    "author": "Evan-Amos",
+    "source": "https://commons.wikimedia.org/wiki/File:Potato-Chips.jpg"
+  },
+  "chocolate": {
+    "file": "Green_and_Black's_dark_chocolate_bar_2.jpg",
+    "article": "Chocolate bar",
+    "license": "CC0",
+    "author": "Mx. Granger",
+    "source": "https://commons.wikimedia.org/wiki/File:Green_and_Black%27s_dark_chocolate_bar_2.jpg"
+  },
+  "coffee": {
+    "file": "Caffe Latte at Pulse Cafe.jpg",
+    "article": "Latte",
+    "license": "CC0",
+    "author": "B adger1",
+    "source": "https://commons.wikimedia.org/wiki/File:Caffe_Latte_at_Pulse_Cafe.jpg"
+  },
+  "cola": {
+    "file": "Glass_of_Cola.jpg",
+    "article": "Cola",
+    "license": "CC BY-SA 4.0",
+    "author": "Cocktailmarler",
+    "source": "https://commons.wikimedia.org/wiki/File:Glass_of_Cola.jpg"
+  },
+  "cream_roll": {
+    "file": "Cream horns (15466292759).jpg",
+    "article": "Cream horn",
+    "license": "CC BY 2.0",
+    "author": "jeffreyw",
+    "source": "https://commons.wikimedia.org/wiki/File:Cream_horns_(15466292759).jpg"
+  },
+  "croissant": {
+    "file": "Croissant-Petr Kratochvil.jpg",
+    "article": "Croissant",
+    "license": "CC0",
+    "author": "Petr Kratochvil",
+    "source": "https://commons.wikimedia.org/wiki/File:Croissant-Petr_Kratochvil.jpg"
+  },
+  "daal": {
+    "file": "EgFoodLentilSoup.jpg",
+    "article": "Lentil soup",
+    "license": "CC BY-SA 3.0",
+    "author": "Roland Unger",
+    "source": "https://commons.wikimedia.org/wiki/File:EgFoodLentilSoup.jpg"
+  },
+  "dahi_bhalay": {
+    "file": "Dahi bhalla or dahi wada or dahi bada.PNG",
+    "article": "Dahi vada",
+    "license": "CC BY-SA 4.0",
+    "author": "Akshay Sanjay Agrawal",
+    "source": "https://commons.wikimedia.org/wiki/File:Dahi_bhalla_or_dahi_wada_or_dahi_bada.PNG"
+  },
+  "dates": {
+    "file": "Dates005.jpg",
+    "article": "Date palm",
+    "license": "CC BY-SA 3.0",
+    "author": "Nepenthes",
+    "source": "https://commons.wikimedia.org/wiki/File:Dates005.jpg"
+  },
+  "donut": {
+    "file": "Glazed-Donut.jpg",
+    "article": "Doughnut",
+    "license": "Public domain",
+    "author": "Evan-Amos",
+    "source": "https://commons.wikimedia.org/wiki/File:Glazed-Donut.jpg"
+  },
+  "egg": {
+    "file": "Soft-boiled-egg.jpg",
+    "article": "Boiled egg",
+    "license": "CC BY-SA 4.0",
+    "author": "Amin",
+    "source": "https://commons.wikimedia.org/wiki/File:Soft-boiled-egg.jpg"
+  },
+  "energy_drink": {
+    "file": "Energydrinks.jpg",
+    "article": "Energy drink",
+    "license": "CC BY-SA 4.0",
+    "author": "AlienFood",
+    "source": "https://commons.wikimedia.org/wiki/File:Energydrinks.jpg"
+  },
+  "falooda": {
+    "file": "Faluda.JPG",
+    "article": "Falooda",
+    "license": "CC BY-SA 3.0",
+    "author": "Randhirreddy at English Wikipedia",
+    "source": "https://commons.wikimedia.org/wiki/File:Faluda.JPG"
+  },
+  "fish": {
+    "file": "Fish and chips blackpool.jpg",
+    "article": "Fish and chips",
+    "license": "CC BY-SA 4.0",
+    "author": "Matthias Meckel",
+    "source": "https://commons.wikimedia.org/wiki/File:Fish_and_chips_blackpool.jpg"
+  },
+  "fried_chicken": {
+    "file": "Fried-Chicken-Set.jpg",
+    "article": "Fried chicken",
+    "license": "CC0",
+    "author": "Evan-Amos",
+    "source": "https://commons.wikimedia.org/wiki/File:Fried-Chicken-Set.jpg"
+  },
+  "fries": {
+    "file": "French Fries.JPG",
+    "article": "French fries",
+    "license": "CC0",
+    "author": "StockSnap",
+    "source": "https://commons.wikimedia.org/wiki/File:French_Fries.JPG"
+  },
+  "garlic_bread": {
+    "file": "Garlicbread.jpg",
+    "article": "Garlic bread",
+    "license": "CC BY-SA 3.0",
+    "author": "Popo le Chien",
+    "source": "https://commons.wikimedia.org/wiki/File:Garlicbread.jpg"
+  },
+  "golgappa": {
+    "file": "Pani Puri1.JPG",
+    "article": "Panipuri",
+    "license": "CC BY-SA 4.0",
+    "author": "Sruthi612",
+    "source": "https://commons.wikimedia.org/wiki/File:Pani_Puri1.JPG"
+  },
+  "gosht": {
+    "file": "Taj Mahal - Lamb Curry Madras.jpg",
+    "article": "Curry",
+    "license": "CC BY-SA 4.0",
+    "author": "Francesc Fort",
+    "source": "https://commons.wikimedia.org/wiki/File:Taj_Mahal_-_Lamb_Curry_Madras.jpg"
+  },
+  "granola_bar": {
+    "file": "Flapjacks.jpg",
+    "article": "Flapjack (oat bar)",
+    "license": "CC BY 2.0",
+    "author": "Alistair young",
+    "source": "https://commons.wikimedia.org/wiki/File:Flapjacks.jpg"
+  },
+  "grapes": {
+    "file": "Grapes, Rostov-on-Don, Russia.jpg",
+    "article": "Grape",
+    "license": "CC BY 4.0",
+    "author": "Vyacheslav Argenberg",
+    "source": "https://commons.wikimedia.org/wiki/File:Grapes,_Rostov-on-Don,_Russia.jpg"
+  },
+  "gulab_jamun": {
+    "file": "Gulab-jamun-wallpaper-1.jpg",
+    "article": "Gulab jamun",
+    "license": "CC BY-SA 4.0",
+    "author": "Sapra5379",
+    "source": "https://commons.wikimedia.org/wiki/File:Gulab-jamun-wallpaper-1.jpg"
+  },
+  "haleem": {
+    "file": "Pakistani Haleem served with garnish.jpg",
+    "article": "Haleem",
+    "license": "CC BY-SA 3.0",
+    "author": "Halt123halt",
+    "source": "https://commons.wikimedia.org/wiki/File:Pakistani_Haleem_served_with_garnish.jpg"
+  },
+  "halwa": {
+    "file": "Orient sweets (special halva) Samarkand, Siyab.jpg",
+    "article": "Halva",
+    "license": "CC BY-SA 3.0",
+    "author": "Shuhrenataxmedov",
+    "source": "https://commons.wikimedia.org/wiki/File:Orient_sweets_(special_halva)_Samarkand,_Siyab.jpg"
+  },
+  "halwa_puri": {
+    "file": "Chole Bhature from Nagpur.JPG",
+    "article": "Halwa puri",
+    "license": "CC BY-SA 4.0",
+    "author": "Dheerajk88",
+    "source": "https://commons.wikimedia.org/wiki/File:Chole_Bhature_from_Nagpur.JPG"
+  },
+  "honey": {
+    "file": "Runny hunny.jpg",
+    "article": "Honey",
+    "license": "Public domain",
+    "author": "Scott Bauer, USDA ARS",
+    "source": "https://commons.wikimedia.org/wiki/File:Runny_hunny.jpg"
+  },
+  "hotdog": {
+    "file": "Hot dog with mustard.png",
+    "article": "Hot dog",
+    "license": "Public domain",
+    "author": "Czar, original photographed by Renee Comet",
+    "source": "https://commons.wikimedia.org/wiki/File:Hot_dog_with_mustard.png"
+  },
+  "ice_cream": {
+    "file": "StrawberrySundae.jpg",
+    "article": "Sundae",
+    "license": "Public domain",
+    "author": "USDA photo by: Ken Hammond",
+    "source": "https://commons.wikimedia.org/wiki/File:StrawberrySundae.jpg"
+  },
+  "jalebi": {
+    "file": "Basavanagudi Kadalekai Parishe (2025) Bangalore (86).jpg",
+    "article": "Jalebi",
+    "license": "CC BY-SA 4.0",
+    "author": "Gpkp",
+    "source": "https://commons.wikimedia.org/wiki/File:Basavanagudi_Kadalekai_Parishe_(2025)_Bangalore_(86).jpg"
+  },
+  "juice": {
+    "file": "Orangejuice.jpg",
+    "article": "Orange juice",
+    "license": "CC0",
+    "author": "rawpixel.com",
+    "source": "https://commons.wikimedia.org/wiki/File:Orangejuice.jpg"
+  },
+  "karahi": {
+    "file": "Wok-and-karahi-2.jpg",
+    "article": "Karahi",
+    "license": "CC BY-SA 3.0",
+    "author": "FiveRings at en.wikipedia",
+    "source": "https://commons.wikimedia.org/wiki/File:Wok-and-karahi-2.jpg"
+  },
+  "karhi": {
+    "file": "Kadhi_Pakora.jpg",
+    "article": "Kadhi",
+    "license": "CC BY-SA 4.0",
+    "author": "Ams4wiki",
+    "source": "https://commons.wikimedia.org/wiki/File:Kadhi_Pakora.jpg"
+  },
+  "kebab": {
+    "file": "Lula kebab 2.jpg",
+    "article": "Kebab",
+    "license": "CC BY-SA 2.0",
+    "author": "Lesya Dolyk",
+    "source": "https://commons.wikimedia.org/wiki/File:Lula_kebab_2.jpg"
+  },
+  "keema": {
+    "file": "Sausage making-H-1.jpg",
+    "article": "Keema",
+    "license": "Public domain",
+    "author": "László Szalai (Beyond silence)",
+    "source": "https://commons.wikimedia.org/wiki/File:Sausage_making-H-1.jpg"
+  },
+  "kheer": {
+    "file": "Kheer.jpg",
+    "article": "Kheer",
+    "license": "CC BY-SA 2.0",
+    "author": "stu spivack",
+    "source": "https://commons.wikimedia.org/wiki/File:Kheer.jpg"
+  },
+  "kulfi": {
+    "file": "Matka kulfi.jpg",
+    "article": "Kulfi",
+    "license": "CC BY-SA 4.0",
+    "author": "Commoner247",
+    "source": "https://commons.wikimedia.org/wiki/File:Matka_kulfi.jpg"
+  },
+  "lassi": {
+    "file": "Salt lassi.jpg",
+    "article": "Lassi",
+    "license": "CC BY-SA 4.0",
+    "author": "Raksanand",
+    "source": "https://commons.wikimedia.org/wiki/File:Salt_lassi.jpg"
+  },
+  "mango": {
+    "file": "Mangos - single and halved.jpg",
+    "article": "Mango",
+    "license": "CC BY-SA 4.0",
+    "author": "Ivar Leidus",
+    "source": "https://commons.wikimedia.org/wiki/File:Mangos_-_single_and_halved.jpg"
+  },
+  "milk": {
+    "file": "Glass of Milk (33657535532).jpg",
+    "article": "Milk",
+    "license": "CC BY 2.0",
+    "author": "NIAID",
+    "source": "https://commons.wikimedia.org/wiki/File:Glass_of_Milk_(33657535532).jpg"
+  },
+  "milkshake": {
+    "file": "Strawberry milk shake (cropped).jpg",
+    "article": "Milkshake",
+    "license": "Public domain",
+    "author": "Renee Comet (Photographer)",
+    "source": "https://commons.wikimedia.org/wiki/File:Strawberry_milk_shake_(cropped).jpg"
+  },
+  "muffin": {
+    "file": "02116jfMuffins in Philippinesfvf 02.jpg",
+    "article": "Muffin",
+    "license": "CC0",
+    "author": "Judgefloro",
+    "source": "https://commons.wikimedia.org/wiki/File:02116jfMuffins_in_Philippinesfvf_02.jpg"
+  },
+  "naan": {
+    "file": "Annapurna Naan.jpg",
+    "article": "Naan",
+    "license": "CC BY 2.0",
+    "author": "snowpea&bokchoi",
+    "source": "https://commons.wikimedia.org/wiki/File:Annapurna_Naan.jpg"
+  },
+  "namkeen": {
+    "file": "Bombaymix.jpg",
+    "article": "Bombay mix",
+    "license": "Public domain",
+    "author": "No machine-readable author provided. J.P.Lon~commonswiki assumed (based on copyright claims).",
+    "source": "https://commons.wikimedia.org/wiki/File:Bombaymix.jpg"
+  },
+  "nihari": {
+    "file": "Nalli Nihari India.jpg",
+    "article": "Nihari",
+    "license": "CC BY-SA 4.0",
+    "author": "Nilanjan Sasmal",
+    "source": "https://commons.wikimedia.org/wiki/File:Nalli_Nihari_India.jpg"
+  },
+  "noodles": {
+    "file": "Shoyu Ramen（Tokyo Ramen） - 01.jpg",
+    "article": "Ramen",
+    "license": "CC BY-SA 4.0",
+    "author": "Quercus acuta",
+    "source": "https://commons.wikimedia.org/wiki/File:Shoyu_Ramen%EF%BC%88Tokyo_Ramen%EF%BC%89_-_01.jpg"
+  },
+  "nuggets": {
+    "file": "Chicken Nuggets.jpg",
+    "article": "Chicken nugget",
+    "license": "CC BY-SA 2.0",
+    "author": "James Palinsad",
+    "source": "https://commons.wikimedia.org/wiki/File:Chicken_Nuggets.jpg"
+  },
+  "nuts": {
+    "file": "Almonds - in shell, shell cracked open, shelled, blanched.jpg",
+    "article": "Almond",
+    "license": "CC BY-SA 4.0",
+    "author": "Ivar Leidus",
+    "source": "https://commons.wikimedia.org/wiki/File:Almonds_-_in_shell,_shell_cracked_open,_shelled,_blanched.jpg"
+  },
+  "oats": {
+    "file": "Oatmeal (1).jpg",
+    "article": "Porridge",
+    "license": "Public domain",
+    "author": "Renee Comet (Photographer)",
+    "source": "https://commons.wikimedia.org/wiki/File:Oatmeal_(1).jpg"
+  },
+  "orange": {
+    "file": "Oranges - whole-halved-segment.jpg",
+    "article": "Orange (fruit)",
+    "license": "CC BY-SA 4.0",
+    "author": "Ivar Leidus",
+    "source": "https://commons.wikimedia.org/wiki/File:Oranges_-_whole-halved-segment.jpg"
+  },
+  "pakora": {
+    "file": "Onion pakora - a.jpg",
+    "article": "Pakoda",
+    "license": "CC BY-SA 4.0",
+    "author": "Babu iyer",
+    "source": "https://commons.wikimedia.org/wiki/File:Onion_pakora_-_a.jpg"
+  },
+  "paneer": {
+    "file": "Panir Paneer Indian cheese fresh.jpg",
+    "article": "Paneer",
+    "license": "CC BY 2.0 de",
+    "author": "Sonja Pauen - Stanhopea",
+    "source": "https://commons.wikimedia.org/wiki/File:Panir_Paneer_Indian_cheese_fresh.jpg"
+  },
+  "paratha": {
+    "file": "Triangle paratha (cropped).JPG",
+    "article": "Paratha",
+    "license": "CC BY-SA 4.0",
+    "author": "Nithyasrm",
+    "source": "https://commons.wikimedia.org/wiki/File:Triangle_paratha_(cropped).JPG"
+  },
+  "pasta": {
+    "file": "Spaghettoni.jpg",
+    "article": "Spaghetti",
+    "license": "CC BY-SA 3.0",
+    "author": "Nnaluci",
+    "source": "https://commons.wikimedia.org/wiki/File:Spaghettoni.jpg"
+  },
+  "peanut_butter": {
+    "file": "2020-03-24 20 57 22 An open jar of Skippy Creamy Peanut Butter in the Dulles section of Sterling, Loudoun County, Virginia.jpg",
+    "article": "Peanut butter",
+    "license": "CC BY-SA 4.0",
+    "author": "Famartin",
+    "source": "https://commons.wikimedia.org/wiki/File:2020-03-24_20_57_22_An_open_jar_of_Skippy_Creamy_Peanut_Butter_in_the_Dulles_section_of_Sterling,_Loudoun_County,_Virginia.jpg"
+  },
+  "pizza": {
+    "file": "Pizza-3007395.jpg",
+    "article": "Pizza",
+    "license": "CC0",
+    "author": "igorovsyannykov",
+    "source": "https://commons.wikimedia.org/wiki/File:Pizza-3007395.jpg"
+  },
+  "popcorn": {
+    "file": "Popcorn_-_Studio_-_2011.jpg",
+    "article": "Popcorn",
+    "license": "CC BY-SA 3.0",
+    "author": "Bill Ebbesen",
+    "source": "https://commons.wikimedia.org/wiki/File:Popcorn_-_Studio_-_2011.jpg"
+  },
+  "prawn": {
+    "file": "Cocktail 1 bg 060702.jpg",
+    "article": "Prawn cocktail",
+    "license": "Public domain",
+    "author": "see below.",
+    "source": "https://commons.wikimedia.org/wiki/File:Cocktail_1_bg_060702.jpg"
+  },
+  "protein_bar": {
+    "file": "Three protein bars, two cut in half.jpg",
+    "article": "Energy bar",
+    "license": "CC0",
+    "author": "Mx. Granger",
+    "source": "https://commons.wikimedia.org/wiki/File:Three_protein_bars,_two_cut_in_half.jpg"
+  },
+  "pulao": {
+    "file": "Afghan_Palo.jpg",
+    "article": "Pilaf",
+    "license": "CC BY-SA 1.0",
+    "author": "Jost Wagner",
+    "source": "https://commons.wikimedia.org/wiki/File:Afghan_Palo.jpg"
+  },
+  "qorma": {
+    "file": "Chicken_Korma.JPG",
+    "article": "Korma",
+    "license": "CC0",
+    "author": "Miansari66",
+    "source": "https://commons.wikimedia.org/wiki/File:Chicken_Korma.JPG"
+  },
+  "rajma": {
+    "file": "Rajma Masala (32081557778).jpg",
+    "article": "Rajma",
+    "license": "CC BY-SA 2.0",
+    "author": "Gaurav Nemade",
+    "source": "https://commons.wikimedia.org/wiki/File:Rajma_Masala_(32081557778).jpg"
+  },
+  "rasmalai": {
+    "file": "Ras Malai 2.JPG",
+    "article": "Rasmalai",
+    "license": "CC BY-SA 4.0",
+    "author": "Shaharbano",
+    "source": "https://commons.wikimedia.org/wiki/File:Ras_Malai_2.JPG"
+  },
+  "rice": {
+    "file": "Meshi 001.jpg",
+    "article": "Cooked rice",
+    "license": "CC0",
+    "author": "Ocdp",
+    "source": "https://commons.wikimedia.org/wiki/File:Meshi_001.jpg"
+  },
+  "roll": {
+    "file": "Kolkata Rolls.jpg",
+    "article": "Kati roll",
+    "license": "CC BY-SA 4.0",
+    "author": "Satyajit Dhawale (Satyajit888)",
+    "source": "https://commons.wikimedia.org/wiki/File:Kolkata_Rolls.jpg"
+  },
+  "roti": {
+    "file": "2020-05-08 19 34 28 Chapati being made in a pan in the Franklin Farm section of Oak Hill, Fairfax County, Virginia.jpg",
+    "article": "Roti",
+    "license": "CC BY-SA 4.0",
+    "author": "Famartin",
+    "source": "https://commons.wikimedia.org/wiki/File:2020-05-08_19_34_28_Chapati_being_made_in_a_pan_in_the_Franklin_Farm_section_of_Oak_Hill,_Fairfax_County,_Virginia.jpg"
+  },
+  "sabzi": {
+    "file": "TibetanFood.JPG",
+    "article": "Vegetable curry",
+    "license": "CC BY-SA 4.0",
+    "author": "User: (WT-shared) Jpatokal at wts wikivoyage",
+    "source": "https://commons.wikimedia.org/wiki/File:TibetanFood.JPG"
+  },
+  "salad": {
+    "file": "Caesar salad (2).jpg",
+    "article": "Caesar salad",
+    "license": "CC BY 2.0",
+    "author": "Geoff Peters from Vancouver, BC, Canada",
+    "source": "https://commons.wikimedia.org/wiki/File:Caesar_salad_(2).jpg"
+  },
+  "samosa": {
+    "file": "Samosas, snack food at Wikipedia's 16th Birthday celebration in Chittagong (01).jpg",
+    "article": "Samosa",
+    "license": "CC BY-SA 4.0",
+    "author": "Moheen Reeyad",
+    "source": "https://commons.wikimedia.org/wiki/File:Samosas,_snack_food_at_Wikipedia%27s_16th_Birthday_celebration_in_Chittagong_(01).jpg"
+  },
+  "sandwich": {
+    "file": "Bacon, lettuce, tomato, and avocado.jpg",
+    "article": "Sandwich",
+    "license": "CC BY-SA 4.0",
+    "author": "Jami430",
+    "source": "https://commons.wikimedia.org/wiki/File:Bacon,_lettuce,_tomato,_and_avocado.jpg"
+  },
+  "shawarma": {
+    "file": "Shawarma 2.jpg",
+    "article": "Shawarma",
+    "license": "CC BY-SA 4.0",
+    "author": "Vis M",
+    "source": "https://commons.wikimedia.org/wiki/File:Shawarma_2.jpg"
+  },
+  "smoothie": {
+    "file": "Kiwi Smoothie.jpg",
+    "article": "Smoothie",
+    "license": "CC0",
+    "author": "rawpixel.com",
+    "source": "https://commons.wikimedia.org/wiki/File:Kiwi_Smoothie.jpg"
+  },
+  "spring_roll": {
+    "file": "Spring Rolls (3357696061).jpg",
+    "article": "Spring roll",
+    "license": "CC BY-SA 2.0",
+    "author": "Donna Benjamin",
+    "source": "https://commons.wikimedia.org/wiki/File:Spring_Rolls_(3357696061).jpg"
+  },
+  "taco": {
+    "file": "Burrito.JPG",
+    "article": "Burrito",
+    "license": "CC0",
+    "author": "samuelfernandezrivera",
+    "source": "https://commons.wikimedia.org/wiki/File:Burrito.JPG"
+  },
+  "tikka": {
+    "file": "Tandoorimumbai.jpg",
+    "article": "Chicken tikka",
+    "license": "CC BY-SA 2.0",
+    "author": "kspoddar",
+    "source": "https://commons.wikimedia.org/wiki/File:Tandoorimumbai.jpg"
+  },
+  "trail_mix": {
+    "file": "DriedfruitS.jpg",
+    "article": "Dried fruit",
+    "license": "CC BY 3.0",
+    "author": "Gilabrand (talk)",
+    "source": "https://commons.wikimedia.org/wiki/File:DriedfruitS.jpg"
+  },
+  "yogurt": {
+    "file": "Joghurt.jpg",
+    "article": "Yogurt",
+    "license": "CC BY-SA 3.0",
+    "author": "No machine-readable author provided. Rainer Zenz assumed (based on copyright claims).",
+    "source": "https://commons.wikimedia.org/wiki/File:Joghurt.jpg"
+  }
+}

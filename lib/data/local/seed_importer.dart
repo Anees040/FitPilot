@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:fitpilot/core/utils/food_image_resolver.dart';
 import 'package:fitpilot/core/utils/type_readers.dart';
 
 /// Loads seed data from bundled JSON assets into the database.
@@ -11,13 +12,22 @@ import 'package:fitpilot/core/utils/type_readers.dart';
 class SeedImporter {
   final Database db;
 
+  /// Every id in `foods_cheat.json` carries this prefix, so the importer can
+  /// tell how many of that file's rows are already present without needing a
+  /// version table.
+  static const _cheatIdPrefix = 'cheat-';
+
   const SeedImporter(this.db);
 
   Future<void> importAll() async {
     int foods = await _importFoods();
+    int cheats = await _importCheatFoods();
     int exercises = await _importExercises();
     int programs = await _importPrograms();
-    debugPrint('[Seed] foods=$foods exercises=$exercises programs=$programs');
+    debugPrint(
+      '[Seed] foods=$foods (cheat=$cheats) '
+      'exercises=$exercises programs=$programs',
+    );
   }
 
   Future<int> _importFoods() async {
@@ -32,23 +42,81 @@ class SeedImporter {
     final batch = db.batch();
     for (final food in foods) {
       final f = food as Map<String, dynamic>;
+      final name = f['name'] as String;
       batch.insert('food_catalog', {
         'id': f['id'] as String,
-        'name': f['name'] as String,
+        'name': name,
         'name_ur': f['name_ur'] as String?,
         'portion_label': f['portion_label'] as String,
         'grams': TolerantReader.readInt(f['grams']),
         'kcal_min': TolerantReader.readInt(f['kcal_min']) ?? 0,
         'kcal_max': TolerantReader.readInt(f['kcal_max']) ?? 0,
+        'image_key': resolveImageKey(name),
         'is_verified': 1,
       });
     }
     await batch.commit(noResult: true);
-    
+
     final finalCount = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM food_catalog'),
     );
     return finalCount ?? 0;
+  }
+
+  /// Imports the high-regret catalog — packaged snacks, cold drinks, fast food
+  /// and desi cheat meals — the foods a gym-goer actually wants a burn plan for.
+  ///
+  /// Runs on existing installs too, unlike [_importFoods], which stops as soon
+  /// as the catalog is non-empty. The guard compares how many `cheat-` rows are
+  /// present against the asset, so adding items to the file later ships them to
+  /// users who already have the earlier ones. Inserts use `ignore` and stable
+  /// ids, so a re-run never duplicates and never overwrites a user's edits.
+  ///
+  /// Writes through a raw batch, which deliberately bypasses `sync_queue`:
+  /// seed rows are bundled with the app and must not be pushed to Supabase.
+  Future<int> _importCheatFoods() async {
+    final jsonStr = await rootBundle.loadString('assets/seed/foods_cheat.json');
+    final List<dynamic> foods = json.decode(jsonStr) as List<dynamic>;
+
+    final present =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM food_catalog WHERE id LIKE ?',
+            ['$_cheatIdPrefix%'],
+          ),
+        ) ??
+        0;
+    if (present >= foods.length) return present;
+
+    final batch = db.batch();
+    for (final food in foods) {
+      final f = food as Map<String, dynamic>;
+      final name = f['name'] as String;
+      batch.insert(
+        'food_catalog',
+        {
+          'id': f['id'] as String,
+          'name': name,
+          'name_ur': f['name_ur'] as String?,
+          'portion_label': f['portion_label'] as String,
+          'grams': TolerantReader.readInt(f['grams']),
+          'kcal_min': TolerantReader.readInt(f['kcal_min']) ?? 0,
+          'kcal_max': TolerantReader.readInt(f['kcal_max']) ?? 0,
+          'image_key': resolveImageKey(name),
+          'is_verified': 1,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+    await batch.commit(noResult: true);
+
+    return Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM food_catalog WHERE id LIKE ?',
+            ['$_cheatIdPrefix%'],
+          ),
+        ) ??
+        0;
   }
 
   Future<int> _importExercises() async {

@@ -1,6 +1,8 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'package:fitpilot/core/utils/food_image_resolver.dart';
+
 /// Opens (or creates) the FitPilot SQLite database.
 ///
 /// Version history:
@@ -20,6 +22,10 @@ import 'package:sqflite/sqflite.dart';
 /// 14 — added programs, program_sessions tables and active program profile fields
 /// 15 — added some features
 /// 16 — recreated exercises table to remove equipment NOT NULL constraint
+/// 17 — added avatar_url to profile
+/// 18 — removed exercises with missing media from the seed
+/// 19 — added image_key to food_catalog and photo_path to food_logs
+///      (both LOCAL-ONLY: never pushed to or pulled from Supabase)
 class AppDatabase {
   static Database? _db;
 
@@ -29,7 +35,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 18,
+      version: 19,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -41,7 +47,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 18,
+      version: 19,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -62,6 +68,7 @@ class AppDatabase {
         kcal_min INTEGER NOT NULL,
         kcal_max INTEGER NOT NULL,
         image_url TEXT,
+        image_key TEXT,
         is_verified INTEGER NOT NULL DEFAULT 1
       )
     ''');
@@ -78,7 +85,8 @@ class AppDatabase {
         source TEXT NOT NULL,
         logged_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        deleted_at TEXT
+        deleted_at TEXT,
+        photo_path TEXT
       )
     ''');
 
@@ -476,6 +484,50 @@ class AppDatabase {
         DELETE FROM exercises WHERE id IN ('dancing-vigorous', 'air-squats', 'weighted-hula-hoop')
       ''');
     }
+    if (oldVersion < 19) {
+      // Both columns are LOCAL-ONLY. They are deliberately absent from the
+      // Supabase schema, so they must never appear in a sync push payload and
+      // a pull must never overwrite them. See sync_service.dart, which builds
+      // payloads from explicit column lists.
+      try {
+        await db.execute('ALTER TABLE food_catalog ADD COLUMN image_key TEXT');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE food_logs ADD COLUMN photo_path TEXT');
+      } catch (_) {}
+      // Present in _onCreate since v1, but older upgrade paths may lack it and
+      // catalog search depends on it once the catalog grows past a few hundred.
+      try {
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_food_catalog_name ON food_catalog (name)',
+        );
+      } catch (_) {}
+      await _backfillImageKeys(db);
+    }
+  }
+
+  /// Populates `image_key` for catalog rows that predate the column, using the
+  /// same resolver the seed importer and custom-food save path use.
+  static Future<void> _backfillImageKeys(Database db) async {
+    final rows = await db.query(
+      'food_catalog',
+      columns: ['id', 'name'],
+      where: 'image_key IS NULL',
+    );
+    if (rows.isEmpty) return;
+
+    final batch = db.batch();
+    for (final row in rows) {
+      final key = resolveImageKey(row['name'] as String?);
+      if (key == null) continue;
+      batch.update(
+        'food_catalog',
+        {'image_key': key},
+        where: 'id = ?',
+        whereArgs: [row['id']],
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   static Future<void> _repairLogs(Database db) async {

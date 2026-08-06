@@ -1,0 +1,107 @@
+# image_key,candidate Wikipedia article titles (pipe-separated, tried in order)
+#
+# The fetcher resolves each article's lead image through en.wikipedia.org/w/api.php,
+# reads the real license + author from the API response, and downloads the bytes
+# from upload.wikimedia.org. A row whose license the API cannot confirm as free
+# is DROPPED, never guessed. Keys must match lib/core/utils/food_image_resolver.dart.
+#
+# --- Desi mains ---
+biryani,Biryani|Hyderabadi biryani
+pulao,Pilaf|Kabuli pulao
+karahi,Karahi|Balti (food)
+karhi,Kadhi
+qorma,Korma
+nihari,Nihari
+haleem,Haleem|Harees
+daal,Dal|Lentil soup
+keema,Keema|Kheema pav
+gosht,Curry|Mutton curry|Rogan josh
+rajma,Rajma|Kidney bean
+paneer,Paneer|Palak paneer|Shahi paneer
+tikka,Chicken tikka|Tikka (food)|Shish taouk
+sabzi,Bhindi masala|Sabzi|Vegetable curry
+prawn,Prawn cocktail|Shrimp and prawn as food|Scampi
+fish,Fish and chips|Fried fish|Fish curry
+# --- Breads ---
+paratha,Paratha|Aloo paratha
+naan,Naan
+roti,Roti|Chapati
+# --- Street food ---
+samosa,Samosa
+pakora,Pakoda|Pakora
+shawarma,Shawarma
+kebab,Kebab|Seekh kebab|Shish kebab
+roll,Kati roll|Frankie (food)|Wrap (food)
+chaat,Chaat|Aloo chaat
+halwa_puri,Halwa puri|Puri (food)
+bun_kebab,Bun kebab
+dahi_bhalay,Dahi vada|Dahi puri
+chana,Chana masala|Chole bhature|Chickpea
+golgappa,Panipuri
+spring_roll,Spring roll
+# --- Fast food ---
+burger,Hamburger|Cheeseburger|Chicken sandwich
+pizza,Pizza|Neapolitan pizza
+fried_chicken,Fried chicken|Karaage
+nuggets,Chicken nugget
+hotdog,Hot dog
+sandwich,Sandwich|Submarine sandwich|Club sandwich
+pasta,Pasta|Spaghetti|Lasagne
+noodles,Ramen|Chow mein|Noodle
+taco,Taco|Burrito|Quesadilla
+fries,French fries
+garlic_bread,Garlic bread
+# --- Packaged snacks ---
+chips,Potato chip|French fries
+popcorn,Popcorn
+namkeen,Bombay mix|Chanachur|Namkeen
+chocolate,Chocolate bar|Chocolate
+candy,Candy|Gummy bear|Hard candy
+biscuit,Biscuit|Sandwich cookie|Cookie
+cake_rusk,Rusk|Biscotti
+cream_roll,Cream horn|Cannoli
+granola_bar,Flapjack (oat bar)|Granola|Muesli
+protein_bar,Energy bar|Protein bar
+peanut_butter,Peanut butter
+honey,Honey
+trail_mix,Trail mix|Dried fruit
+nuts,Almond|Nut (fruit)|Cashew
+# --- Sweets & desserts ---
+jalebi,Jalebi
+gulab_jamun,Gulab jamun
+kheer,Kheer|Rice pudding
+rasmalai,Rasmalai
+halwa,Halva|Sooji halwa|Gajar ka halwa
+kulfi,Kulfi
+falooda,Falooda
+ice_cream,Ice cream|Ice cream cone|Sundae
+brownie,Chocolate brownie
+donut,Doughnut
+croissant,Croissant
+muffin,Muffin|Cupcake
+cake,Cake|Chocolate cake|Pastry
+# --- Drinks ---
+milkshake,Milkshake
+smoothie,Smoothie
+bubble_tea,Bubble tea
+lassi,Lassi
+cola,Cola|Coca-Cola|Soft drink
+energy_drink,Energy drink|Sports drink
+juice,Juice|Orange juice
+coffee,Latte|Cappuccino|Coffee
+chai,Masala chai|Tea
+milk,Milk
+# --- Basics ---
+egg,Omelette|Fried egg|Boiled egg
+yogurt,Yogurt|Raita
+oats,Porridge|Oatmeal|Breakfast cereal
+salad,Caesar salad|Greek salad|Garden salad|Salad
+bread,Bread|Toast (food)
+rice,Cooked rice|White rice
+# --- Fruit ---
+apple,Gala (apple)|Red Delicious|Golden Delicious|Fuji (apple)|Apple
+banana,Banana
+mango,Mango
+orange,Orange (fruit)
+grapes,Grape
+dates,Date palm|Medjool

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:fitpilot/core/utils/food_image_resolver.dart';
 import 'package:fitpilot/core/utils/type_readers.dart';
 import '../../domain/entities/food_item.dart';
 import '../../domain/entities/kcal_range.dart';
@@ -49,6 +50,9 @@ class FoodRepository {
   /// Add a custom food to the catalog. Returns the generated id.
   Future<String> addCustomFood(FoodItem item) async {
     final id = item.id.isEmpty ? _uuid.v4() : item.id;
+    // Resolve a shared dish photo from the name so user-added foods get
+    // imagery too. Same resolver the seed importer and v19 backfill use.
+    final imageKey = item.imageKey ?? resolveImageKey(item.name);
     await db.insert('food_catalog', {
       'id': id,
       'name': item.name,
@@ -58,8 +62,11 @@ class FoodRepository {
       'kcal_min': item.kcalPerPortion.min,
       'kcal_max': item.kcalPerPortion.max,
       'image_url': item.imageUrl,
+      'image_key': imageKey,
       'is_verified': item.isVerified ? 1 : 0,
     });
+    // NOTE: `image_key` is intentionally absent from the sync payload — the
+    // column is local-only and does not exist in the Supabase schema.
     await _enqueue('food_catalog', id, 'insert', {
       'id': id,
       'name': item.name,
@@ -87,6 +94,7 @@ class FoodRepository {
           TolerantReader.readInt(row['kcal_max']) ?? 0,
         ),
         imageUrl: row['image_url'] as String?,
+        imageKey: row['image_key'] as String?,
         isVerified: TolerantReader.readBool(row['is_verified']) ?? false,
       );
     } catch (e) {

@@ -38,7 +38,8 @@ void main() {
         source TEXT NOT NULL,
         logged_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        deleted_at TEXT
+        deleted_at TEXT,
+        photo_path TEXT
       )
     ''');
   });

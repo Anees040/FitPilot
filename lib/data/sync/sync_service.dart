@@ -224,6 +224,13 @@ class SyncService {
             data['user_id'] = userId;
           }
 
+          // The push sends the whole local row, so columns that exist only
+          // on this device must be stripped — Supabase has no such columns
+          // and would reject the upsert.
+          for (final column in _localOnlyColumns[table] ?? const <String>[]) {
+            data.remove(column);
+          }
+
           rowsToUpsert.add(data);
         } else if (op == 'soft_delete') {
           // It might have been physically deleted, let's tombstone
@@ -415,6 +422,11 @@ class SyncService {
               // physical delete
               await txn.delete(table, where: 'id = ?', whereArgs: [rowId]);
             } else {
+              // ConflictAlgorithm.replace is INSERT OR REPLACE, which deletes
+              // the existing row and reinserts it — any column missing from
+              // dataToInsert would be reset to NULL. Carry local-only columns
+              // (which the remote schema does not have) across the replace.
+              await _preserveLocalOnly(txn, table, rowId, dataToInsert);
               // Upsert directly into local db (bypasses queue)
               await txn.insert(
                 table,
@@ -435,6 +447,41 @@ class SyncService {
 
     if (throwOnFailure && failures.isNotEmpty) {
       throw Exception('Pull failed for tables: ${failures.join(", ")}');
+    }
+  }
+
+  /// Columns that exist only in the local SQLite schema and have no
+  /// counterpart in Supabase. A pull must never null these out.
+  static const Map<String, List<String>> _localOnlyColumns = {
+    'food_catalog': ['image_key'],
+    'food_logs': ['photo_path'],
+  };
+
+  /// Reads the local-only column values for [rowId] and merges them into
+  /// [dataToInsert] so the INSERT OR REPLACE writes them back unchanged.
+  Future<void> _preserveLocalOnly(
+    DatabaseExecutor txn,
+    String table,
+    Object? rowId,
+    Map<String, dynamic> dataToInsert,
+  ) async {
+    final columns = _localOnlyColumns[table];
+    if (columns == null || rowId == null) return;
+    try {
+      final existing = await txn.query(
+        table,
+        columns: columns,
+        where: 'id = ?',
+        whereArgs: [rowId],
+        limit: 1,
+      );
+      if (existing.isEmpty) return;
+      for (final column in columns) {
+        final value = existing.first[column];
+        if (value != null) dataToInsert[column] = value;
+      }
+    } catch (_) {
+      // Column may not exist yet on a partially-migrated db — never block a pull.
     }
   }
 

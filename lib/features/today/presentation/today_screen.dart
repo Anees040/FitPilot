@@ -19,6 +19,7 @@ import 'package:fitpilot/core/ui/staggered_list.dart';
 import 'package:intl/intl.dart';
 import 'package:fitpilot/core/ui/semicircle_progress.dart';
 import 'package:fitpilot/core/ui/profile_avatar.dart';
+import 'package:fitpilot/core/ui/food_image.dart';
 
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
@@ -432,18 +433,11 @@ class _LogListItem extends ConsumerWidget {
         },
         child: Row(
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  colors: [theme.colorScheme.primary.withValues(alpha: 0.2), theme.colorScheme.primary.withValues(alpha: 0.05)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Icon(Icons.fastfood, color: theme.colorScheme.primary),
+            FoodImage(
+              name: log.displayName ?? '',
+              photoPath: log.photoPath,
+              cacheId: log.foodId,
+              size: 56,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -533,13 +527,12 @@ class _FoodLogDetailSheetState extends ConsumerState<_FoodLogDetailSheet> {
       children: [
         Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(Icons.fastfood, color: theme.colorScheme.primary, size: 28),
+            FoodImage(
+              name: log.displayName ?? '',
+              photoPath: log.photoPath,
+              cacheId: log.foodId,
+              size: 64,
+              radius: 16,
             ),
             const SizedBox(width: 16),
             Expanded(

@@ -17,6 +17,10 @@ class FoodLog extends Equatable {
   final DateTime loggedAt;
   final DateTime? deletedAt;
 
+  /// Absolute path to the user's own meal photo, set only for AI photo scans.
+  /// Local-only — never synced (the file lives in app documents).
+  final String? photoPath;
+
   FoodLog({
     required this.id,
     this.foodId,
@@ -27,6 +31,7 @@ class FoodLog extends Equatable {
     required this.source,
     required this.loggedAt,
     this.deletedAt,
+    this.photoPath,
   }) {
     if (foodId == null && customName == null && foodName == null) {
       throw ArgumentError(
@@ -53,6 +58,7 @@ class FoodLog extends Equatable {
     source,
     loggedAt,
     deletedAt,
+    photoPath,
   ];
 
   @override
@@ -69,6 +75,7 @@ class FoodLog extends Equatable {
     LogSource? source,
     DateTime? loggedAt,
     DateTime? deletedAt,
+    String? photoPath,
   }) {
     return FoodLog(
       id: id ?? this.id,
@@ -80,6 +87,7 @@ class FoodLog extends Equatable {
       source: source ?? this.source,
       loggedAt: loggedAt ?? this.loggedAt,
       deletedAt: deletedAt ?? this.deletedAt,
+      photoPath: photoPath ?? this.photoPath,
     );
   }
 }

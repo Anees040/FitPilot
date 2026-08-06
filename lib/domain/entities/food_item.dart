@@ -11,6 +11,10 @@ class FoodItem extends Equatable {
   final int? grams;
   final KcalRange kcalPerPortion;
   final String? imageUrl;
+
+  /// Key into the bundled shared dish-photo set (see food_image_resolver).
+  /// Local-only — never synced.
+  final String? imageKey;
   final bool isVerified;
 
   FoodItem({
@@ -21,6 +25,7 @@ class FoodItem extends Equatable {
     this.grams,
     required this.kcalPerPortion,
     this.imageUrl,
+    this.imageKey,
     this.isVerified = true,
   }) {
     if (id.isEmpty) {
@@ -46,6 +51,7 @@ class FoodItem extends Equatable {
     grams,
     kcalPerPortion,
     imageUrl,
+    imageKey,
     isVerified,
   ];
 

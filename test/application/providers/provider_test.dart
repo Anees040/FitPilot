@@ -37,6 +37,7 @@ void main() {
             grams INTEGER,
             kcal_min INTEGER NOT NULL,
             kcal_max INTEGER NOT NULL,
+            image_key TEXT,
             is_verified INTEGER NOT NULL DEFAULT 0
           )
         ''');
@@ -52,7 +53,8 @@ void main() {
             source TEXT NOT NULL,
             logged_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
-            deleted_at TEXT
+            deleted_at TEXT,
+            photo_path TEXT
           )
         ''');
           await db.execute('''

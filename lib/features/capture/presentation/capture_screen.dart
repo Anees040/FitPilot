@@ -13,6 +13,7 @@ import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/core/utils/require_online.dart';
 import 'package:fitpilot/data/ai/ai_food_service.dart';
+import 'package:fitpilot/data/services/meal_photo_service.dart';
 import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
 import 'package:fitpilot/domain/entities/food_log.dart';
@@ -315,11 +316,18 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         isLocal: true,
       );
 
+      // Keep the user's own photo of this meal so the log shows what they
+      // actually ate rather than generic dish art. Best-effort: a failure here
+      // must not block logging.
+      final photoPath = await MealPhotoService.save(bytes);
+      if (!mounted) return;
+
       await AppBottomSheet.show(
         context,
         child: BarcodeQuantitySheet(
-          barcode: 'ai_scan',
+          barcode: aiScanBarcode,
           offResult: offResult,
+          photoPath: photoPath,
         ),
       );
     } catch (e) {

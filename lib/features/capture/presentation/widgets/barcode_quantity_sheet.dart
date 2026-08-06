@@ -11,10 +11,15 @@ class BarcodeQuantitySheet extends ConsumerStatefulWidget {
   final String barcode;
   final OffResult offResult; // Assumes OffFound or OffFoundMissingEnergy
 
+  /// The user's own photo of this meal, saved by the AI scan flow. Null for
+  /// barcode and label scans, which show the product or dish art instead.
+  final String? photoPath;
+
   const BarcodeQuantitySheet({
     super.key,
     required this.barcode,
     required this.offResult,
+    this.photoPath,
   });
 
   @override
@@ -120,8 +125,9 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
         .logScannedItem(
           barcode: widget.barcode,
           name: _productName,
-          kcal: kcal, 
+          kcal: kcal,
           grams: finalGrams,
+          photoPath: widget.photoPath,
         );
 
     if (mounted) {

@@ -22,6 +22,7 @@ import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
 import 'package:fitpilot/features/settings/presentation/notification_prefs_screen.dart' as fitpilot_settings;
+import 'package:fitpilot/features/settings/presentation/image_credits_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -307,6 +308,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         value: profile.hapticsOn,
                         activeThumbColor: theme.colorScheme.primary,
                         onChanged: (v) => _updateProfile(profile.copyWith(hapticsOn: v)),
+                      ),
+                      Divider(color: theme.dividerColor, height: 1),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('Image Credits', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                        subtitle: Text('Photographers behind the food photos', style: theme.textTheme.bodySmall),
+                        trailing: Icon(Icons.chevron_right, color: theme.textTheme.bodySmall?.color),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ImageCreditsScreen(),
+                          ),
+                        ),
                       ),
                     ],
                   ),
