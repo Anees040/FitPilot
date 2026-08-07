@@ -24,6 +24,10 @@ import 'package:fitpilot/features/exercises/presentation/workout_hub_screen.dart
 import 'package:fitpilot/features/exercises/presentation/all_categories_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/category_detail_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/muscle_detail_screen.dart';
+import 'package:fitpilot/features/programs/presentation/programs_screen.dart';
+import 'package:fitpilot/features/programs/presentation/program_detail_screen.dart';
+import 'package:fitpilot/features/programs/presentation/session_detail_screen.dart';
+import 'package:fitpilot/features/programs/presentation/program_complete_screen.dart';
 import 'package:fitpilot/features/today/presentation/notification_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/offline_banner.dart';
@@ -139,6 +143,40 @@ final appRouter = GoRouter(
       path: '/notifications',
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const NotificationScreen(),
+    ),
+    // Programs are addressed by id rather than passed as `extra`, so a deep
+    // link (and a hot reload mid-session) resolves without a prior push.
+    GoRoute(
+      path: '/programs',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const ProgramsScreen(),
+      routes: [
+        GoRoute(
+          path: 'complete/:id',
+          builder: (context, state) => ProgramCompleteScreen(
+            programId: state.pathParameters['id']!,
+            sessions: int.tryParse(
+                  state.uri.queryParameters['sessions'] ?? '',
+                ) ??
+                0,
+            kcal: int.tryParse(state.uri.queryParameters['kcal'] ?? '') ?? 0,
+          ),
+        ),
+        GoRoute(
+          path: ':id',
+          builder: (context, state) =>
+              ProgramDetailScreen(programId: state.pathParameters['id']!),
+          routes: [
+            GoRoute(
+              path: 'session/:sessionId',
+              builder: (context, state) => SessionDetailScreen(
+                programId: state.pathParameters['id']!,
+                sessionId: state.pathParameters['sessionId']!,
+              ),
+            ),
+          ],
+        ),
+      ],
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {

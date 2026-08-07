@@ -14,6 +14,7 @@ import 'package:fitpilot/core/ui/select_chip.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/core/ui/fade_scroll_row.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/features/programs/presentation/widgets/training_program_card.dart';
 import '../../../core/ui/exercise_media.dart';
 
 
@@ -82,6 +83,8 @@ class PlanScreen extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: 24),
+          const TrainingProgramCard(),
           if (state.todayBurns.isNotEmpty) ...[
             const SizedBox(height: 24),
             _buildDoneTodaySection(context, state),
@@ -91,12 +94,19 @@ class PlanScreen extends ConsumerWidget {
     }
 
     if (state.frame == BurnPlanFrame.cleanDay && state.options.isEmpty) {
-      return EmptyState(
-        message: 'A perfect clean day with no logged meals. Keep it up!',
-        buttonLabel: 'Great job!',
-        illustration: 'goal_maintain',
-        isColoredImage: true,
-        onAction: () => context.go('/today'),
+      return ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          EmptyState(
+            message: 'A perfect clean day with no logged meals. Keep it up!',
+            buttonLabel: 'Great job!',
+            illustration: 'goal_maintain',
+            isColoredImage: true,
+            onAction: () => context.go('/today'),
+          ),
+          const SizedBox(height: 8),
+          const TrainingProgramCard(),
+        ],
       );
     }
 
@@ -108,6 +118,8 @@ class PlanScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
+        const TrainingProgramCard(),
+        const SizedBox(height: 20),
         if (!isYesterday) _buildTargetSelector(context, ref, state),
         if (isYesterday)
           AppCard(

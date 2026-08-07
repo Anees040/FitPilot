@@ -7,6 +7,7 @@ import 'package:fitpilot/data/repositories/exercise_repository.dart';
 import 'package:fitpilot/data/repositories/food_repository.dart';
 import 'package:fitpilot/data/repositories/log_repository.dart';
 import 'package:fitpilot/data/repositories/profile_repository.dart';
+import 'package:fitpilot/data/repositories/program_repository.dart';
 
 import 'package:fitpilot/application/providers/auth_provider.dart';
 
@@ -64,4 +65,11 @@ final exerciseRepositoryProvider = FutureProvider<ExerciseRepository>((
 ) async {
   final db = await ref.watch(databaseProvider.future);
   return ExerciseRepository(db);
+});
+
+/// Exposes the ProgramRepository. Takes no guest guard: every table it touches
+/// is local-only, so nothing it writes is ever queued for sync.
+final programRepositoryProvider = FutureProvider<ProgramRepository>((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  return ProgramRepository(db);
 });

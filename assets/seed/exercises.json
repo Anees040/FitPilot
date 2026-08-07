@@ -1634,5 +1634,35 @@
     ],
     "media_asset": "exercise_media/wall_sit.webp",
     "video_url": null
+  },
+  {
+    "id": "kegel-hold",
+    "name": "Kegel Hold",
+    "category": "calisthenics",
+    "subcategory": "bodyweight",
+    "met": 1.5,
+    "equipment": null,
+    "primary_muscles": [
+      "Core"
+    ],
+    "secondary_muscles": [],
+    "difficulty": 1,
+    "pace_tier": "easy",
+    "steps": [
+      "Sit or lie down comfortably with your knees slightly apart.",
+      "Find the pelvic floor muscles: the ones you would use to stop yourself passing wind or urine mid-flow.",
+      "Squeeze and lift those muscles inward and upward, without clenching your glutes, thighs or abs.",
+      "Hold for 5 to 10 seconds while breathing normally.",
+      "Release fully and rest for the same length of time before the next rep.",
+      "Do the sets listed in your program notes. Quality of the squeeze beats the count."
+    ],
+    "mistakes": [
+      "Holding your breath or bearing down instead of lifting.",
+      "Squeezing your glutes, thighs or stomach to fake the movement.",
+      "Skipping the release phase — the muscle needs to fully relax between reps.",
+      "Practising while urinating, which can interfere with bladder emptying."
+    ],
+    "media_asset": null,
+    "video_url": null
   }
 ]

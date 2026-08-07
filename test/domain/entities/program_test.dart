@@ -35,17 +35,16 @@ void main() {
         id: '1', programId: 'p', weekNumber: 1, dayNumber: 1, exerciseId: 'ex', minutes: 30
       );
       final exercise = Exercise(
-        id: 'ex', name: 'ex', category: ExerciseCategory.indoor, 
+        id: 'ex', name: 'ex', category: ExerciseCategory.indoor,
         met: 8.0, // 8 MET
         primaryMuscles: const [], secondaryMuscles: const [],
         difficulty: 1, paceTier: 'quick', steps: const [], mistakes: const []
       );
 
       final swe = SessionWithExercise(session: session, exercise: exercise);
-      // kcal = MET * weightKg * (minutes / 60)
-      // weight = 70.0
-      // 8.0 * 70.0 * 0.5 = 280
-      expect(swe.estimatedKcal(70.0), 280);
+      // The app-wide formula: kcal/min = MET * 3.5 * weightKg / 200.
+      // 8.0 * 3.5 * 70.0 / 200 * 30 = 294
+      expect(swe.estimatedKcal(70.0), 294);
     });
   });
 }

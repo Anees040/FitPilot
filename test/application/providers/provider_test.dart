@@ -96,7 +96,14 @@ void main() {
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             icon TEXT NOT NULL,
-            goal TEXT NOT NULL
+            goal TEXT NOT NULL,
+            level TEXT NOT NULL DEFAULT 'beginner',
+            focus TEXT NOT NULL DEFAULT 'full_body',
+            equipment TEXT NOT NULL DEFAULT 'none',
+            duration_days INTEGER NOT NULL DEFAULT 0,
+            days_per_week INTEGER NOT NULL DEFAULT 0,
+            hero_image TEXT,
+            sort_index INTEGER NOT NULL DEFAULT 100
           )
         ''');
           await db.execute('''
@@ -107,7 +114,31 @@ void main() {
             day_number INTEGER NOT NULL,
             exercise_id TEXT NOT NULL,
             minutes INTEGER NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            focus TEXT,
+            kind TEXT NOT NULL DEFAULT 'workout',
+            notes TEXT,
             FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+          )
+        ''');
+          await db.execute('''
+          CREATE TABLE program_session_items (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            position INTEGER NOT NULL,
+            exercise_id TEXT NOT NULL,
+            minutes INTEGER NOT NULL,
+            detail TEXT
+          )
+        ''');
+          await db.execute('''
+          CREATE TABLE program_completions (
+            session_id TEXT PRIMARY KEY,
+            program_id TEXT NOT NULL,
+            week_number INTEGER NOT NULL,
+            day_number INTEGER NOT NULL,
+            kcal INTEGER NOT NULL DEFAULT 0,
+            completed_at TEXT NOT NULL
           )
         ''');
           await db.execute('''

@@ -32,4 +32,9 @@ void resetApplicationState(WidgetRef ref) {
   ref.invalidate(themeColorProvider);
   ref.invalidate(todayProvider);
   ref.invalidate(programsProvider);
+  ref.invalidate(activeProgramFutureProvider);
+  ref.invalidate(programProgressProvider);
+  ref.invalidate(activeProgramProgressProvider);
+  ref.invalidate(todaySessionProvider);
+  ref.invalidate(resolvedSessionProvider);
 }

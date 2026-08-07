@@ -50,6 +50,14 @@ class WorkoutHubScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  _CategoryTile(
+                    title: 'Training Programs',
+                    subtitle: 'Structured multi-week plans with rest days',
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    imagePath: 'assets/illustrations/athletic_hero.png',
+                    onTap: () => context.push('/programs'),
+                  ),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(

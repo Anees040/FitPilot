@@ -1,164 +1,4067 @@
-﻿[
+[
+  {
+    "id": "six-pack-30",
+    "name": "Six-Pack in 30 Days",
+    "icon": "🔥",
+    "goal": "30 days of focused core training — planks, crunch and leg-raise progressions, plus short cardio finishers. Straight talk: you cannot spot-reduce fat, and 30 days of core work alone will not reveal abs. This builds the muscle and burns real calories; the deficit from your food log is what uncovers it.",
+    "level": "beginner",
+    "focus": "core",
+    "equipment": "none",
+    "duration_days": 30,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/core_hero.png",
+    "sort_index": 1,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "title": "Core Foundations",
+            "focus": "Core",
+            "notes": "Week 1: 3 rounds. Brace your abs and breathe — never hold your breath.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Core + Cardio",
+            "focus": "Core • Cardio",
+            "notes": "Week 1: keep rest under 30 s to hold your heart rate up.",
+            "exercises": [
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 4,
+                "detail": "3 × 45 s"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 2,
+                "detail": "2 × 30 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Recovery is when the core actually rebuilds. An easy walk is fine."
+          },
+          {
+            "title": "Lower Abs",
+            "focus": "Lower core",
+            "notes": "Week 1: press your lower back into the floor on every leg raise.",
+            "exercises": [
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 12 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 2,
+                "detail": "2 × 30 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Obliques & Burn",
+            "focus": "Obliques • Conditioning",
+            "notes": "Week 1: rotate through as a circuit, 3 rounds total.",
+            "exercises": [
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              },
+              {
+                "exercise_id": "high-knees",
+                "minutes": 4,
+                "detail": "3 × 45 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Sleep and food do the building. Keep logging meals — that is what uncovers the work."
+          },
+          {
+            "title": "Core Finisher",
+            "focus": "Core • Cardio",
+            "notes": "Week 1: last core session of the week — go for quality holds, then walk it off.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 12 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min easy cooldown walk"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "title": "Core Foundations",
+            "focus": "Core",
+            "notes": "Week 2: 3 rounds. Brace your abs and breathe — never hold your breath.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 18 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 4,
+                "detail": "3 × 18 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Core + Cardio",
+            "focus": "Core • Cardio",
+            "notes": "Week 2: keep rest under 30 s to hold your heart rate up.",
+            "exercises": [
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 4,
+                "detail": "3 × 50 s"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 18 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 2,
+                "detail": "2 × 40 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Recovery is when the core actually rebuilds. An easy walk is fine."
+          },
+          {
+            "title": "Lower Abs",
+            "focus": "Lower core",
+            "notes": "Week 2: press your lower back into the floor on every leg raise.",
+            "exercises": [
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 14 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 4,
+                "detail": "3 × 18 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 2,
+                "detail": "2 × 40 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Obliques & Burn",
+            "focus": "Obliques • Conditioning",
+            "notes": "Week 2: rotate through as a circuit, 3 rounds total.",
+            "exercises": [
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 4,
+                "detail": "3 × 50 s"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 18 reps"
+              },
+              {
+                "exercise_id": "high-knees",
+                "minutes": 4,
+                "detail": "3 × 50 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Sleep and food do the building. Keep logging meals — that is what uncovers the work."
+          },
+          {
+            "title": "Core Finisher",
+            "focus": "Core • Cardio",
+            "notes": "Week 2: last core session of the week — go for quality holds, then walk it off.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 50 s hold"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 14 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 18 reps"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min easy cooldown walk"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "title": "Core Foundations",
+            "focus": "Core",
+            "notes": "Week 3: 4 rounds. Brace your abs and breathe — never hold your breath.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 45 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 20 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 6,
+                "detail": "4 × 20 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Core + Cardio",
+            "focus": "Core • Cardio",
+            "notes": "Week 3: keep rest under 30 s to hold your heart rate up.",
+            "exercises": [
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 6,
+                "detail": "4 × 55 s"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 5,
+                "detail": "4 × 45 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 20 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 45 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Recovery is when the core actually rebuilds. An easy walk is fine."
+          },
+          {
+            "title": "Lower Abs",
+            "focus": "Lower core",
+            "notes": "Week 3: press your lower back into the floor on every leg raise.",
+            "exercises": [
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 6,
+                "detail": "4 × 16 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 6,
+                "detail": "4 × 20 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 45 s hold"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 45 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Obliques & Burn",
+            "focus": "Obliques • Conditioning",
+            "notes": "Week 3: rotate through as a circuit, 4 rounds total.",
+            "exercises": [
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 6,
+                "detail": "4 × 55 s"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 4,
+                "detail": "4 × 30 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 20 reps"
+              },
+              {
+                "exercise_id": "high-knees",
+                "minutes": 6,
+                "detail": "4 × 55 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Sleep and food do the building. Keep logging meals — that is what uncovers the work."
+          },
+          {
+            "title": "Core Finisher",
+            "focus": "Core • Cardio",
+            "notes": "Week 3: last core session of the week — go for quality holds, then walk it off.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 6,
+                "detail": "4 × 55 s hold"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 6,
+                "detail": "4 × 16 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 20 reps"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min easy cooldown walk"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {
+            "title": "Core Foundations",
+            "focus": "Core",
+            "notes": "Week 4: 4 rounds. Brace your abs and breathe — never hold your breath.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 6,
+                "detail": "4 × 60 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 22 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 6,
+                "detail": "4 × 22 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Core + Cardio",
+            "focus": "Core • Cardio",
+            "notes": "Week 4: keep rest under 30 s to hold your heart rate up.",
+            "exercises": [
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 6,
+                "detail": "4 × 60 s"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 5,
+                "detail": "4 × 50 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 22 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 60 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Recovery is when the core actually rebuilds. An easy walk is fine."
+          },
+          {
+            "title": "Lower Abs",
+            "focus": "Lower core",
+            "notes": "Week 4: press your lower back into the floor on every leg raise.",
+            "exercises": [
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 7,
+                "detail": "4 × 18 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 6,
+                "detail": "4 × 22 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 6,
+                "detail": "4 × 60 s hold"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 60 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Obliques & Burn",
+            "focus": "Obliques • Conditioning",
+            "notes": "Week 4: rotate through as a circuit, 4 rounds total.",
+            "exercises": [
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 6,
+                "detail": "4 × 60 s"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 4,
+                "detail": "4 × 30 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 22 reps"
+              },
+              {
+                "exercise_id": "high-knees",
+                "minutes": 6,
+                "detail": "4 × 60 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Sleep and food do the building. Keep logging meals — that is what uncovers the work."
+          },
+          {
+            "title": "Core Finisher",
+            "focus": "Core • Cardio",
+            "notes": "Week 4: last core session of the week — go for quality holds, then walk it off.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 7,
+                "detail": "4 × 70 s hold"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 7,
+                "detail": "4 × 18 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 22 reps"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min easy cooldown walk"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 5,
+        "sessions": [
+          {
+            "title": "Core Foundations",
+            "focus": "Core",
+            "notes": "Week 5: 4 rounds. Brace your abs and breathe — never hold your breath.",
+            "exercises": [
+              {
+                "exercise_id": "plank",
+                "minutes": 7,
+                "detail": "4 × 75 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 7,
+                "detail": "4 × 25 reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 7,
+                "detail": "4 × 25 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Core + Cardio",
+            "focus": "Core • Cardio",
+            "notes": "Week 5: keep rest under 30 s to hold your heart rate up.",
+            "exercises": [
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 6,
+                "detail": "4 × 60 s"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 6,
+                "detail": "4 × 60 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 7,
+                "detail": "4 × 25 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "3 × 75 s hold"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "full-body-30",
+    "name": "30-Day Full Body",
+    "icon": "💪",
+    "goal": "A 30-day push / pull / legs / core rotation built from calisthenics and bodyweight basics. Five training days and two rest days a week, with reps climbing each week. A pull-up bar or resistance band helps on pull days — every other session needs nothing.",
+    "level": "beginner",
+    "focus": "full_body",
+    "equipment": "minimal",
+    "duration_days": 30,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/athletic_hero.png",
+    "sort_index": 2,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "title": "Push Day",
+            "focus": "Chest • Shoulders • Triceps",
+            "notes": "Week 1: full range beats extra reps. Drop to knees on push-ups if form slips.",
+            "exercises": [
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 3,
+                "detail": "3 × 8 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 3,
+                "detail": "3 × 6 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              },
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              }
+            ]
+          },
+          {
+            "title": "Pull Day",
+            "focus": "Back • Biceps",
+            "notes": "Week 1: no bar? Swap pull-ups for the resistance band row in the notes.",
+            "exercises": [
+              {
+                "exercise_id": "pullup",
+                "minutes": 2,
+                "detail": "3 × 5 reps (or band rows)"
+              },
+              {
+                "exercise_id": "chinup",
+                "minutes": 2,
+                "detail": "3 × 4 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              },
+              {
+                "exercise_id": "resistance-band-circuit",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Muscle grows on rest days. Walk, stretch, sleep."
+          },
+          {
+            "title": "Leg Day",
+            "focus": "Quads • Glutes • Hamstrings",
+            "notes": "Week 1: control the descent — 2 s down, drive up.",
+            "exercises": [
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 4,
+                "detail": "3 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 3,
+                "detail": "3 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 12 reps"
+              }
+            ]
+          },
+          {
+            "title": "Core & Conditioning",
+            "focus": "Core • Cardio",
+            "notes": "Week 1: circuit style, 3 rounds, 30 s rest between rounds.",
+            "exercises": [
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 3,
+                "detail": "3 × 10 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 3,
+                "detail": "3 × 12 reps"
+              },
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day — take it. Log your meals."
+          },
+          {
+            "title": "Full Body Circuit",
+            "focus": "Full body",
+            "notes": "Week 1: one round is all four moves back to back. 3 rounds.",
+            "exercises": [
+              {
+                "exercise_id": "burpees",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 3,
+                "detail": "3 × 8 reps"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "title": "Push Day",
+            "focus": "Chest • Shoulders • Triceps",
+            "notes": "Week 2: full range beats extra reps. Drop to knees on push-ups if form slips.",
+            "exercises": [
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 3,
+                "detail": "3 × 10 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 3,
+                "detail": "3 × 8 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "3 × 45 s"
+              }
+            ]
+          },
+          {
+            "title": "Pull Day",
+            "focus": "Back • Biceps",
+            "notes": "Week 2: no bar? Swap pull-ups for the resistance band row in the notes.",
+            "exercises": [
+              {
+                "exercise_id": "pullup",
+                "minutes": 3,
+                "detail": "3 × 6 reps (or band rows)"
+              },
+              {
+                "exercise_id": "chinup",
+                "minutes": 3,
+                "detail": "3 × 5 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              },
+              {
+                "exercise_id": "resistance-band-circuit",
+                "minutes": 4,
+                "detail": "3 × 45 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Muscle grows on rest days. Walk, stretch, sleep."
+          },
+          {
+            "title": "Leg Day",
+            "focus": "Quads • Glutes • Hamstrings",
+            "notes": "Week 2: control the descent — 2 s down, drive up.",
+            "exercises": [
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 4,
+                "detail": "3 × 14 reps per leg"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 4,
+                "detail": "3 × 14 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 4,
+                "detail": "3 × 14 reps"
+              }
+            ]
+          },
+          {
+            "title": "Core & Conditioning",
+            "focus": "Core • Cardio",
+            "notes": "Week 2: circuit style, 3 rounds, 30 s rest between rounds.",
+            "exercises": [
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 4,
+                "detail": "3 × 45 s"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 12 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 14 reps"
+              },
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 4,
+                "detail": "3 × 45 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day — take it. Log your meals."
+          },
+          {
+            "title": "Full Body Circuit",
+            "focus": "Full body",
+            "notes": "Week 2: one round is all four moves back to back. 3 rounds.",
+            "exercises": [
+              {
+                "exercise_id": "burpees",
+                "minutes": 4,
+                "detail": "3 × 45 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 3,
+                "detail": "3 × 35 s"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 3,
+                "detail": "3 × 10 reps"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "title": "Push Day",
+            "focus": "Chest • Shoulders • Triceps",
+            "notes": "Week 3: full range beats extra reps. Drop to knees on push-ups if form slips.",
+            "exercises": [
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 4,
+                "detail": "4 × 12 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 4,
+                "detail": "4 × 10 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 45 s hold"
+              },
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 5,
+                "detail": "4 × 50 s"
+              }
+            ]
+          },
+          {
+            "title": "Pull Day",
+            "focus": "Back • Biceps",
+            "notes": "Week 3: no bar? Swap pull-ups for the resistance band row in the notes.",
+            "exercises": [
+              {
+                "exercise_id": "pullup",
+                "minutes": 4,
+                "detail": "4 × 7 reps (or band rows)"
+              },
+              {
+                "exercise_id": "chinup",
+                "minutes": 4,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              },
+              {
+                "exercise_id": "resistance-band-circuit",
+                "minutes": 5,
+                "detail": "4 × 50 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Muscle grows on rest days. Walk, stretch, sleep."
+          },
+          {
+            "title": "Leg Day",
+            "focus": "Quads • Glutes • Hamstrings",
+            "notes": "Week 3: control the descent — 2 s down, drive up.",
+            "exercises": [
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 6,
+                "detail": "4 × 16 reps per leg"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 5,
+                "detail": "4 × 16 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 5,
+                "detail": "4 × 45 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 16 reps"
+              }
+            ]
+          },
+          {
+            "title": "Core & Conditioning",
+            "focus": "Core • Cardio",
+            "notes": "Week 3: circuit style, 4 rounds, 30 s rest between rounds.",
+            "exercises": [
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 5,
+                "detail": "4 × 50 s"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 5,
+                "detail": "4 × 14 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 5,
+                "detail": "4 × 16 reps"
+              },
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 5,
+                "detail": "4 × 50 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day — take it. Log your meals."
+          },
+          {
+            "title": "Full Body Circuit",
+            "focus": "Full body",
+            "notes": "Week 3: one round is all four moves back to back. 4 rounds.",
+            "exercises": [
+              {
+                "exercise_id": "burpees",
+                "minutes": 5,
+                "detail": "4 × 50 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 4,
+                "detail": "4 × 12 reps"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 4,
+                "detail": "4 × 30 s"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {
+            "title": "Push Day",
+            "focus": "Chest • Shoulders • Triceps",
+            "notes": "Week 4: full range beats extra reps. Drop to knees on push-ups if form slips.",
+            "exercises": [
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 5,
+                "detail": "4 × 14 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 5,
+                "detail": "4 × 12 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 50 s hold"
+              },
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 6,
+                "detail": "4 × 55 s"
+              }
+            ]
+          },
+          {
+            "title": "Pull Day",
+            "focus": "Back • Biceps",
+            "notes": "Week 4: no bar? Swap pull-ups for the resistance band row in the notes.",
+            "exercises": [
+              {
+                "exercise_id": "pullup",
+                "minutes": 4,
+                "detail": "4 × 8 reps (or band rows)"
+              },
+              {
+                "exercise_id": "chinup",
+                "minutes": 4,
+                "detail": "4 × 7 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              },
+              {
+                "exercise_id": "resistance-band-circuit",
+                "minutes": 6,
+                "detail": "4 × 55 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Muscle grows on rest days. Walk, stretch, sleep."
+          },
+          {
+            "title": "Leg Day",
+            "focus": "Quads • Glutes • Hamstrings",
+            "notes": "Week 4: control the descent — 2 s down, drive up.",
+            "exercises": [
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 7,
+                "detail": "4 × 18 reps per leg"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 6,
+                "detail": "4 × 18 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 5,
+                "detail": "4 × 50 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 6,
+                "detail": "4 × 18 reps"
+              }
+            ]
+          },
+          {
+            "title": "Core & Conditioning",
+            "focus": "Core • Cardio",
+            "notes": "Week 4: circuit style, 4 rounds, 30 s rest between rounds.",
+            "exercises": [
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 6,
+                "detail": "4 × 55 s"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 6,
+                "detail": "4 × 16 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 18 reps"
+              },
+              {
+                "exercise_id": "jumping-jacks",
+                "minutes": 6,
+                "detail": "4 × 55 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day — take it. Log your meals."
+          },
+          {
+            "title": "Full Body Circuit",
+            "focus": "Full body",
+            "notes": "Week 4: one round is all four moves back to back. 4 rounds.",
+            "exercises": [
+              {
+                "exercise_id": "burpees",
+                "minutes": 6,
+                "detail": "4 × 55 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 5,
+                "detail": "4 × 45 s"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 5,
+                "detail": "4 × 14 reps"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 4,
+                "detail": "4 × 30 s"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 5,
+        "sessions": [
+          {
+            "title": "Push Day",
+            "focus": "Chest • Shoulders • Triceps",
+            "notes": "Week 5: full range beats extra reps. Drop to knees on push-ups if form slips.",
+            "exercises": [
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 5,
+                "detail": "4 × 15 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 5,
+                "detail": "4 × 13 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 6,
+                "detail": "4 × 60 s hold"
+              },
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 6,
+                "detail": "4 × 60 s"
+              }
+            ]
+          },
+          {
+            "title": "Pull Day",
+            "focus": "Back • Biceps",
+            "notes": "Week 5: no bar? Swap pull-ups for the resistance band row in the notes.",
+            "exercises": [
+              {
+                "exercise_id": "pullup",
+                "minutes": 4,
+                "detail": "4 × 9 reps (or band rows)"
+              },
+              {
+                "exercise_id": "chinup",
+                "minutes": 4,
+                "detail": "4 × 8 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              },
+              {
+                "exercise_id": "resistance-band-circuit",
+                "minutes": 6,
+                "detail": "4 × 60 s"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "strength-conditioning-28",
+    "name": "Strength & Conditioning",
+    "icon": "🏋️",
+    "goal": "Four weeks alternating heavy compound lifts with conditioning work. Squat, bench, deadlift and press carry the strength days; rowing, kettlebells and bike intervals build the engine. Needs gym access.",
+    "level": "intermediate",
+    "focus": "strength",
+    "equipment": "gym",
+    "duration_days": 28,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/powerlifting_hero.png",
+    "sort_index": 3,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "title": "Lower Strength",
+            "focus": "Quads • Glutes • Posterior chain",
+            "notes": "Week 1: 3 working sets of 8. Add weight only when all sets are clean.",
+            "exercises": [
+              {
+                "exercise_id": "barbell-squat",
+                "minutes": 6,
+                "detail": "3 × 8 reps"
+              },
+              {
+                "exercise_id": "leg-press",
+                "minutes": 5,
+                "detail": "3 × 12 reps"
+              },
+              {
+                "exercise_id": "dumbbell-walking-lunges",
+                "minutes": 5,
+                "detail": "3 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "farmers-carry",
+                "minutes": 5,
+                "detail": "3 × 45 s carry"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning",
+            "focus": "Cardio • Engine",
+            "notes": "Week 1: steady effort — you should be able to speak in short sentences.",
+            "exercises": [
+              {
+                "exercise_id": "rowing-vigorous",
+                "minutes": 12,
+                "detail": "12 min steady"
+              },
+              {
+                "exercise_id": "jump-rope-moderate",
+                "minutes": 7,
+                "detail": "7 min, break as needed"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Heavy weeks need real rest. Walk and hydrate."
+          },
+          {
+            "title": "Upper Strength",
+            "focus": "Chest • Back • Shoulders",
+            "notes": "Week 1: 3 working sets of 8. Keep 1–2 reps in reserve.",
+            "exercises": [
+              {
+                "exercise_id": "bench-press",
+                "minutes": 6,
+                "detail": "3 × 8 reps"
+              },
+              {
+                "exercise_id": "barbell-row",
+                "minutes": 6,
+                "detail": "3 × 8 reps"
+              },
+              {
+                "exercise_id": "overhead-press",
+                "minutes": 6,
+                "detail": "3 × 8 reps"
+              },
+              {
+                "exercise_id": "lat-pulldown",
+                "minutes": 5,
+                "detail": "3 × 12 reps"
+              }
+            ]
+          },
+          {
+            "title": "HIIT Conditioning",
+            "focus": "Full body • Power",
+            "notes": "Week 1: 3 hard rounds, full recovery between them.",
+            "exercises": [
+              {
+                "exercise_id": "kettlebell-swings",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              },
+              {
+                "exercise_id": "dumbbell-hiit",
+                "minutes": 4,
+                "detail": "3 × 45 s circuit"
+              },
+              {
+                "exercise_id": "stationary-bike-vigorous",
+                "minutes": 8,
+                "detail": "8 min intervals"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Eat enough — strength needs fuel."
+          },
+          {
+            "title": "Full Body Power",
+            "focus": "Posterior chain • Power",
+            "notes": "Week 1: technique first on every rep. Stop the set when speed drops.",
+            "exercises": [
+              {
+                "exercise_id": "deadlift",
+                "minutes": 8,
+                "detail": "3 × 8 reps"
+              },
+              {
+                "exercise_id": "clean-and-press",
+                "minutes": 6,
+                "detail": "3 × 6 reps"
+              },
+              {
+                "exercise_id": "farmers-carry",
+                "minutes": 5,
+                "detail": "3 × 45 s carry"
+              },
+              {
+                "exercise_id": "stair-climber",
+                "minutes": 8,
+                "detail": "8 min finisher"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "title": "Lower Strength",
+            "focus": "Quads • Glutes • Posterior chain",
+            "notes": "Week 2: 4 working sets of 8. Add weight only when all sets are clean.",
+            "exercises": [
+              {
+                "exercise_id": "barbell-squat",
+                "minutes": 9,
+                "detail": "4 × 8 reps"
+              },
+              {
+                "exercise_id": "leg-press",
+                "minutes": 7,
+                "detail": "4 × 12 reps"
+              },
+              {
+                "exercise_id": "dumbbell-walking-lunges",
+                "minutes": 7,
+                "detail": "4 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "farmers-carry",
+                "minutes": 7,
+                "detail": "4 × 45 s carry"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning",
+            "focus": "Cardio • Engine",
+            "notes": "Week 2: steady effort — you should be able to speak in short sentences.",
+            "exercises": [
+              {
+                "exercise_id": "rowing-vigorous",
+                "minutes": 15,
+                "detail": "15 min steady"
+              },
+              {
+                "exercise_id": "jump-rope-moderate",
+                "minutes": 10,
+                "detail": "10 min, break as needed"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Heavy weeks need real rest. Walk and hydrate."
+          },
+          {
+            "title": "Upper Strength",
+            "focus": "Chest • Back • Shoulders",
+            "notes": "Week 2: 4 working sets of 8. Keep 1–2 reps in reserve.",
+            "exercises": [
+              {
+                "exercise_id": "bench-press",
+                "minutes": 9,
+                "detail": "4 × 8 reps"
+              },
+              {
+                "exercise_id": "barbell-row",
+                "minutes": 8,
+                "detail": "4 × 8 reps"
+              },
+              {
+                "exercise_id": "overhead-press",
+                "minutes": 8,
+                "detail": "4 × 8 reps"
+              },
+              {
+                "exercise_id": "lat-pulldown",
+                "minutes": 7,
+                "detail": "4 × 12 reps"
+              }
+            ]
+          },
+          {
+            "title": "HIIT Conditioning",
+            "focus": "Full body • Power",
+            "notes": "Week 2: 4 hard rounds, full recovery between them.",
+            "exercises": [
+              {
+                "exercise_id": "kettlebell-swings",
+                "minutes": 6,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "dumbbell-hiit",
+                "minutes": 6,
+                "detail": "4 × 45 s circuit"
+              },
+              {
+                "exercise_id": "stationary-bike-vigorous",
+                "minutes": 11,
+                "detail": "11 min intervals"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Eat enough — strength needs fuel."
+          },
+          {
+            "title": "Full Body Power",
+            "focus": "Posterior chain • Power",
+            "notes": "Week 2: technique first on every rep. Stop the set when speed drops.",
+            "exercises": [
+              {
+                "exercise_id": "deadlift",
+                "minutes": 11,
+                "detail": "4 × 8 reps"
+              },
+              {
+                "exercise_id": "clean-and-press",
+                "minutes": 9,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "farmers-carry",
+                "minutes": 7,
+                "detail": "4 × 45 s carry"
+              },
+              {
+                "exercise_id": "stair-climber",
+                "minutes": 9,
+                "detail": "9 min finisher"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "title": "Lower Strength",
+            "focus": "Quads • Glutes • Posterior chain",
+            "notes": "Week 3: 4 working sets of 6. Add weight only when all sets are clean.",
+            "exercises": [
+              {
+                "exercise_id": "barbell-squat",
+                "minutes": 8,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "leg-press",
+                "minutes": 7,
+                "detail": "4 × 10 reps"
+              },
+              {
+                "exercise_id": "dumbbell-walking-lunges",
+                "minutes": 7,
+                "detail": "4 × 10 reps per leg"
+              },
+              {
+                "exercise_id": "farmers-carry",
+                "minutes": 7,
+                "detail": "4 × 45 s carry"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning",
+            "focus": "Cardio • Engine",
+            "notes": "Week 3: steady effort — you should be able to speak in short sentences.",
+            "exercises": [
+              {
+                "exercise_id": "rowing-vigorous",
+                "minutes": 18,
+                "detail": "18 min steady"
+              },
+              {
+                "exercise_id": "jump-rope-moderate",
+                "minutes": 13,
+                "detail": "13 min, break as needed"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Heavy weeks need real rest. Walk and hydrate."
+          },
+          {
+            "title": "Upper Strength",
+            "focus": "Chest • Back • Shoulders",
+            "notes": "Week 3: 4 working sets of 6. Keep 1–2 reps in reserve.",
+            "exercises": [
+              {
+                "exercise_id": "bench-press",
+                "minutes": 8,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "barbell-row",
+                "minutes": 7,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "overhead-press",
+                "minutes": 8,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "lat-pulldown",
+                "minutes": 7,
+                "detail": "4 × 10 reps"
+              }
+            ]
+          },
+          {
+            "title": "HIIT Conditioning",
+            "focus": "Full body • Power",
+            "notes": "Week 3: 4 hard rounds, full recovery between them.",
+            "exercises": [
+              {
+                "exercise_id": "kettlebell-swings",
+                "minutes": 6,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "dumbbell-hiit",
+                "minutes": 6,
+                "detail": "4 × 45 s circuit"
+              },
+              {
+                "exercise_id": "stationary-bike-vigorous",
+                "minutes": 14,
+                "detail": "14 min intervals"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Eat enough — strength needs fuel."
+          },
+          {
+            "title": "Full Body Power",
+            "focus": "Posterior chain • Power",
+            "notes": "Week 3: technique first on every rep. Stop the set when speed drops.",
+            "exercises": [
+              {
+                "exercise_id": "deadlift",
+                "minutes": 10,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "clean-and-press",
+                "minutes": 8,
+                "detail": "4 × 4 reps"
+              },
+              {
+                "exercise_id": "farmers-carry",
+                "minutes": 7,
+                "detail": "4 × 45 s carry"
+              },
+              {
+                "exercise_id": "stair-climber",
+                "minutes": 12,
+                "detail": "12 min finisher"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {
+            "title": "Lower Strength",
+            "focus": "Quads • Glutes • Posterior chain",
+            "notes": "Week 4: 5 working sets of 5. Add weight only when all sets are clean.",
+            "exercises": [
+              {
+                "exercise_id": "barbell-squat",
+                "minutes": 10,
+                "detail": "5 × 5 reps"
+              },
+              {
+                "exercise_id": "leg-press",
+                "minutes": 8,
+                "detail": "5 × 10 reps"
+              },
+              {
+                "exercise_id": "dumbbell-walking-lunges",
+                "minutes": 8,
+                "detail": "5 × 10 reps per leg"
+              },
+              {
+                "exercise_id": "farmers-carry",
+                "minutes": 9,
+                "detail": "5 × 45 s carry"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning",
+            "focus": "Cardio • Engine",
+            "notes": "Week 4: steady effort — you should be able to speak in short sentences.",
+            "exercises": [
+              {
+                "exercise_id": "rowing-vigorous",
+                "minutes": 20,
+                "detail": "20 min steady"
+              },
+              {
+                "exercise_id": "jump-rope-moderate",
+                "minutes": 15,
+                "detail": "15 min, break as needed"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 6,
+                "detail": "5 × 40 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Heavy weeks need real rest. Walk and hydrate."
+          },
+          {
+            "title": "Upper Strength",
+            "focus": "Chest • Back • Shoulders",
+            "notes": "Week 4: 5 working sets of 5. Keep 1–2 reps in reserve.",
+            "exercises": [
+              {
+                "exercise_id": "bench-press",
+                "minutes": 10,
+                "detail": "5 × 5 reps"
+              },
+              {
+                "exercise_id": "barbell-row",
+                "minutes": 8,
+                "detail": "5 × 5 reps"
+              },
+              {
+                "exercise_id": "overhead-press",
+                "minutes": 10,
+                "detail": "5 × 6 reps"
+              },
+              {
+                "exercise_id": "lat-pulldown",
+                "minutes": 8,
+                "detail": "5 × 10 reps"
+              }
+            ]
+          },
+          {
+            "title": "HIIT Conditioning",
+            "focus": "Full body • Power",
+            "notes": "Week 4: 5 hard rounds, full recovery between them.",
+            "exercises": [
+              {
+                "exercise_id": "kettlebell-swings",
+                "minutes": 7,
+                "detail": "5 × 40 s"
+              },
+              {
+                "exercise_id": "dumbbell-hiit",
+                "minutes": 8,
+                "detail": "5 × 45 s circuit"
+              },
+              {
+                "exercise_id": "stationary-bike-vigorous",
+                "minutes": 16,
+                "detail": "16 min intervals"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Eat enough — strength needs fuel."
+          },
+          {
+            "title": "Full Body Power",
+            "focus": "Posterior chain • Power",
+            "notes": "Week 4: technique first on every rep. Stop the set when speed drops.",
+            "exercises": [
+              {
+                "exercise_id": "deadlift",
+                "minutes": 12,
+                "detail": "5 × 5 reps"
+              },
+              {
+                "exercise_id": "clean-and-press",
+                "minutes": 10,
+                "detail": "5 × 4 reps"
+              },
+              {
+                "exercise_id": "farmers-carry",
+                "minutes": 9,
+                "detail": "5 × 45 s carry"
+              },
+              {
+                "exercise_id": "stair-climber",
+                "minutes": 14,
+                "detail": "14 min finisher"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "lower-body-28",
+    "name": "28-Day Lower Body Challenge",
+    "icon": "🦵",
+    "goal": "Four weeks of lunges, step-ups, wall sits, bridges and skater hops to build stronger legs and glutes at home. Weeks 3 and 4 add assisted pistol-squat progressions. Session notes list gym swaps (leg press, barbell squat) if you train in a gym.",
+    "level": "beginner",
+    "focus": "lower_body",
+    "equipment": "none",
+    "duration_days": 28,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/lower_body_hero.png",
+    "sort_index": 4,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "title": "Quads & Glutes",
+            "focus": "Quads • Glutes",
+            "notes": "Week 1: 2 s down, drive up. Gym option: swap for barbell-squat, 4 × 8.",
+            "exercises": [
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 4,
+                "detail": "3 × 10 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 10 reps"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 3,
+                "detail": "3 × 10 reps per leg"
+              }
+            ]
+          },
+          {
+            "title": "Power & Balance",
+            "focus": "Glutes • Hamstrings • Balance",
+            "notes": "Week 1: land soft on every hop — knees track over toes.",
+            "exercises": [
+              {
+                "exercise_id": "skater-hops",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 3,
+                "detail": "3 × 10 reps per leg"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 12 reps"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 2,
+                "detail": "2 × 30 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Legs rebuild on rest days. Keep walking, skip the stairs sprint."
+          },
+          {
+            "title": "Strength Ladder",
+            "focus": "Quads • Glutes",
+            "notes": "Week 1: descending ladder — 10, 8, 6 reps. Gym option: swap for leg-press at the same reps.",
+            "exercises": [
+              {
+                "exercise_id": "step-ups",
+                "minutes": 4,
+                "detail": "3 × 10 reps per leg"
+              },
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 4,
+                "detail": "3 × 10 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning Legs",
+            "focus": "Legs • Cardio",
+            "notes": "Week 1: circuit, 3 rounds, 45 s rest between rounds.",
+            "exercises": [
+              {
+                "exercise_id": "skater-hops",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 2,
+                "detail": "3 × 20 s"
+              },
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 3,
+                "detail": "3 × 8 reps per leg"
+              },
+              {
+                "exercise_id": "incline-walking",
+                "minutes": 12,
+                "detail": "12 min uphill finisher"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Sore is fine, sharp pain is not."
+          },
+          {
+            "title": "Glute Focus",
+            "focus": "Glutes • Hamstrings",
+            "notes": "Week 1: squeeze at the top of every bridge for a full second. Gym option: swap for leg-press at the same reps.",
+            "exercises": [
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 4,
+                "detail": "3 × 14 reps"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 4,
+                "detail": "3 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min easy cooldown walk"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "title": "Quads & Glutes",
+            "focus": "Quads • Glutes",
+            "notes": "Week 2: 2 s down, drive up. Gym option: swap for barbell-squat, 4 × 8.",
+            "exercises": [
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 4,
+                "detail": "3 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 12 reps"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 3,
+                "detail": "3 × 12 reps per leg"
+              }
+            ]
+          },
+          {
+            "title": "Power & Balance",
+            "focus": "Glutes • Hamstrings • Balance",
+            "notes": "Week 2: land soft on every hop — knees track over toes.",
+            "exercises": [
+              {
+                "exercise_id": "skater-hops",
+                "minutes": 3,
+                "detail": "3 × 35 s"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 3,
+                "detail": "3 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 14 reps"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 2,
+                "detail": "2 × 40 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Legs rebuild on rest days. Keep walking, skip the stairs sprint."
+          },
+          {
+            "title": "Strength Ladder",
+            "focus": "Quads • Glutes",
+            "notes": "Week 2: descending ladder — 12, 10, 8 reps. Gym option: swap for leg-press at the same reps.",
+            "exercises": [
+              {
+                "exercise_id": "step-ups",
+                "minutes": 4,
+                "detail": "3 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 4,
+                "detail": "3 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 50 s hold"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning Legs",
+            "focus": "Legs • Cardio",
+            "notes": "Week 2: circuit, 3 rounds, 45 s rest between rounds.",
+            "exercises": [
+              {
+                "exercise_id": "skater-hops",
+                "minutes": 3,
+                "detail": "3 × 35 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 3,
+                "detail": "3 × 25 s"
+              },
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 3,
+                "detail": "3 × 10 reps per leg"
+              },
+              {
+                "exercise_id": "incline-walking",
+                "minutes": 12,
+                "detail": "12 min uphill finisher"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Sore is fine, sharp pain is not."
+          },
+          {
+            "title": "Glute Focus",
+            "focus": "Glutes • Hamstrings",
+            "notes": "Week 2: squeeze at the top of every bridge for a full second. Gym option: swap for leg-press at the same reps.",
+            "exercises": [
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 4,
+                "detail": "3 × 16 reps"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 4,
+                "detail": "3 × 14 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min easy cooldown walk"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "title": "Quads & Glutes",
+            "focus": "Quads • Glutes",
+            "notes": "Week 3: 2 s down, drive up. Gym option: swap for barbell-squat, 4 × 8.",
+            "exercises": [
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 6,
+                "detail": "4 × 14 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 5,
+                "detail": "4 × 45 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 14 reps"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 5,
+                "detail": "4 × 14 reps per leg"
+              }
+            ]
+          },
+          {
+            "title": "Power & Balance",
+            "focus": "Glutes • Hamstrings • Balance",
+            "notes": "Week 3: land soft on every hop — knees track over toes. Pistol progression starts today: hold a doorframe and go only as low as you control.",
+            "exercises": [
+              {
+                "exercise_id": "skater-hops",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "pistol-squat",
+                "minutes": 5,
+                "detail": "4 × 3–5 assisted reps per leg"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 16 reps"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 45 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Legs rebuild on rest days. Keep walking, skip the stairs sprint."
+          },
+          {
+            "title": "Strength Ladder",
+            "focus": "Quads • Glutes",
+            "notes": "Week 3: descending ladder — 14, 12, 10 reps. Gym option: swap for leg-press at the same reps.",
+            "exercises": [
+              {
+                "exercise_id": "step-ups",
+                "minutes": 6,
+                "detail": "4 × 14 reps per leg"
+              },
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 6,
+                "detail": "4 × 14 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 6,
+                "detail": "4 × 55 s hold"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning Legs",
+            "focus": "Legs • Cardio",
+            "notes": "Week 3: circuit, 4 rounds, 45 s rest between rounds.",
+            "exercises": [
+              {
+                "exercise_id": "skater-hops",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 4,
+                "detail": "4 × 30 s"
+              },
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 5,
+                "detail": "4 × 12 reps per leg"
+              },
+              {
+                "exercise_id": "incline-walking",
+                "minutes": 12,
+                "detail": "12 min uphill finisher"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Sore is fine, sharp pain is not."
+          },
+          {
+            "title": "Glute Focus",
+            "focus": "Glutes • Hamstrings",
+            "notes": "Week 3: squeeze at the top of every bridge for a full second. Gym option: swap for leg-press at the same reps.",
+            "exercises": [
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 6,
+                "detail": "4 × 18 reps"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 6,
+                "detail": "4 × 16 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 5,
+                "detail": "4 × 45 s hold"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min easy cooldown walk"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {
+            "title": "Quads & Glutes",
+            "focus": "Quads • Glutes",
+            "notes": "Week 4: 2 s down, drive up. Gym option: swap for barbell-squat, 4 × 8.",
+            "exercises": [
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 6,
+                "detail": "4 × 16 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 6,
+                "detail": "4 × 60 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 16 reps"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 5,
+                "detail": "4 × 16 reps per leg"
+              }
+            ]
+          },
+          {
+            "title": "Power & Balance",
+            "focus": "Glutes • Hamstrings • Balance",
+            "notes": "Week 4: land soft on every hop — knees track over toes. Pistol progression starts today: hold a doorframe and go only as low as you control.",
+            "exercises": [
+              {
+                "exercise_id": "skater-hops",
+                "minutes": 5,
+                "detail": "4 × 45 s"
+              },
+              {
+                "exercise_id": "pistol-squat",
+                "minutes": 5,
+                "detail": "4 × 3–5 assisted reps per leg"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 18 reps"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 4,
+                "detail": "3 × 60 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Legs rebuild on rest days. Keep walking, skip the stairs sprint."
+          },
+          {
+            "title": "Strength Ladder",
+            "focus": "Quads • Glutes",
+            "notes": "Week 4: descending ladder — 16, 14, 12 reps. Gym option: swap for leg-press at the same reps.",
+            "exercises": [
+              {
+                "exercise_id": "step-ups",
+                "minutes": 6,
+                "detail": "4 × 16 reps per leg"
+              },
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 6,
+                "detail": "4 × 16 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 7,
+                "detail": "4 × 70 s hold"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning Legs",
+            "focus": "Legs • Cardio",
+            "notes": "Week 4: circuit, 4 rounds, 45 s rest between rounds.",
+            "exercises": [
+              {
+                "exercise_id": "skater-hops",
+                "minutes": 5,
+                "detail": "4 × 45 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 4,
+                "detail": "4 × 35 s"
+              },
+              {
+                "exercise_id": "walking-lunges",
+                "minutes": 5,
+                "detail": "4 × 14 reps per leg"
+              },
+              {
+                "exercise_id": "incline-walking",
+                "minutes": 12,
+                "detail": "12 min uphill finisher"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Sore is fine, sharp pain is not."
+          },
+          {
+            "title": "Glute Focus",
+            "focus": "Glutes • Hamstrings",
+            "notes": "Week 4: squeeze at the top of every bridge for a full second. Gym option: swap for leg-press at the same reps.",
+            "exercises": [
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 6,
+                "detail": "4 × 20 reps"
+              },
+              {
+                "exercise_id": "step-ups",
+                "minutes": 6,
+                "detail": "4 × 18 reps per leg"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 6,
+                "detail": "4 × 60 s hold"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min easy cooldown walk"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "belly-burn-14",
+    "name": "14-Day Belly Burn",
+    "icon": "⚡",
+    "goal": "Two weeks of high-intensity intervals paired with core strength work. Be clear on the science: you cannot spot-reduce belly fat, and no exercise burns fat from one specific place. What this does is stack big calorie burns against a stronger core — the deficit from your food log is what actually shifts the fat.",
+    "level": "intermediate",
+    "focus": "weight_loss",
+    "equipment": "minimal",
+    "duration_days": 14,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/hiit_hero.png",
+    "sort_index": 5,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "title": "HIIT + Core",
+            "focus": "Full body • Core",
+            "notes": "Week 1: 3 rounds. Go hard on the intervals, then hold the core work strict.",
+            "exercises": [
+              {
+                "exercise_id": "burpees",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rope & Abs",
+            "focus": "Cardio • Core",
+            "notes": "Week 1: break the rope work into 3 blocks if you need to.",
+            "exercises": [
+              {
+                "exercise_id": "jump-rope-fast",
+                "minutes": 5,
+                "detail": "3 × 60 s"
+              },
+              {
+                "exercise_id": "high-knees",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Hard intervals need recovery. Walk, hydrate, log your meals."
+          },
+          {
+            "title": "Stairs & Core",
+            "focus": "Cardio • Core",
+            "notes": "Week 1: stairs at a hard but repeatable pace, 3 rounds.",
+            "exercises": [
+              {
+                "exercise_id": "home-stair-climbing",
+                "minutes": 5,
+                "detail": "3 × 60 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 2,
+                "detail": "3 × 20 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 18 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Sprint Intervals",
+            "focus": "Cardio • Legs",
+            "notes": "Week 1: 3 hard efforts with full recovery. No open ground? Use stairs.",
+            "exercises": [
+              {
+                "exercise_id": "sprint-intervals",
+                "minutes": 6,
+                "detail": "3 × 30 s sprint, 90 s walk"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 3,
+                "detail": "3 × 30 s"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. The food log does the deficit work today."
+          },
+          {
+            "title": "Full Burn Finisher",
+            "focus": "Full body • Core",
+            "notes": "Week 1: last push of the week — 3 rounds, then walk it off.",
+            "exercises": [
+              {
+                "exercise_id": "burpees",
+                "minutes": 4,
+                "detail": "3 × 40 s"
+              },
+              {
+                "exercise_id": "jump-rope-fast",
+                "minutes": 5,
+                "detail": "3 × 60 s"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min cooldown walk"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "title": "HIIT + Core",
+            "focus": "Full body • Core",
+            "notes": "Week 2: 4 rounds. Go hard on the intervals, then hold the core work strict.",
+            "exercises": [
+              {
+                "exercise_id": "burpees",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 40 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 20 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rope & Abs",
+            "focus": "Cardio • Core",
+            "notes": "Week 2: break the rope work into 4 blocks if you need to.",
+            "exercises": [
+              {
+                "exercise_id": "jump-rope-fast",
+                "minutes": 7,
+                "detail": "4 × 60 s"
+              },
+              {
+                "exercise_id": "high-knees",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 7,
+                "detail": "4 × 20 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 40 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Hard intervals need recovery. Walk, hydrate, log your meals."
+          },
+          {
+            "title": "Stairs & Core",
+            "focus": "Cardio • Core",
+            "notes": "Week 2: stairs at a hard but repeatable pace, 4 rounds.",
+            "exercises": [
+              {
+                "exercise_id": "home-stair-climbing",
+                "minutes": 7,
+                "detail": "4 × 60 s"
+              },
+              {
+                "exercise_id": "squat-jumps",
+                "minutes": 4,
+                "detail": "4 × 30 s"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 6,
+                "detail": "4 × 23 reps"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Sprint Intervals",
+            "focus": "Cardio • Legs",
+            "notes": "Week 2: 4 hard efforts with full recovery. No open ground? Use stairs.",
+            "exercises": [
+              {
+                "exercise_id": "sprint-intervals",
+                "minutes": 8,
+                "detail": "4 × 30 s sprint, 90 s walk"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 7,
+                "detail": "4 × 20 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. The food log does the deficit work today."
+          },
+          {
+            "title": "Full Burn Finisher",
+            "focus": "Full body • Core",
+            "notes": "Week 2: last push of the week — 4 rounds, then walk it off.",
+            "exercises": [
+              {
+                "exercise_id": "burpees",
+                "minutes": 5,
+                "detail": "4 × 50 s"
+              },
+              {
+                "exercise_id": "jump-rope-fast",
+                "minutes": 7,
+                "detail": "4 × 60 s"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 50 s hold"
+              },
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 15,
+                "detail": "15 min cooldown walk"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "lose-weight-30",
+    "name": "Lose Weight in 30 Days",
+    "icon": "🏃",
+    "goal": "A 30-day progressive cardio build: brisk and incline walking in week 1, jogging and cycling through weeks 2–3, running and rope intervals by week 4, with two rest days every week. The program creates the burn — your daily food log creates the deficit, so log every meal.",
+    "level": "beginner",
+    "focus": "weight_loss",
+    "equipment": "none",
+    "duration_days": 30,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/goal_lose_fat.png",
+    "sort_index": 6,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "title": "Base Walk",
+            "focus": "Cardio",
+            "notes": "Week 1: build the habit first. Conversational pace the whole way.",
+            "exercises": [
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 30,
+                "detail": "30 min steady"
+              }
+            ]
+          },
+          {
+            "title": "Incline Walk",
+            "focus": "Cardio • Legs",
+            "notes": "Week 1: find a hill, or set the treadmill to a 5–8% incline.",
+            "exercises": [
+              {
+                "exercise_id": "incline-walking",
+                "minutes": 30,
+                "detail": "30 min uphill"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Rest days matter as much as the walks. Log every meal."
+          },
+          {
+            "title": "Long Walk",
+            "focus": "Cardio",
+            "notes": "Week 1: your longest walk of the week. Podcast recommended.",
+            "exercises": [
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 40,
+                "detail": "40 min steady"
+              }
+            ]
+          },
+          {
+            "title": "Walk + Strength",
+            "focus": "Cardio • Full body",
+            "notes": "Week 1: walk first, then two easy rounds of bodyweight work.",
+            "exercises": [
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 30,
+                "detail": "30 min steady"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 4,
+                "detail": "2 × 12 reps"
+              },
+              {
+                "exercise_id": "wall-sit",
+                "minutes": 3,
+                "detail": "2 × 30 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Weigh in tomorrow if you track weight."
+          },
+          {
+            "title": "Weekend Walk",
+            "focus": "Cardio",
+            "notes": "Week 1: same route, try to beat last time by a couple of minutes.",
+            "exercises": [
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 40,
+                "detail": "40 min steady"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "title": "Jog Intervals",
+            "focus": "Cardio",
+            "notes": "Week 2: alternate 2 min jog / 2 min walk for the whole session.",
+            "exercises": [
+              {
+                "exercise_id": "jogging-12min",
+                "minutes": 25,
+                "detail": "25 min jog-walk intervals"
+              }
+            ]
+          },
+          {
+            "title": "Cycle Steady",
+            "focus": "Cardio • Legs",
+            "notes": "Week 2: steady spin. No bike? Do the incline walk instead.",
+            "exercises": [
+              {
+                "exercise_id": "cycling-moderate",
+                "minutes": 40,
+                "detail": "40 min steady"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Recovery day. Your deficit comes from the food log — keep it honest."
+          },
+          {
+            "title": "Incline Walk",
+            "focus": "Cardio • Legs",
+            "notes": "Week 2: uphill work builds the engine without the joint load.",
+            "exercises": [
+              {
+                "exercise_id": "incline-walking",
+                "minutes": 40,
+                "detail": "40 min uphill"
+              }
+            ]
+          },
+          {
+            "title": "Jog + Core",
+            "focus": "Cardio • Core",
+            "notes": "Week 2: finish the jog, then three rounds of core.",
+            "exercises": [
+              {
+                "exercise_id": "jogging-12min",
+                "minutes": 25,
+                "detail": "25 min steady jog"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 20 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Sleep is a weight-loss tool too."
+          },
+          {
+            "title": "Long Walk",
+            "focus": "Cardio",
+            "notes": "Week 2: long and easy. This is your highest-burn session.",
+            "exercises": [
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 50,
+                "detail": "50 min steady"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "title": "Jog Intervals",
+            "focus": "Cardio",
+            "notes": "Week 3: alternate 2 min jog / 2 min walk for the whole session.",
+            "exercises": [
+              {
+                "exercise_id": "jogging-12min",
+                "minutes": 28,
+                "detail": "28 min jog-walk intervals"
+              }
+            ]
+          },
+          {
+            "title": "Cycle Steady",
+            "focus": "Cardio • Legs",
+            "notes": "Week 3: steady spin. No bike? Do the incline walk instead.",
+            "exercises": [
+              {
+                "exercise_id": "cycling-moderate",
+                "minutes": 40,
+                "detail": "40 min steady"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Recovery day. Your deficit comes from the food log — keep it honest."
+          },
+          {
+            "title": "Incline Walk",
+            "focus": "Cardio • Legs",
+            "notes": "Week 3: uphill work builds the engine without the joint load.",
+            "exercises": [
+              {
+                "exercise_id": "incline-walking",
+                "minutes": 40,
+                "detail": "40 min uphill"
+              }
+            ]
+          },
+          {
+            "title": "Jog + Core",
+            "focus": "Cardio • Core",
+            "notes": "Week 3: finish the jog, then three rounds of core.",
+            "exercises": [
+              {
+                "exercise_id": "jogging-12min",
+                "minutes": 28,
+                "detail": "28 min steady jog"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "3 × 40 s hold"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 4,
+                "detail": "3 × 20 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Sleep is a weight-loss tool too."
+          },
+          {
+            "title": "Long Walk",
+            "focus": "Cardio",
+            "notes": "Week 3: long and easy. This is your highest-burn session.",
+            "exercises": [
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 55,
+                "detail": "55 min steady"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {
+            "title": "Run",
+            "focus": "Cardio",
+            "notes": "Week 4: continuous run at a pace you can just about hold.",
+            "exercises": [
+              {
+                "exercise_id": "running-6mph",
+                "minutes": 25,
+                "detail": "25 min continuous"
+              }
+            ]
+          },
+          {
+            "title": "Rope Intervals",
+            "focus": "Cardio • Full body",
+            "notes": "Week 4: five rounds of 60 s rope, 60 s rest.",
+            "exercises": [
+              {
+                "exercise_id": "jump-rope-moderate",
+                "minutes": 15,
+                "detail": "5 × 60 s, 60 s rest"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Rest. Four weeks in — judge the weight trend, not one weigh-in."
+          },
+          {
+            "title": "Cycle Hard",
+            "focus": "Cardio • Legs",
+            "notes": "Week 4: pick the pace up for the middle third.",
+            "exercises": [
+              {
+                "exercise_id": "cycling-moderate",
+                "minutes": 40,
+                "detail": "40 min, hard middle third"
+              }
+            ]
+          },
+          {
+            "title": "Run + Core",
+            "focus": "Cardio • Core",
+            "notes": "Week 4: run, then core work to finish.",
+            "exercises": [
+              {
+                "exercise_id": "running-6mph",
+                "minutes": 20,
+                "detail": "20 min run"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "3 × 60 s hold"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 15 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day."
+          },
+          {
+            "title": "Long Walk",
+            "focus": "Cardio",
+            "notes": "Week 4: finish the week with a long easy walk.",
+            "exercises": [
+              {
+                "exercise_id": "brisk-walking",
+                "minutes": 60,
+                "detail": "60 min steady"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 5,
+        "sessions": [
+          {
+            "title": "Run",
+            "focus": "Cardio",
+            "notes": "Week 5: continuous run at a pace you can just about hold.",
+            "exercises": [
+              {
+                "exercise_id": "running-6mph",
+                "minutes": 25,
+                "detail": "25 min continuous"
+              }
+            ]
+          },
+          {
+            "title": "Rope Intervals",
+            "focus": "Cardio • Full body",
+            "notes": "Week 5: five rounds of 60 s rope, 60 s rest.",
+            "exercises": [
+              {
+                "exercise_id": "jump-rope-moderate",
+                "minutes": 15,
+                "detail": "5 × 60 s, 60 s rest"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "kegel-core-14",
+    "name": "14-Day Kegel & Core Power",
+    "icon": "🧘",
+    "goal": "Two weeks of pelvic-floor training paired with deep core work — Kegel holds, bridges, planks and leg raises. This one is about control, continence and core stability, not calories: the kcal per session are deliberately tiny and that is exactly right. If you have pelvic pain or recent surgery, check with a clinician first.",
+    "level": "beginner",
+    "focus": "core",
+    "equipment": "none",
+    "duration_days": 14,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/recovery_hero.png",
+    "sort_index": 7,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "title": "Pelvic Floor Basics",
+            "focus": "Pelvic floor • Core",
+            "notes": "Week 1: 3 sets of 10 Kegels, 5 s each. Breathe normally — never bear down, and keep glutes and thighs relaxed.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 4,
+                "detail": "3 × 10 reps, 5 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 12 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Deep Core",
+            "focus": "Pelvic floor • Lower core",
+            "notes": "Week 1: pair each squeeze with a slow exhale. Rest as long as you hold.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 4,
+                "detail": "3 × 10 reps, 5 s hold"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 10 slow reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 12 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "The pelvic floor is a muscle and needs recovery. Full rest today."
+          },
+          {
+            "title": "Control & Stability",
+            "focus": "Pelvic floor • Core",
+            "notes": "Week 1: quality over count — end the set when the squeeze weakens.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 4,
+                "detail": "3 × 10 reps, 5 s hold"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 2,
+                "detail": "3 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Endurance Holds",
+            "focus": "Pelvic floor • Core",
+            "notes": "Week 1: longer holds today — 7 s each, drop reps if needed.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 5,
+                "detail": "3 × 8 reps, 7 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 14 reps"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 4,
+                "detail": "3 × 10 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Consistency beats intensity with this one."
+          },
+          {
+            "title": "Full Core Integration",
+            "focus": "Pelvic floor • Core",
+            "notes": "Week 1: hold a gentle Kegel through the plank — that is the whole point.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 4,
+                "detail": "3 × 10 reps, 5 s hold"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 3,
+                "detail": "3 × 30 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 3,
+                "detail": "3 × 14 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 3,
+                "detail": "3 × 12 reps"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "title": "Pelvic Floor Basics",
+            "focus": "Pelvic floor • Core",
+            "notes": "Week 2: 4 sets of 12 Kegels, 8 s each. Breathe normally — never bear down, and keep glutes and thighs relaxed.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 8,
+                "detail": "4 × 12 reps, 8 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 15 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "4 × 30 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Deep Core",
+            "focus": "Pelvic floor • Lower core",
+            "notes": "Week 2: pair each squeeze with a slow exhale. Rest as long as you hold.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 8,
+                "detail": "4 × 12 reps, 8 s hold"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 6,
+                "detail": "4 × 13 slow reps"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 15 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "The pelvic floor is a muscle and needs recovery. Full rest today."
+          },
+          {
+            "title": "Control & Stability",
+            "focus": "Pelvic floor • Core",
+            "notes": "Week 2: quality over count — end the set when the squeeze weakens.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 8,
+                "detail": "4 × 12 reps, 8 s hold"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "4 × 30 s hold"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Endurance Holds",
+            "focus": "Pelvic floor • Core",
+            "notes": "Week 2: longer holds today — 10 s each, drop reps if needed.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 10,
+                "detail": "4 × 10 reps, 10 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 17 reps"
+              },
+              {
+                "exercise_id": "leg-raises",
+                "minutes": 6,
+                "detail": "4 × 13 reps"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Consistency beats intensity with this one."
+          },
+          {
+            "title": "Full Core Integration",
+            "focus": "Pelvic floor • Core",
+            "notes": "Week 2: hold a gentle Kegel through the plank — that is the whole point.",
+            "exercises": [
+              {
+                "exercise_id": "kegel-hold",
+                "minutes": 8,
+                "detail": "4 × 12 reps, 8 s hold"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 40 s hold"
+              },
+              {
+                "exercise_id": "glute-bridge",
+                "minutes": 5,
+                "detail": "4 × 17 reps"
+              },
+              {
+                "exercise_id": "crunches",
+                "minutes": 5,
+                "detail": "4 × 15 reps"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "pushup-power-21",
+    "name": "21-Day Push-Up Power",
+    "icon": "🙌",
+    "goal": "Three weeks of push-up progressions — volume, tempo, ladders and a weekly max test — backed by dips, bear crawls, planks and shadow-boxing warm-ups. Track your max set each week; that number is the whole scoreboard. No equipment needed.",
+    "level": "intermediate",
+    "focus": "strength",
+    "equipment": "none",
+    "duration_days": 21,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/upper_body_hero.png",
+    "sort_index": 8,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "title": "Push Volume",
+            "focus": "Chest • Triceps",
+            "notes": "Week 1: 4 sets of 8. Knees down is a valid regression — full range always beats a sloppy rep.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 4,
+                "detail": "4 × 8 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 4,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "4 × 30 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Tempo Push",
+            "focus": "Chest • Shoulders",
+            "notes": "Week 1: 3 s down, 1 s up. Fewer reps at this tempo is expected.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 4,
+                "detail": "4 × 5 slow reps"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 4,
+                "detail": "4 × 30 s"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 3,
+                "detail": "4 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Pushing muscles want 48 h. Rest properly."
+          },
+          {
+            "title": "Push Ladder",
+            "focus": "Chest • Triceps",
+            "notes": "Week 1: ladder down 8, 6, 4, 2 reps with 60 s between rungs.",
+            "exercises": [
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 4,
+                "detail": "Ladder down from 8 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 4,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 4,
+                "detail": "4 × 30 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning Push",
+            "focus": "Full body",
+            "notes": "Week 1: circuit, 4 rounds, minimal rest.",
+            "exercises": [
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 4,
+                "detail": "4 × 30 s"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 4,
+                "detail": "4 × 6 reps"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 5,
+                "detail": "4 × 40 s"
+              },
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 5,
+                "detail": "4 × 45 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Protein and sleep do the rebuilding."
+          },
+          {
+            "title": "Max Test",
+            "focus": "Chest • Triceps",
+            "notes": "Week 1: one all-out set to failure, then 3 back-off sets. Write the number down — it should climb every week.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 4,
+                "detail": "1 max set + back-off sets"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 4,
+                "detail": "3 × 6 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 5,
+                "detail": "4 × 45 s hold"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "title": "Push Volume",
+            "focus": "Chest • Triceps",
+            "notes": "Week 2: 5 sets of 11. Knees down is a valid regression — full range always beats a sloppy rep.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 5,
+                "detail": "5 × 11 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 5,
+                "detail": "5 × 8 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 6,
+                "detail": "5 × 45 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Tempo Push",
+            "focus": "Chest • Shoulders",
+            "notes": "Week 2: 3 s down, 1 s up. Fewer reps at this tempo is expected.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 6,
+                "detail": "5 × 8 slow reps"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 6,
+                "detail": "5 × 40 s"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 4,
+                "detail": "5 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Pushing muscles want 48 h. Rest properly."
+          },
+          {
+            "title": "Push Ladder",
+            "focus": "Chest • Triceps",
+            "notes": "Week 2: ladder down 11, 9, 7, 5 reps with 60 s between rungs.",
+            "exercises": [
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 5,
+                "detail": "Ladder down from 11 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 5,
+                "detail": "5 × 8 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 6,
+                "detail": "5 × 45 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning Push",
+            "focus": "Full body",
+            "notes": "Week 2: circuit, 5 rounds, minimal rest.",
+            "exercises": [
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 6,
+                "detail": "5 × 40 s"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 5,
+                "detail": "5 × 9 reps"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 6,
+                "detail": "5 × 40 s"
+              },
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 6,
+                "detail": "5 × 45 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Protein and sleep do the rebuilding."
+          },
+          {
+            "title": "Max Test",
+            "focus": "Chest • Triceps",
+            "notes": "Week 2: one all-out set to failure, then 4 back-off sets. Write the number down — it should climb every week.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 6,
+                "detail": "1 max set + back-off sets"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 5,
+                "detail": "4 × 8 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 8,
+                "detail": "5 × 60 s hold"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "title": "Push Volume",
+            "focus": "Chest • Triceps",
+            "notes": "Week 3: 5 sets of 15. Knees down is a valid regression — full range always beats a sloppy rep.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 6,
+                "detail": "5 × 15 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 6,
+                "detail": "5 × 10 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 8,
+                "detail": "5 × 60 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Tempo Push",
+            "focus": "Chest • Shoulders",
+            "notes": "Week 3: 3 s down, 1 s up. Fewer reps at this tempo is expected.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 8,
+                "detail": "5 × 12 slow reps"
+              },
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 6,
+                "detail": "5 × 45 s"
+              },
+              {
+                "exercise_id": "superman-hold",
+                "minutes": 4,
+                "detail": "5 × 20 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Pushing muscles want 48 h. Rest properly."
+          },
+          {
+            "title": "Push Ladder",
+            "focus": "Chest • Triceps",
+            "notes": "Week 3: ladder down 15, 13, 11, 9 reps with 60 s between rungs.",
+            "exercises": [
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 6,
+                "detail": "Ladder down from 15 reps"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 6,
+                "detail": "5 × 10 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 8,
+                "detail": "5 × 60 s hold"
+              }
+            ]
+          },
+          {
+            "title": "Conditioning Push",
+            "focus": "Full body",
+            "notes": "Week 3: circuit, 5 rounds, minimal rest.",
+            "exercises": [
+              {
+                "exercise_id": "bear-crawl",
+                "minutes": 6,
+                "detail": "5 × 45 s"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 6,
+                "detail": "5 × 13 reps"
+              },
+              {
+                "exercise_id": "mountain-climbers",
+                "minutes": 6,
+                "detail": "5 × 40 s"
+              },
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 6,
+                "detail": "5 × 45 s"
+              }
+            ]
+          },
+          {
+            "title": "Rest day",
+            "kind": "rest",
+            "notes": "Second rest day. Protein and sleep do the rebuilding."
+          },
+          {
+            "title": "Max Test",
+            "focus": "Chest • Triceps",
+            "notes": "Week 3: one all-out set to failure, then 4 back-off sets. Write the number down — it should climb every week.",
+            "exercises": [
+              {
+                "exercise_id": "shadow-boxing",
+                "minutes": 4,
+                "detail": "4 min warm-up"
+              },
+              {
+                "exercise_id": "pushup-vigorous",
+                "minutes": 8,
+                "detail": "1 max set + back-off sets"
+              },
+              {
+                "exercise_id": "dips",
+                "minutes": 6,
+                "detail": "4 × 10 reps"
+              },
+              {
+                "exercise_id": "plank",
+                "minutes": 9,
+                "detail": "5 × 75 s hold"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
   {
     "id": "weight-loss-kickstart",
     "name": "Weight Loss Kickstart",
     "icon": "🔥",
     "goal": "A perfect blend of brisk walking, light jogging, and beginner HIIT to maximize calorie burn over 4 weeks.",
+    "level": "beginner",
+    "focus": "weight_loss",
+    "equipment": "minimal",
+    "duration_days": 16,
+    "days_per_week": 4,
+    "hero_image": "assets/illustrations/goal_lose_fat.png",
+    "sort_index": 20,
     "weeks": [
       {
         "week_number": 1,
         "sessions": [
-          {"day_number": 1, "exercise_id": "brisk-walking", "minutes": 30},
-          {"day_number": 2, "exercise_id": "jumping-jacks", "minutes": 15},
-          {"day_number": 3, "exercise_id": "brisk-walking", "minutes": 40},
-          {"day_number": 4, "exercise_id": "jogging-12min", "minutes": 20}
+          {
+            "day_number": 1,
+            "exercise_id": "brisk-walking",
+            "minutes": 30
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "jumping-jacks",
+            "minutes": 15
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "brisk-walking",
+            "minutes": 40
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "jogging-12min",
+            "minutes": 20
+          }
         ]
       },
       {
         "week_number": 2,
         "sessions": [
-          {"day_number": 1, "exercise_id": "incline-walking", "minutes": 30},
-          {"day_number": 2, "exercise_id": "mountain-climbers", "minutes": 15},
-          {"day_number": 3, "exercise_id": "jogging-12min", "minutes": 25},
-          {"day_number": 4, "exercise_id": "jump-rope-moderate", "minutes": 20}
+          {
+            "day_number": 1,
+            "exercise_id": "incline-walking",
+            "minutes": 30
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "mountain-climbers",
+            "minutes": 15
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "jogging-12min",
+            "minutes": 25
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "jump-rope-moderate",
+            "minutes": 20
+          }
         ]
       },
       {
         "week_number": 3,
         "sessions": [
-          {"day_number": 1, "exercise_id": "running-6mph", "minutes": 20},
-          {"day_number": 2, "exercise_id": "burpees", "minutes": 15},
-          {"day_number": 3, "exercise_id": "hill-hiking", "minutes": 45},
-          {"day_number": 4, "exercise_id": "cycling-moderate", "minutes": 30}
+          {
+            "day_number": 1,
+            "exercise_id": "running-6mph",
+            "minutes": 20
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "burpees",
+            "minutes": 15
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "hill-hiking",
+            "minutes": 45
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "cycling-moderate",
+            "minutes": 30
+          }
         ]
       },
       {
         "week_number": 4,
         "sessions": [
-          {"day_number": 1, "exercise_id": "sprint-intervals", "minutes": 20},
-          {"day_number": 2, "exercise_id": "high-knees", "minutes": 20},
-          {"day_number": 3, "exercise_id": "running-6mph", "minutes": 30},
-          {"day_number": 4, "exercise_id": "stair-sprints", "minutes": 20}
-        ]
-      }
-    ]
-  },
-  {
-    "id": "calisthenics-foundations",
-    "name": "Calisthenics Foundations",
-    "icon": "💪",
-    "goal": "Master your bodyweight with progressions for pushups, pullups, dips, squats, and planks over 4 weeks.",
-    "weeks": [
-      {
-        "week_number": 1,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "air-squats", "minutes": 15},
-          {"day_number": 2, "exercise_id": "pushup-vigorous", "minutes": 10},
-          {"day_number": 3, "exercise_id": "plank", "minutes": 10},
-          {"day_number": 4, "exercise_id": "glute-bridge", "minutes": 15}
-        ]
-      },
-      {
-        "week_number": 2,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "walking-lunges", "minutes": 15},
-          {"day_number": 2, "exercise_id": "pullup", "minutes": 15},
-          {"day_number": 3, "exercise_id": "dips", "minutes": 15},
-          {"day_number": 4, "exercise_id": "crunches", "minutes": 15}
-        ]
-      },
-      {
-        "week_number": 3,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "pistol-squat", "minutes": 20},
-          {"day_number": 2, "exercise_id": "chinup", "minutes": 20},
-          {"day_number": 3, "exercise_id": "pushup-vigorous", "minutes": 20},
-          {"day_number": 4, "exercise_id": "leg-raises", "minutes": 20}
-        ]
-      },
-      {
-        "week_number": 4,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "pullup", "minutes": 25},
-          {"day_number": 2, "exercise_id": "dips", "minutes": 25},
-          {"day_number": 3, "exercise_id": "pistol-squat", "minutes": 25},
-          {"day_number": 4, "exercise_id": "superman-hold", "minutes": 20}
-        ]
-      }
-    ]
-  },
-  {
-    "id": "home-hiit-burner",
-    "name": "Home HIIT Burner",
-    "icon": "⚡",
-    "goal": "Fast-paced, high-intensity intervals using no equipment to scorch calories in just 3 weeks.",
-    "weeks": [
-      {
-        "week_number": 1,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "jumping-jacks", "minutes": 15},
-          {"day_number": 2, "exercise_id": "high-knees", "minutes": 15},
-          {"day_number": 3, "exercise_id": "skater-hops", "minutes": 20}
-        ]
-      },
-      {
-        "week_number": 2,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "burpees", "minutes": 20},
-          {"day_number": 2, "exercise_id": "mountain-climbers", "minutes": 20},
-          {"day_number": 3, "exercise_id": "jump-rope-fast", "minutes": 25}
-        ]
-      },
-      {
-        "week_number": 3,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "squat-jumps", "minutes": 25},
-          {"day_number": 2, "exercise_id": "bear-crawl", "minutes": 20},
-          {"day_number": 3, "exercise_id": "burpees", "minutes": 30}
-        ]
-      }
-    ]
-  },
-  {
-    "id": "gym-strength-basics",
-    "name": "Gym Strength Basics",
-    "icon": "🏋️",
-    "goal": "Learn the ropes at the gym with a 4-week split combining essential machines and free weights.",
-    "weeks": [
-      {
-        "week_number": 1,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "chest-press-machine", "minutes": 30},
-          {"day_number": 2, "exercise_id": "leg-press", "minutes": 30},
-          {"day_number": 3, "exercise_id": "lat-pulldown", "minutes": 30},
-          {"day_number": 4, "exercise_id": "ab-crunch-machine", "minutes": 20}
-        ]
-      },
-      {
-        "week_number": 2,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "bench-press", "minutes": 35},
-          {"day_number": 2, "exercise_id": "barbell-squat", "minutes": 35},
-          {"day_number": 3, "exercise_id": "seated-cable-row", "minutes": 35},
-          {"day_number": 4, "exercise_id": "dumbbell-walking-lunges", "minutes": 25}
-        ]
-      },
-      {
-        "week_number": 3,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "overhead-press", "minutes": 40},
-          {"day_number": 2, "exercise_id": "deadlift", "minutes": 40},
-          {"day_number": 3, "exercise_id": "barbell-row", "minutes": 40},
-          {"day_number": 4, "exercise_id": "step-ups", "minutes": 30}
-        ]
-      },
-      {
-        "week_number": 4,
-        "sessions": [
-          {"day_number": 1, "exercise_id": "clean-and-press", "minutes": 45},
-          {"day_number": 2, "exercise_id": "kettlebell-swings", "minutes": 45},
-          {"day_number": 3, "exercise_id": "farmers-carry", "minutes": 30},
-          {"day_number": 4, "exercise_id": "dumbbell-hiit", "minutes": 30}
+          {
+            "day_number": 1,
+            "exercise_id": "sprint-intervals",
+            "minutes": 20
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "high-knees",
+            "minutes": 20
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "running-6mph",
+            "minutes": 30
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "stair-sprints",
+            "minutes": 20
+          }
         ]
       }
     ]
@@ -168,25 +4071,377 @@
     "name": "Daily Walk Challenge",
     "icon": "👟",
     "goal": "Build a solid cardiovascular base with 2 weeks of progressively longer brisk walking sessions.",
+    "level": "beginner",
+    "focus": "cardio",
+    "equipment": "none",
+    "duration_days": 10,
+    "days_per_week": 5,
+    "hero_image": "assets/illustrations/walker_rope.png",
+    "sort_index": 30,
     "weeks": [
       {
         "week_number": 1,
         "sessions": [
-          {"day_number": 1, "exercise_id": "brisk-walking", "minutes": 20},
-          {"day_number": 2, "exercise_id": "brisk-walking", "minutes": 25},
-          {"day_number": 3, "exercise_id": "brisk-walking", "minutes": 30},
-          {"day_number": 4, "exercise_id": "brisk-walking", "minutes": 35},
-          {"day_number": 5, "exercise_id": "brisk-walking", "minutes": 40}
+          {
+            "day_number": 1,
+            "exercise_id": "brisk-walking",
+            "minutes": 20
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "brisk-walking",
+            "minutes": 25
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "brisk-walking",
+            "minutes": 30
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "brisk-walking",
+            "minutes": 35
+          },
+          {
+            "day_number": 5,
+            "exercise_id": "brisk-walking",
+            "minutes": 40
+          }
         ]
       },
       {
         "week_number": 2,
         "sessions": [
-          {"day_number": 1, "exercise_id": "brisk-walking", "minutes": 40},
-          {"day_number": 2, "exercise_id": "brisk-walking", "minutes": 45},
-          {"day_number": 3, "exercise_id": "brisk-walking", "minutes": 50},
-          {"day_number": 4, "exercise_id": "brisk-walking", "minutes": 55},
-          {"day_number": 5, "exercise_id": "brisk-walking", "minutes": 60}
+          {
+            "day_number": 1,
+            "exercise_id": "brisk-walking",
+            "minutes": 40
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "brisk-walking",
+            "minutes": 45
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "brisk-walking",
+            "minutes": 50
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "brisk-walking",
+            "minutes": 55
+          },
+          {
+            "day_number": 5,
+            "exercise_id": "brisk-walking",
+            "minutes": 60
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "calisthenics-foundations",
+    "name": "Calisthenics Foundations",
+    "icon": "💪",
+    "goal": "Master your bodyweight with progressions for pushups, pullups, dips, squats, and planks over 4 weeks.",
+    "level": "intermediate",
+    "focus": "full_body",
+    "equipment": "minimal",
+    "duration_days": 16,
+    "days_per_week": 4,
+    "hero_image": "assets/illustrations/calisthenics_hero.png",
+    "sort_index": 40,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "wall-sit",
+            "minutes": 15
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "pushup-vigorous",
+            "minutes": 10
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "plank",
+            "minutes": 10
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "glute-bridge",
+            "minutes": 15
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "walking-lunges",
+            "minutes": 15
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "pullup",
+            "minutes": 15
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "dips",
+            "minutes": 15
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "crunches",
+            "minutes": 15
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "pistol-squat",
+            "minutes": 20
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "chinup",
+            "minutes": 20
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "pushup-vigorous",
+            "minutes": 20
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "leg-raises",
+            "minutes": 20
+          }
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "pullup",
+            "minutes": 25
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "dips",
+            "minutes": 25
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "pistol-squat",
+            "minutes": 25
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "superman-hold",
+            "minutes": 20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "home-hiit-burner",
+    "name": "Home HIIT Burner",
+    "icon": "⚡",
+    "goal": "Fast-paced, high-intensity intervals using no equipment to scorch calories in just 3 weeks.",
+    "level": "intermediate",
+    "focus": "cardio",
+    "equipment": "minimal",
+    "duration_days": 9,
+    "days_per_week": 3,
+    "hero_image": "assets/illustrations/hiit_hero.png",
+    "sort_index": 50,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "jumping-jacks",
+            "minutes": 15
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "high-knees",
+            "minutes": 15
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "skater-hops",
+            "minutes": 20
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "burpees",
+            "minutes": 20
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "mountain-climbers",
+            "minutes": 20
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "jump-rope-fast",
+            "minutes": 25
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "squat-jumps",
+            "minutes": 25
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "bear-crawl",
+            "minutes": 20
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "burpees",
+            "minutes": 30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gym-strength-basics",
+    "name": "Gym Strength Basics",
+    "icon": "🏋️",
+    "goal": "Learn the ropes at the gym with a 4-week split combining essential machines and free weights.",
+    "level": "intermediate",
+    "focus": "strength",
+    "equipment": "gym",
+    "duration_days": 16,
+    "days_per_week": 4,
+    "hero_image": "assets/illustrations/powerlifting_hero.png",
+    "sort_index": 60,
+    "weeks": [
+      {
+        "week_number": 1,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "chest-press-machine",
+            "minutes": 30
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "leg-press",
+            "minutes": 30
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "lat-pulldown",
+            "minutes": 30
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "ab-crunch-machine",
+            "minutes": 20
+          }
+        ]
+      },
+      {
+        "week_number": 2,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "bench-press",
+            "minutes": 35
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "barbell-squat",
+            "minutes": 35
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "seated-cable-row",
+            "minutes": 35
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "dumbbell-walking-lunges",
+            "minutes": 25
+          }
+        ]
+      },
+      {
+        "week_number": 3,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "overhead-press",
+            "minutes": 40
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "deadlift",
+            "minutes": 40
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "barbell-row",
+            "minutes": 40
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "step-ups",
+            "minutes": 30
+          }
+        ]
+      },
+      {
+        "week_number": 4,
+        "sessions": [
+          {
+            "day_number": 1,
+            "exercise_id": "clean-and-press",
+            "minutes": 45
+          },
+          {
+            "day_number": 2,
+            "exercise_id": "kettlebell-swings",
+            "minutes": 45
+          },
+          {
+            "day_number": 3,
+            "exercise_id": "farmers-carry",
+            "minutes": 30
+          },
+          {
+            "day_number": 4,
+            "exercise_id": "dumbbell-hiit",
+            "minutes": 30
+          }
         ]
       }
     ]

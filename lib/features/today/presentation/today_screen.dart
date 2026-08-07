@@ -20,6 +20,7 @@ import 'package:intl/intl.dart';
 import 'package:fitpilot/core/ui/semicircle_progress.dart';
 import 'package:fitpilot/core/ui/profile_avatar.dart';
 import 'package:fitpilot/core/ui/food_image.dart';
+import 'package:fitpilot/features/programs/presentation/widgets/training_program_card.dart';
 
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
@@ -51,34 +52,63 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                
+
+                // Only renders once enrolled — the Planner tile below is the
+                // discovery path, so an extra promo here would be noise.
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  sliver: SliverToBoxAdapter(
+                    child: TrainingProgramCard(hidePromo: true),
+                  ),
+                ),
+
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   sliver: SliverToBoxAdapter(
-                    child: Text('Tools & Features', style: theme.textTheme.h2),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 24.0),
+                      child: Text('Tools & Features', style: theme.textTheme.h2),
+                    ),
                   ),
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   sliver: SliverToBoxAdapter(
-                    child: Row(
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: _ImageCard(
-                            title: 'Workout\nHub',
-                            imagePath: 'assets/illustrations/today_workout_hub.png',
-                            onTap: () => context.push('/workout-hub'),
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _ImageCard(
+                                title: 'Workout\nHub',
+                                imagePath:
+                                    'assets/illustrations/today_workout_hub.png',
+                                onTap: () => context.push('/workout-hub'),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _ImageCard(
+                                title: 'Machine\nScanner',
+                                imagePath:
+                                    'assets/illustrations/today_machine_scanner.png',
+                                onTap: () {
+                                  AppSnackbar.success(
+                                    context,
+                                    'This feature is coming soon!',
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _ImageCard(
-                            title: 'Machine\nScanner',
-                            imagePath: 'assets/illustrations/today_machine_scanner.png',
-                            onTap: () {
-                              AppSnackbar.success(context, 'This feature is coming soon!');
-                            },
-                          ),
+                        const SizedBox(height: 16),
+                        _ImageCard(
+                          title: 'Training\nPrograms',
+                          imagePath: 'assets/illustrations/today_programs.png',
+                          fallbackImagePath:
+                              'assets/illustrations/athletic_hero.png',
+                          onTap: () => context.push('/programs'),
                         ),
                       ],
                     ),
@@ -269,12 +299,17 @@ class _HeroSection extends ConsumerWidget {
 class _ImageCard extends StatelessWidget {
   final String title;
   final String imagePath;
+
+  /// Used when [imagePath] is not bundled yet, so a card can ship before its
+  /// dedicated artwork does.
+  final String? fallbackImagePath;
   final VoidCallback onTap;
 
   const _ImageCard({
     required this.title,
     required this.imagePath,
     required this.onTap,
+    this.fallbackImagePath,
   });
 
   @override
@@ -300,6 +335,19 @@ class _ImageCard extends StatelessWidget {
             Image.asset(
               imagePath,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  fallbackImagePath == null
+                      ? Container(
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : Image.asset(
+                          fallbackImagePath!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
             ),
             // Gradient overlay for text readability
             Container(

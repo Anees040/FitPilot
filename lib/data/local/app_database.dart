@@ -26,6 +26,12 @@ import 'package:fitpilot/core/utils/food_image_resolver.dart';
 /// 18 — removed exercises with missing media from the seed
 /// 19 — added image_key to food_catalog and photo_path to food_logs
 ///      (both LOCAL-ONLY: never pushed to or pulled from Supabase)
+/// 20 — goal-based training programs: metadata columns on programs, title/
+///      focus/kind/notes on program_sessions, new program_session_items
+///      (multi-exercise days) and program_completions tables. Both new tables
+///      are LOCAL-ONLY — bundled seed content and per-device plan progress,
+///      never pushed to or pulled from Supabase. Seed-owned program rows are
+///      cleared so the reworked importer reseeds them with the new shape.
 class AppDatabase {
   static Database? _db;
 
@@ -35,7 +41,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 19,
+      version: 20,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -47,7 +53,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 19,
+      version: 20,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -165,7 +171,14 @@ class AppDatabase {
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         icon TEXT NOT NULL,
-        goal TEXT NOT NULL
+        goal TEXT NOT NULL,
+        level TEXT NOT NULL DEFAULT 'beginner',
+        focus TEXT NOT NULL DEFAULT 'full_body',
+        equipment TEXT NOT NULL DEFAULT 'none',
+        duration_days INTEGER NOT NULL DEFAULT 0,
+        days_per_week INTEGER NOT NULL DEFAULT 0,
+        hero_image TEXT,
+        sort_index INTEGER NOT NULL DEFAULT 100
       )
     ''');
 
@@ -176,7 +189,38 @@ class AppDatabase {
         week_number INTEGER NOT NULL,
         day_number INTEGER NOT NULL,
         exercise_id TEXT NOT NULL,
-        minutes INTEGER NOT NULL
+        minutes INTEGER NOT NULL,
+        title TEXT NOT NULL DEFAULT '',
+        focus TEXT,
+        kind TEXT NOT NULL DEFAULT 'workout',
+        notes TEXT
+      )
+    ''');
+
+    // Ordered exercise list for a session. A rest day has zero items.
+    // LOCAL-ONLY: bundled seed content, never synced.
+    batch.execute('''
+      CREATE TABLE program_session_items (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        exercise_id TEXT NOT NULL,
+        minutes INTEGER NOT NULL,
+        detail TEXT
+      )
+    ''');
+
+    // Per-device record of which program days the user finished.
+    // LOCAL-ONLY: deliberately absent from the Supabase schema, like the
+    // profile's active_program_* columns. Never enqueued to sync_queue.
+    batch.execute('''
+      CREATE TABLE program_completions (
+        session_id TEXT PRIMARY KEY,
+        program_id TEXT NOT NULL,
+        week_number INTEGER NOT NULL,
+        day_number INTEGER NOT NULL,
+        kcal INTEGER NOT NULL DEFAULT 0,
+        completed_at TEXT NOT NULL
       )
     ''');
 
@@ -228,6 +272,15 @@ class AppDatabase {
     );
     batch.execute('CREATE INDEX idx_food_catalog_name ON food_catalog (name)');
     batch.execute('CREATE INDEX idx_exercises_category ON exercises (category)');
+    batch.execute(
+      'CREATE INDEX idx_program_sessions_program ON program_sessions (program_id)',
+    );
+    batch.execute(
+      'CREATE INDEX idx_program_session_items_session ON program_session_items (session_id)',
+    );
+    batch.execute(
+      'CREATE INDEX idx_program_completions_program ON program_completions (program_id)',
+    );
 
     await batch.commit(noResult: true);
   }
@@ -503,6 +556,106 @@ class AppDatabase {
         );
       } catch (_) {}
       await _backfillImageKeys(db);
+    }
+    if (oldVersion < 20) {
+      // Goal-based training programs.
+      //
+      // `programs` and `program_sessions` hold bundled seed content only — no
+      // user data — so widening them and dropping the old session rows is safe;
+      // the reworked importer reseeds every program on the next launch with
+      // titles, rest days and globally-numbered plan days.
+      //
+      // `program_session_items` and `program_completions` are LOCAL-ONLY. They
+      // are deliberately absent from the Supabase schema, so they must never
+      // appear in a sync push payload and a pull must never write them. See
+      // sync_service.dart, which builds payloads from explicit column lists and
+      // pulls from a fixed table list that excludes both.
+      //
+      // Created first so an upgrade path that never ran the v14 step (or a
+      // partial schema) still ends up with the tables before they are altered.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS programs (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          icon TEXT NOT NULL,
+          goal TEXT NOT NULL
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS program_sessions (
+          id TEXT PRIMARY KEY,
+          program_id TEXT NOT NULL,
+          week_number INTEGER NOT NULL,
+          day_number INTEGER NOT NULL,
+          exercise_id TEXT NOT NULL,
+          minutes INTEGER NOT NULL
+        )
+      ''');
+      for (final column in const [
+        "level TEXT NOT NULL DEFAULT 'beginner'",
+        "focus TEXT NOT NULL DEFAULT 'full_body'",
+        "equipment TEXT NOT NULL DEFAULT 'none'",
+        'duration_days INTEGER NOT NULL DEFAULT 0',
+        'days_per_week INTEGER NOT NULL DEFAULT 0',
+        'hero_image TEXT',
+        'sort_index INTEGER NOT NULL DEFAULT 100',
+      ]) {
+        try {
+          await db.execute('ALTER TABLE programs ADD COLUMN $column');
+        } catch (_) {}
+      }
+      for (final column in const [
+        "title TEXT NOT NULL DEFAULT ''",
+        'focus TEXT',
+        "kind TEXT NOT NULL DEFAULT 'workout'",
+        'notes TEXT',
+      ]) {
+        try {
+          await db.execute('ALTER TABLE program_sessions ADD COLUMN $column');
+        } catch (_) {}
+      }
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS program_session_items (
+          id TEXT PRIMARY KEY,
+          session_id TEXT NOT NULL,
+          position INTEGER NOT NULL,
+          exercise_id TEXT NOT NULL,
+          minutes INTEGER NOT NULL,
+          detail TEXT
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS program_completions (
+          session_id TEXT PRIMARY KEY,
+          program_id TEXT NOT NULL,
+          week_number INTEGER NOT NULL,
+          day_number INTEGER NOT NULL,
+          kcal INTEGER NOT NULL DEFAULT 0,
+          completed_at TEXT NOT NULL
+        )
+      ''');
+      for (final index in const [
+        'CREATE INDEX IF NOT EXISTS idx_program_sessions_program ON program_sessions (program_id)',
+        'CREATE INDEX IF NOT EXISTS idx_program_session_items_session ON program_session_items (session_id)',
+        'CREATE INDEX IF NOT EXISTS idx_program_completions_program ON program_completions (program_id)',
+      ]) {
+        try {
+          await db.execute(index);
+        } catch (_) {}
+      }
+      // Old rows use per-week day numbers and carry no title/kind; drop them so
+      // the importer rebuilds every program in the v20 shape.
+      await db.delete('program_sessions');
+      // Until v20 no route reached the programs feature, so an active pointer
+      // can only be stale test data — and it would now point at a day number
+      // that no longer exists. Clear it rather than strand the user mid-plan.
+      try {
+        await db.update('profile', {
+          'active_program_id': null,
+          'active_program_week': null,
+          'active_program_day': null,
+        });
+      } catch (_) {}
     }
   }
 
