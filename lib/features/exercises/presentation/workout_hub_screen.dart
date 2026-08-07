@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/states.dart';
-import 'package:fitpilot/core/utils/require_online.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/exercise_provider.dart';
 
@@ -221,8 +220,10 @@ class WorkoutHubScreen extends ConsumerWidget {
 
 /// Prominent entry to the AI machine scanner.
 ///
-/// The tap is gated on connectivity here so an offline user gets the standard
-/// explanation immediately, rather than discovering the problem a screen later.
+/// The tap is deliberately NOT gated on connectivity: it opens the scanner hub,
+/// which lists previously saved scans and stays useful with no network. The
+/// online check lives on the scan action itself, so an offline user can still
+/// reach the results they already have.
 class _MachineScannerCard extends ConsumerWidget {
   const _MachineScannerCard();
 
@@ -234,10 +235,7 @@ class _MachineScannerCard extends ConsumerWidget {
     return AppCard(
       variant: AppCardVariant.hero,
       padding: const EdgeInsets.all(16),
-      onTap: () {
-        if (!requireOnline(context, ref, feature: 'Machine Scanner')) return;
-        context.push('/machine-scanner');
-      },
+      onTap: () => context.push('/machine-scanner'),
       child: Row(
         children: [
           Container(
