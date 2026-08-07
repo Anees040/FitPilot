@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -32,6 +33,11 @@ import 'package:fitpilot/core/utils/food_image_resolver.dart';
 ///      are LOCAL-ONLY — bundled seed content and per-device plan progress,
 ///      never pushed to or pulled from Supabase. Seed-owned program rows are
 ///      cleared so the reworked importer reseeds them with the new shape.
+/// 21 — added machine_scans table for the gym machine scanner history.
+///      LOCAL-ONLY: cached AI results for offline re-reading, deliberately
+///      absent from the Supabase schema, so it must never appear in a sync push
+///      payload and a pull must never write it. Capped at 20 rows by
+///      MachineScanRepository (oldest deleted first).
 class AppDatabase {
   static Database? _db;
 
@@ -41,7 +47,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 20,
+      version: 21,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -53,7 +59,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 20,
+      version: 21,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -263,6 +269,19 @@ class AppDatabase {
       )
     ''');
 
+    // Gym machine scanner history.
+    // LOCAL-ONLY: deliberately absent from the Supabase schema. It caches AI
+    // results so a scan stays readable offline, and is capped at 20 rows by
+    // MachineScanRepository. Never enqueued to sync_queue.
+    batch.execute('''
+      CREATE TABLE machine_scans (
+        id TEXT PRIMARY KEY,
+        machine_name TEXT NOT NULL,
+        response_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
     // Indexes.
     batch.execute(
       'CREATE INDEX idx_food_logs_logged_at ON food_logs (logged_at)',
@@ -281,9 +300,21 @@ class AppDatabase {
     batch.execute(
       'CREATE INDEX idx_program_completions_program ON program_completions (program_id)',
     );
+    batch.execute(
+      'CREATE INDEX idx_machine_scans_created ON machine_scans (created_at)',
+    );
 
     await batch.commit(noResult: true);
   }
+
+  /// Test seam: runs the real migration chain so migration tests exercise the
+  /// production `_onUpgrade` instead of a hand-copied duplicate of it.
+  @visibleForTesting
+  static Future<void> runUpgradeForTest(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) => _onUpgrade(db, oldVersion, newVersion);
 
   static Future<void> _onUpgrade(
     Database db,
@@ -655,6 +686,31 @@ class AppDatabase {
           'active_program_week': null,
           'active_program_day': null,
         });
+      } catch (_) {}
+    }
+    if (oldVersion < 21) {
+      // Gym machine scanner history.
+      //
+      // LOCAL-ONLY: this table caches AI results so a scan stays readable with
+      // no network. It is deliberately absent from the Supabase schema, so it
+      // must never appear in a sync push payload and a pull must never write
+      // it. See sync_service.dart, which builds payloads from explicit column
+      // lists and pulls from a fixed table list that excludes it.
+      //
+      // Created additively — no existing table is touched, so no user data can
+      // be lost on this step.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS machine_scans (
+          id TEXT PRIMARY KEY,
+          machine_name TEXT NOT NULL,
+          response_json TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
+      try {
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_machine_scans_created ON machine_scans (created_at)',
+        );
       } catch (_) {}
     }
   }

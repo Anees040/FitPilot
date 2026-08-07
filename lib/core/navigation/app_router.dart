@@ -24,6 +24,10 @@ import 'package:fitpilot/features/exercises/presentation/workout_hub_screen.dart
 import 'package:fitpilot/features/exercises/presentation/all_categories_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/category_detail_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/muscle_detail_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/machine_scanner_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/machine_camera_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/machine_result_screen.dart';
+import 'package:fitpilot/domain/entities/machine_analysis.dart';
 import 'package:fitpilot/features/programs/presentation/programs_screen.dart';
 import 'package:fitpilot/features/programs/presentation/program_detail_screen.dart';
 import 'package:fitpilot/features/programs/presentation/session_detail_screen.dart';
@@ -139,6 +143,35 @@ final appRouter = GoRouter(
           },
         ),
       ]
+    ),
+    GoRoute(
+      path: '/machine-scanner',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const MachineScannerScreen(),
+      routes: [
+        GoRoute(
+          path: 'camera',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) => const MachineCameraScreen(),
+        ),
+        GoRoute(
+          path: 'result',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final analysis = extra?['analysis'];
+            // A direct hit on this route (deep link, hot restart) carries no
+            // analysis, so send the user to the scanner rather than crash.
+            if (analysis is! MachineAnalysis) {
+              return const MachineScannerScreen();
+            }
+            return MachineResultScreen(
+              analysis: analysis,
+              fromHistory: extra?['fromHistory'] == true,
+            );
+          },
+        ),
+      ],
     ),
     GoRoute(
       path: '/notifications',

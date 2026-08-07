@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/states.dart';
+import 'package:fitpilot/core/utils/require_online.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/exercise_provider.dart';
 
@@ -45,6 +47,10 @@ class WorkoutHubScreen extends ConsumerWidget {
             ),
             const SliverToBoxAdapter(
               child: _HeroSection(),
+            ),
+            const SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              sliver: SliverToBoxAdapter(child: _MachineScannerCard()),
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -204,6 +210,95 @@ class WorkoutHubScreen extends ConsumerWidget {
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Machine Scanner entry
+// ─────────────────────────────────────────────
+
+/// Prominent entry to the AI machine scanner.
+///
+/// The tap is gated on connectivity here so an offline user gets the standard
+/// explanation immediately, rather than discovering the problem a screen later.
+class _MachineScannerCard extends ConsumerWidget {
+  const _MachineScannerCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return AppCard(
+      variant: AppCardVariant.hero,
+      padding: const EdgeInsets.all(16),
+      onTap: () {
+        if (!requireOnline(context, ref, feature: 'Machine Scanner')) return;
+        context.push('/machine-scanner');
+      },
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(
+              Icons.camera_alt_rounded,
+              color: theme.colorScheme.primary,
+              size: 25,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Machine Scanner',
+                        style: theme.textTheme.h2,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: ext.energy.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'AI',
+                        style: theme.textTheme.overline.copyWith(
+                          color: ext.energy,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Point your camera at any gym machine to learn it',
+                  style: theme.textTheme.caption,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right_rounded, color: ext.textDisabled),
+        ],
       ),
     );
   }

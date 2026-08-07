@@ -132,6 +132,134 @@ app.post('/api/estimate-food', quota, async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Gym machine identification + coaching.
+// Same quota map and model as /api/estimate-food; counted only after success.
+// ---------------------------------------------------------------------------
+app.post('/api/analyze-machine', quota, async (req, res) => {
+  try {
+    if (!ai) {
+      return res.status(503).json({ error: 'Server is not configured (missing API key).' });
+    }
+    // The Flutter client sends `imageBase64`; `image` is accepted so this
+    // endpoint stays call-compatible with the food endpoint's payload shape.
+    const image = req.body.imageBase64 || req.body.image;
+    const { mimeType } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: 'Missing image data in request.' });
+    }
+
+    const stringArray = (description, min, max) => ({
+      type: Type.ARRAY,
+      description,
+      minItems: min,
+      maxItems: max,
+      items: { type: Type.STRING },
+    });
+
+    const responseSchema = {
+      type: Type.OBJECT,
+      properties: {
+        isGymMachine: {
+          type: Type.BOOLEAN,
+          description: 'True only if the photo shows gym or fitness equipment.',
+        },
+        machineName: {
+          type: Type.STRING,
+          description: 'Common name of the machine, e.g. "Lat Pulldown Machine".',
+        },
+        confidence: {
+          type: Type.NUMBER,
+          description: 'How certain the identification is, from 0 to 1.',
+        },
+        primaryMuscles: stringArray('Main muscles the machine trains.', 1, 3),
+        secondaryMuscles: stringArray('Supporting muscles worked.', 0, 3),
+        howToUse: stringArray(
+          'Five to seven short beginner steps, in order, from setup to finish. No step numbers in the text.',
+          5,
+          7
+        ),
+        commonMistakes: stringArray('Exactly three common beginner mistakes.', 3, 3),
+        safetyTips: stringArray('Exactly two safety tips.', 2, 2),
+        suggestedExerciseKeywords: stringArray(
+          'Three to six generic exercise names for this machine, e.g. "lat pulldown", "chest press".',
+          3,
+          6
+        ),
+      },
+      required: ['isGymMachine', 'machineName', 'confidence'],
+    };
+
+    const prompt =
+      'Identify the gym or fitness machine in this photo and teach a complete beginner how to use it safely. ' +
+      'Write for someone who has never touched this machine: plain language, no jargon, one action per step. ' +
+      'Steps must run in order from setup (seat, pin, grip) through the working reps to finishing safely. ' +
+      'Use anatomical muscle names such as Chest, Back, Lats, Shoulders, Biceps, Triceps, Core, Quads, Hamstrings, Glutes, Legs. ' +
+      'If the photo does NOT show gym or fitness equipment, set isGymMachine=false, machineName to a short description ' +
+      'of what is actually shown, confidence to your certainty about that, and leave every list empty.';
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: mimeType || 'image/jpeg', data: image } },
+          ],
+        },
+      ],
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema,
+        temperature: 0.2,
+      },
+    });
+
+    if (!response.text) {
+      return res.status(502).json({ error: 'Model did not return a result.' });
+    }
+
+    let responseText = response.text;
+    if (responseText.startsWith('```')) {
+      responseText = responseText.replace(/^```(?:json)?\n?/g, '').replace(/\n?```$/g, '');
+    }
+
+    const data = JSON.parse(responseText);
+
+    // Normalise so the client never has to defend against a missing list.
+    const asList = (value) =>
+      Array.isArray(value) ? value.filter((v) => typeof v === 'string' && v.trim()) : [];
+    data.isGymMachine = data.isGymMachine === true;
+    data.machineName = typeof data.machineName === 'string' ? data.machineName : '';
+    data.confidence =
+      typeof data.confidence === 'number' ? Math.min(1, Math.max(0, data.confidence)) : 0;
+    data.primaryMuscles = asList(data.primaryMuscles);
+    data.secondaryMuscles = asList(data.secondaryMuscles);
+    data.howToUse = asList(data.howToUse);
+    data.commonMistakes = asList(data.commonMistakes);
+    data.safetyTips = asList(data.safetyTips);
+    data.suggestedExerciseKeywords = asList(data.suggestedExerciseKeywords);
+
+    // A "not a machine" answer is still a successful call, so it counts against
+    // the quota exactly like a hit — the model work was done either way.
+    const entry = usage.get(req.deviceId);
+    if (!entry || entry.day !== req.today) {
+      usage.set(req.deviceId, { day: req.today, count: 1 });
+    } else {
+      entry.count += 1;
+    }
+
+    return res.json(data);
+  } catch (error) {
+    console.error('Error analyzing machine:', error && error.message ? error.message : error);
+    return res.status(500).json({
+      error: 'Failed to analyze the machine.',
+      details: error && error.message ? error.message : String(error),
+    });
+  }
+});
+
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/domain/engines/muscle_synonyms.dart';
 import 'package:fitpilot/domain/entities/exercise.dart';
 
 /// Currently selected category filter for the exercise library.
@@ -36,35 +37,18 @@ final exerciseListProvider = FutureProvider.autoDispose<List<Exercise>>((ref) as
 final hubMuscleExercisesProvider = FutureProvider.autoDispose.family<List<Exercise>, String>((ref, muscleId) async {
   final repo = await ref.watch(exerciseRepositoryProvider.future);
   final all = await repo.all();
-  
-  final target = muscleId.toLowerCase();
-  
-  final synonyms = <String, Set<String>>{
-    'chest': {'chest'},
-    'back': {'back', 'lower back', 'traps'},
-    'shoulders': {'shoulders'},
-    'arms': {'biceps', 'triceps', 'grip'},
-    'core': {'core'},
-    'legs': {'legs', 'quads', 'hams', 'glutes', 'hip flexors'},
-  };
-  
-  final targetSet = synonyms[target] ?? {target};
-  
-  return all.where((e) {
-    final isFullBody = e.primaryMuscles.any((m) => m.toLowerCase() == 'full body');
-    if (isFullBody && ['chest', 'back', 'shoulders', 'core', 'legs'].contains(target)) {
-      return true;
-    }
-    return e.primaryMuscles.any((m) => targetSet.contains(m.toLowerCase()));
-  }).toList();
+
+  return all
+      .where((e) => MuscleSynonyms.matches(e.primaryMuscles, muscleId))
+      .toList();
 });
 
 final hubCategoryExercisesProvider = FutureProvider.autoDispose.family<List<Exercise>, String>((ref, categoryId) async {
   final repo = await ref.watch(exerciseRepositoryProvider.future);
   final all = await repo.all();
-  
+
   final target = categoryId.toLowerCase();
-  
+
   if (target == 'upper_body') {
     final upperMuscles = {'chest', 'back', 'lower back', 'traps', 'shoulders', 'biceps', 'triceps', 'grip', 'core'};
     return all.where((e) {
@@ -80,23 +64,9 @@ final hubCategoryExercisesProvider = FutureProvider.autoDispose.family<List<Exer
       return e.primaryMuscles.any((m) => lowerMuscles.contains(m.toLowerCase()));
     }).toList();
   }
-  
-  // For any other category ID, just use the muscle logic mapping
-  final synonyms = <String, Set<String>>{
-    'chest': {'chest'},
-    'back': {'back', 'lower back', 'traps'},
-    'shoulders': {'shoulders'},
-    'arms': {'biceps', 'triceps', 'grip'},
-    'core': {'core'},
-    'legs': {'legs', 'quads', 'hams', 'glutes', 'hip flexors'},
-  };
-  
-  final targetSet = synonyms[target] ?? {target};
-  return all.where((e) {
-    final isFullBody = e.primaryMuscles.any((m) => m.toLowerCase() == 'full body');
-    if (isFullBody && ['chest', 'back', 'shoulders', 'core', 'legs'].contains(target)) {
-      return true;
-    }
-    return e.primaryMuscles.any((m) => targetSet.contains(m.toLowerCase()));
-  }).toList();
+
+  // Any other category id follows the same muscle-group rules as the tiles.
+  return all
+      .where((e) => MuscleSynonyms.matches(e.primaryMuscles, target))
+      .toList();
 });

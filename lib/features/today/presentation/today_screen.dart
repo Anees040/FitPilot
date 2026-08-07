@@ -9,7 +9,6 @@ import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
 
 import 'package:fitpilot/core/ui/states.dart';
-import 'package:fitpilot/core/ui/app_snackbar.dart';
 
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/staggered_list.dart';
@@ -162,12 +161,7 @@ class TodayScreen extends ConsumerWidget {
                                 title: 'Machine\nScanner',
                                 imagePath:
                                     'assets/illustrations/today_machine_scanner.png',
-                                onTap: () {
-                                  AppSnackbar.success(
-                                    context,
-                                    'This feature is coming soon!',
-                                  );
-                                },
+                                onTap: () => context.push('/machine-scanner'),
                               ),
                             ),
                           ],
