@@ -55,7 +55,7 @@ class WorkoutHubScreen extends ConsumerWidget {
                     subtitle: 'Structured multi-week plans with rest days',
                     color: theme.colorScheme.surfaceContainerHighest,
                     imagePath: 'assets/illustrations/athletic_hero.png',
-                    onTap: () => context.push('/programs'),
+                    onTap: () => context.go('/programs'),
                   ),
                   const SizedBox(height: 16),
                   Row(

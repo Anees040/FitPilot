@@ -13,6 +13,11 @@ import 'package:fitpilot/domain/entities/day_status.dart';
 
 enum BurnPlanFrame { burnToday, yesterdayDebt, allClear, cleanDay }
 
+/// Reference surplus used to size "extra credit" suggestions once the day's
+/// real surplus is already cleared, so each activity still shows a sensible
+/// short session instead of a leftover debt figure.
+const int kExtraCreditReferenceKcal = 100;
+
 class BurnPlanState {
   final BurnPlanFrame frame;
   final int kcalToBurnOrEat;
@@ -160,11 +165,21 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
 
     // Is there a surplus today or selected meal or logged meals?
     if (todayState.logs.isNotEmpty || todayStatus.toBurn > 0 || selectedMealId != null) {
-      if (selectedMealId == null && todayStatus.toBurn <= 0) {
+      // Nothing left to burn — regardless of any pinned meal. Gating on the
+      // day's real surplus is what stops the same activity being banked over
+      // and over once the debt is already paid; anything further is optional
+      // extra credit, so we still offer a short suggestion for each activity.
+      if (todayStatus.toBurn <= 0) {
         return BurnPlanState(
           frame: BurnPlanFrame.allClear,
           kcalToBurnOrEat: 0,
-          options: const [],
+          options: const BurnPlanner().planFor(
+            kcalOver: kExtraCreditReferenceKcal,
+            weightKg: profile.weightKg,
+            candidates: candidates,
+            categoryPref: activeCategoryPref,
+            pacePref: activePacePref,
+          ),
           targetDate: today,
           burnedToday: burnedToday,
           todayBurns: todayBurnsList,
@@ -177,13 +192,15 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
       if (selectedMealId != null) {
         final meal = todayState.logs.where((l) => l.id == selectedMealId).firstOrNull;
         if (meal != null) {
-          calcTarget = meal.kcal.midpoint;
+          // Never plan for more than the day actually owes, otherwise burning
+          // off a single big meal could overshoot the whole day's surplus.
+          calcTarget = meal.kcal.midpoint.clamp(0, todayStatus.toBurn);
         }
       }
 
       if (calcTarget <= 0) {
-        calcTarget = todayStatus.net.midpoint > 0 
-            ? todayStatus.net.midpoint 
+        calcTarget = todayStatus.net.midpoint > 0
+            ? todayStatus.net.midpoint
             : (todayState.logs.firstOrNull?.kcal.midpoint ?? 300);
       }
 
@@ -218,10 +235,25 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     );
   }
 
-  Future<void> markDone(BurnOption option) async {
+  /// Records [option] as completed for the plan's target date.
+  ///
+  /// Logging the suggested duration as-is. Prefer [logBurn] when the user
+  /// picked their own duration.
+  Future<void> markDone(BurnOption option) => logBurn(option);
+
+  /// Records a burn for the duration the user actually did.
+  ///
+  /// [minutes] and [kcal] override the option's suggested figures, so doing
+  /// half the suggested session only clears half the surplus. Omitting both
+  /// records the option exactly as planned.
+  Future<void> logBurn(
+    BurnOption option, {
+    int? minutes,
+    int? kcal,
+  }) async {
     final stateValue = state.value;
     if (stateValue == null) return;
-    
+
     if (stateValue.busyOptionIds.contains(option.activity)) {
       return;
     }
@@ -231,8 +263,27 @@ class BurnPlanNotifier extends AsyncNotifier<BurnPlanState> {
     ));
 
     try {
+      final loggedMinutes = minutes ?? option.minutes;
+      final loggedKcal = kcal ?? option.kcal;
+
+      // A user-chosen duration is a single continuous effort, so the
+      // multi-session split of the suggestion no longer applies.
+      final isEdited = minutes != null && minutes != option.minutes;
+      final record = BurnOption(
+        activity: option.activity,
+        minutes: loggedMinutes,
+        kcal: loggedKcal,
+        steps: isEdited ? null : option.steps,
+        exerciseId: option.exerciseId,
+        difficulty: option.difficulty,
+        mediaAsset: option.mediaAsset,
+        sessions: isEdited ? 1 : option.sessions,
+        minutesPerSession: isEdited ? loggedMinutes : option.minutesPerSession,
+        met: option.met,
+      );
+
       final burnRepo = await ref.read(burnRepositoryProvider.future);
-      await burnRepo.add(option, stateValue.targetDate, DateTime.now());
+      await burnRepo.add(record, stateValue.targetDate, DateTime.now());
 
       ref.invalidateSelf();
       ref.invalidate(todayProvider);

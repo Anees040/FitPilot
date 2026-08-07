@@ -29,6 +29,7 @@ import 'package:fitpilot/features/programs/presentation/program_detail_screen.da
 import 'package:fitpilot/features/programs/presentation/session_detail_screen.dart';
 import 'package:fitpilot/features/programs/presentation/program_complete_screen.dart';
 import 'package:fitpilot/features/today/presentation/notification_screen.dart';
+import 'package:fitpilot/features/today/presentation/all_meals_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/offline_banner.dart';
 
@@ -39,8 +40,8 @@ final shellNavigatorPlanKey = GlobalKey<NavigatorState>(debugLabel: 'plan');
 final shellNavigatorProgressKey = GlobalKey<NavigatorState>(
   debugLabel: 'progress',
 );
-final shellNavigatorProfileKey = GlobalKey<NavigatorState>(
-  debugLabel: 'profile',
+final shellNavigatorProgramsKey = GlobalKey<NavigatorState>(
+  debugLabel: 'programs',
 );
 
 final appRouter = GoRouter(
@@ -144,39 +145,17 @@ final appRouter = GoRouter(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const NotificationScreen(),
     ),
-    // Programs are addressed by id rather than passed as `extra`, so a deep
-    // link (and a hot reload mid-session) resolves without a prior push.
+    // Profile moved off the bottom nav: it is a settings destination reached
+    // from the Today avatar, so Programs can take the fifth tab.
     GoRoute(
-      path: '/programs',
+      path: '/profile',
       parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) => const ProgramsScreen(),
-      routes: [
-        GoRoute(
-          path: 'complete/:id',
-          builder: (context, state) => ProgramCompleteScreen(
-            programId: state.pathParameters['id']!,
-            sessions: int.tryParse(
-                  state.uri.queryParameters['sessions'] ?? '',
-                ) ??
-                0,
-            kcal: int.tryParse(state.uri.queryParameters['kcal'] ?? '') ?? 0,
-          ),
-        ),
-        GoRoute(
-          path: ':id',
-          builder: (context, state) =>
-              ProgramDetailScreen(programId: state.pathParameters['id']!),
-          routes: [
-            GoRoute(
-              path: 'session/:sessionId',
-              builder: (context, state) => SessionDetailScreen(
-                programId: state.pathParameters['id']!,
-                sessionId: state.pathParameters['sessionId']!,
-              ),
-            ),
-          ],
-        ),
-      ],
+      builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
+      path: '/meals',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const AllMealsScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
@@ -221,12 +200,47 @@ final appRouter = GoRouter(
             ),
           ],
         ),
+        // Programs are addressed by id rather than passed as `extra`, so a deep
+        // link (and a hot reload mid-session) resolves without a prior push.
+        // The list is a tab; its details push full-screen over the nav bar.
         StatefulShellBranch(
-          navigatorKey: shellNavigatorProfileKey,
+          navigatorKey: shellNavigatorProgramsKey,
           routes: [
             GoRoute(
-              path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
+              path: '/programs',
+              builder: (context, state) => const ProgramsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'complete/:id',
+                  parentNavigatorKey: rootNavigatorKey,
+                  builder: (context, state) => ProgramCompleteScreen(
+                    programId: state.pathParameters['id']!,
+                    sessions: int.tryParse(
+                          state.uri.queryParameters['sessions'] ?? '',
+                        ) ??
+                        0,
+                    kcal:
+                        int.tryParse(state.uri.queryParameters['kcal'] ?? '') ??
+                        0,
+                  ),
+                ),
+                GoRoute(
+                  path: ':id',
+                  parentNavigatorKey: rootNavigatorKey,
+                  builder: (context, state) =>
+                      ProgramDetailScreen(programId: state.pathParameters['id']!),
+                  routes: [
+                    GoRoute(
+                      path: 'session/:sessionId',
+                      parentNavigatorKey: rootNavigatorKey,
+                      builder: (context, state) => SessionDetailScreen(
+                        programId: state.pathParameters['id']!,
+                        sessionId: state.pathParameters['sessionId']!,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
@@ -321,9 +335,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
                 label: 'Progress',
               ),
               NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: _AnimatedIconWrapper(child: Icon(Icons.person)),
-                label: 'Profile',
+                icon: Icon(Icons.fitness_center_outlined),
+                selectedIcon: _AnimatedIconWrapper(child: Icon(Icons.fitness_center)),
+                label: 'Programs',
               ),
             ],
           ),

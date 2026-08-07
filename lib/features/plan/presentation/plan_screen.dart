@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
@@ -11,10 +10,11 @@ import 'package:fitpilot/domain/entities/burn_option.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
-import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/core/ui/fade_scroll_row.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
+import 'package:fitpilot/core/ui/progress_ring.dart';
 import 'package:fitpilot/features/programs/presentation/widgets/training_program_card.dart';
+import 'package:fitpilot/features/plan/presentation/widgets/burn_log_sheet.dart';
 import '../../../core/ui/exercise_media.dart';
 
 
@@ -57,21 +57,22 @@ class PlanScreen extends ConsumerWidget {
       );
     }
 
-    if (state.frame == BurnPlanFrame.allClear && state.options.isEmpty) {
+    if (state.frame == BurnPlanFrame.allClear) {
       final theme = Theme.of(context);
       final ext = theme.extension<AppColors>()!;
       return ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
           AppCard(
+            color: ext.success.withValues(alpha: 0.1),
             child: Column(
               children: [
-                Icon(Icons.local_fire_department, size: 64, color: ext.warning),
+                Icon(Icons.check_circle, size: 64, color: ext.success),
                 const SizedBox(height: 16),
-                Text('All burned off!', style: theme.textTheme.h1),
+                Text('Surplus cleared!', style: theme.textTheme.h1),
                 const SizedBox(height: 8),
                 Text(
-                  "You've cleared today's surplus - ${state.burnedToday} kcal burned",
+                  '${state.burnedToday} kcal burned today.\nYour streak is safe 🔥',
                   style: theme.textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -83,11 +84,27 @@ class PlanScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          const TrainingProgramCard(),
           if (state.todayBurns.isNotEmpty) ...[
             const SizedBox(height: 24),
             _buildDoneTodaySection(context, state),
+          ],
+          const SizedBox(height: 24),
+          const TrainingProgramCard(),
+          if (state.options.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            const _SectionHeader(
+              icon: Icons.auto_awesome,
+              label: 'EXTRA CREDIT',
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Nothing left to burn — anything from here is a bonus.',
+              style: theme.textTheme.caption,
+            ),
+            const SizedBox(height: 12),
+            ...state.options.map(
+              (option) => _BurnOptionCard(option: option, isExtraCredit: true),
+            ),
           ],
         ],
       );
@@ -118,6 +135,8 @@ class PlanScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
+        _BurnGoalHero(state: state, isYesterday: isYesterday),
+        const SizedBox(height: 20),
         const TrainingProgramCard(),
         const SizedBox(height: 20),
         if (!isYesterday) _buildTargetSelector(context, ref, state),
@@ -147,7 +166,10 @@ class PlanScreen extends ConsumerWidget {
             ),
           ),
         const SizedBox(height: 24),
-        Text('AVAILABLE ACTIVITIES', style: theme.textTheme.overline),
+        const _SectionHeader(
+          icon: Icons.fitness_center,
+          label: 'AVAILABLE ACTIVITIES',
+        ),
         const SizedBox(height: 12),
         _buildCategoryFilters(context, ref),
         if (state.kcalToBurnOrEat > 2000)
@@ -162,10 +184,13 @@ class PlanScreen extends ConsumerWidget {
             ),
           ),
         const SizedBox(height: 16),
-        Text('Pick ONE — each option clears your surplus on its own.', style: theme.textTheme.caption),
+        Text(
+          'Pick one and log the time you actually did — partial sessions count too.',
+          style: theme.textTheme.caption,
+        ),
         const SizedBox(height: 8),
         ...state.options.map(
-          (option) => _ExpandableOptionCard(option: option),
+          (option) => _BurnOptionCard(option: option),
         ),
         if (state.todayBurns.isNotEmpty) ...[
           const SizedBox(height: 24),
@@ -178,11 +203,15 @@ class PlanScreen extends ConsumerWidget {
   Widget _buildDoneTodaySection(BuildContext context, BurnPlanState state) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('DONE TODAY', style: theme.textTheme.overline),
+        _SectionHeader(
+          icon: Icons.check_circle_outline,
+          label: 'DONE TODAY',
+          color: ext.success,
+        ),
         const SizedBox(height: 12),
         AppCard(
           padding: EdgeInsets.zero,
@@ -190,7 +219,20 @@ class PlanScreen extends ConsumerWidget {
             children: [
               ...state.todayBurns.take(5).map((burn) {
                 return ListTile(
+                  leading: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: ext.success.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.check, size: 18, color: ext.success),
+                  ),
                   title: Text(burn.activity, style: theme.textTheme.bodyStrong),
+                  subtitle: Text(
+                    '${burn.minutes} min',
+                    style: theme.textTheme.caption,
+                  ),
                   trailing: Text(
                     '${burn.kcal} kcal',
                     style: theme.textTheme.bodyMedium!.copyWith(color: ext.success),
@@ -231,7 +273,7 @@ class PlanScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('TARGET', style: theme.textTheme.overline),
+          const _SectionHeader(icon: Icons.my_location, label: 'TARGET'),
           const SizedBox(height: 8),
           DropdownButtonFormField<String?>(
             initialValue: validSelectedMealId,
@@ -356,139 +398,276 @@ class PlanScreen extends ConsumerWidget {
   }
 }
 
-class _ExpandableOptionCard extends ConsumerStatefulWidget {
-  final BurnOption option;
+/// Headline card for the surplus frames.
+///
+/// The kcal figure used to live only inside the target dropdown's label, which
+/// buried the one number the screen exists to communicate. This puts it up
+/// front with a ring so progress is legible at a glance.
+class _BurnGoalHero extends StatelessWidget {
+  final BurnPlanState state;
+  final bool isYesterday;
 
-  const _ExpandableOptionCard({required this.option});
-
-  @override
-  ConsumerState<_ExpandableOptionCard> createState() => _ExpandableOptionCardState();
-}
-
-class _ExpandableOptionCardState extends ConsumerState<_ExpandableOptionCard> {
-  bool _isExpanded = false;
-
-  void _toggleExpand() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
-  }
+  const _BurnGoalHero({required this.state, required this.isYesterday});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
-    final option = widget.option;
-    final isWalking = option.activity.contains('Walking');
-    
-    String subtitle;
-    if (option.sessions > 1) {
-      subtitle = '${option.sessions} × ${option.minutesPerSession} min over ${option.sessions} days';
-    } else {
-      subtitle = isWalking && option.steps != null
-          ? '${option.minutes} min • ~${option.steps} steps'
-          : '${option.minutes} min';
-    }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: AppCard(
-        onTap: _toggleExpand,
-        child: Column(
-          children: [
-            Row(
-              children: [
-                if (option.mediaAsset != null)
-                  Container(
-                    width: 56,
-                    height: 56,
-                    margin: const EdgeInsets.only(right: 16),
-                    child: ExerciseMedia.asset(
-                      mediaAsset: option.mediaAsset!,
-                      borderRadius: 12,
+    final toGo = state.kcalToBurnOrEat;
+    final burned = state.burnedToday;
+    final goal = burned + toGo;
+    final progress = goal > 0 ? (burned / goal).clamp(0.0, 1.0) : 0.0;
+    final accent = isYesterday ? ext.warning : theme.colorScheme.primary;
+
+    return AppCard(
+      child: Row(
+        children: [
+          SizedBox(
+            width: 82,
+            height: 82,
+            child: ProgressRing(
+              progress: progress,
+              strokeWidth: 7,
+              color: accent,
+              backgroundColor: ext.hairline,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.local_fire_department,
+                      size: 18,
+                      color: accent,
                     ),
-                  ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              option.activity,
-                              style: theme.textTheme.bodyStrong,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (option.difficulty != null) ...[
-                            const SizedBox(width: 8),
-                            _buildDifficultyDots(option.difficulty!, theme, ext),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
+                    Text(
+                      '${(progress * 100).round()}%',
+                      style: theme.textTheme.bodyStrong.copyWith(color: accent),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isYesterday ? 'LEFT FROM YESTERDAY' : 'LEFT TO BURN',
+                  style: theme.textTheme.overline,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '$toGo',
+                      style: theme.textTheme.h1.copyWith(color: accent),
+                    ),
+                    const SizedBox(width: 4),
+                    Text('kcal', style: theme.textTheme.caption),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.check_circle, size: 14, color: ext.success),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        '$burned of $goal kcal done',
                         style: theme.textTheme.caption,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                  color: ext.textDisabled,
+                    ),
+                  ],
                 ),
               ],
             ),
-            if (_isExpanded) ...[
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 16),
-              Row(
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Overline section label with a leading icon, so the long scroll reads as
+/// distinct blocks instead of a wall of uppercase text.
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  const _SectionHeader({required this.icon, required this.label, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tint = color ?? theme.colorScheme.onSurfaceVariant;
+
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: tint),
+        const SizedBox(width: 6),
+        Text(label, style: theme.textTheme.overline.copyWith(color: tint)),
+      ],
+    );
+  }
+}
+
+/// Small icon + label chip used on the activity cards.
+class _InfoPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color background;
+
+  const _InfoPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.background,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.textTheme.caption.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BurnOptionCard extends ConsumerWidget {
+  final BurnOption option;
+  final bool isExtraCredit;
+
+  const _BurnOptionCard({required this.option, this.isExtraCredit = false});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    final isWalking = option.activity.contains('Walking');
+    final isBusy = ref.watch(burnPlanProvider).valueOrNull?.busyOptionIds
+            .contains(option.activity) ??
+        false;
+
+    // Extra-credit options carry a nominal reference kcal, so surfacing it
+    // would misrepresent what gets logged — the sheet computes the real value.
+    final pills = <Widget>[
+      if (isExtraCredit)
+        _InfoPill(
+          icon: Icons.add_circle_outline,
+          label: 'Log any duration',
+          color: theme.colorScheme.primary,
+          background: ext.accentSoft,
+        )
+      else ...[
+        _InfoPill(
+          icon: Icons.schedule,
+          label: option.sessions > 1
+              ? '${option.sessions} × ${option.minutesPerSession} min'
+              : '${option.minutes} min',
+          color: theme.colorScheme.onSurfaceVariant,
+          background: ext.surfaceRaised,
+        ),
+        _InfoPill(
+          icon: Icons.local_fire_department,
+          label: '${option.kcal} kcal',
+          color: ext.energy,
+          background: ext.energySoft,
+        ),
+        if (isWalking && option.steps != null)
+          _InfoPill(
+            icon: Icons.directions_walk,
+            label: '~${option.steps} steps',
+            color: theme.colorScheme.onSurfaceVariant,
+            background: ext.surfaceRaised,
+          ),
+      ],
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: AppCard(
+        onTap: isBusy
+            ? null
+            : () => BurnLogSheet.show(
+                  context,
+                  option: option,
+                  isExtraCredit: isExtraCredit,
+                ),
+        child: Row(
+          children: [
+            if (option.mediaAsset != null)
+              Container(
+                width: 56,
+                height: 56,
+                margin: const EdgeInsets.only(right: 16),
+                child: ExerciseMedia.asset(
+                  mediaAsset: option.mediaAsset!,
+                  borderRadius: 12,
+                ),
+              ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: SecondaryButton(
-                      label: 'See details',
-                      onPressed: option.exerciseId != null
-                          ? () => context.push('/exercises/${option.exerciseId}')
-                          : null,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          option.activity,
+                          style: theme.textTheme.bodyStrong,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (option.difficulty != null) ...[
+                        const SizedBox(width: 8),
+                        _buildDifficultyDots(option.difficulty!, theme, ext),
+                      ],
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Consumer(
-                      builder: (context, ref, child) {
-                        final isBusy = ref.watch(burnPlanProvider).valueOrNull?.busyOptionIds.contains(option.activity) ?? false;
-                        
-                        return PrimaryButton(
-                          label: isBusy ? 'Saving...' : 'Mark Done',
-                          onPressed: isBusy
-                              ? null
-                              : () async {
-                                  HapticFeedback.heavyImpact();
-                                  await ref.read(burnPlanProvider.notifier).markDone(option);
-                                  if (!context.mounted) return;
-                                  
-                                  // Read the new state directly without waiting for a re-build
-                                  final newState = ref.read(burnPlanProvider).valueOrNull;
-                                  if (newState != null && newState.kcalToBurnOrEat > 0) {
-                                    AppSnackbar.success(
-                                      context,
-                                      '+${option.kcal} kcal burned - ${newState.kcalToBurnOrEat} to go',
-                                    );
-                                  }
-                                },
-                        );
-                      },
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 6, runSpacing: 6, children: pills),
+                  if (option.sessions > 1) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Spread over ${option.sessions} days',
+                      style: theme.textTheme.caption,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                  ],
                 ],
               ),
-            ],
+            ),
+            Icon(Icons.chevron_right, color: ext.textDisabled),
           ],
         ),
       ),

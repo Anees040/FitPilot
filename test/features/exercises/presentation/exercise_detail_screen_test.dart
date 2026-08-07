@@ -83,4 +83,7 @@ class _FakeBurnPlanNotifier extends AsyncNotifier<BurnPlanState> implements Burn
 
   @override
   Future<void> markDone(option) async {}
+
+  @override
+  Future<void> logBurn(option, {int? minutes, int? kcal}) async {}
 }

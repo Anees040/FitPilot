@@ -139,6 +139,7 @@ class BurnPlanner {
       mediaAsset: exercise.mediaAsset,
       sessions: sessions,
       minutesPerSession: minutesPerSession,
+      met: exercise.met,
     );
   }
 }

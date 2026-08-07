@@ -3,24 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/domain/entities/day_status.dart';
+import 'package:fitpilot/domain/entities/profile.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
 
-import 'package:fitpilot/features/log/presentation/widgets/kcal_range_text.dart';
-import 'package:fitpilot/domain/entities/food_log.dart';
 import 'package:fitpilot/core/ui/states.dart';
-import 'package:fitpilot/core/ui/app_card.dart';
-import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/staggered_list.dart';
-import 'package:intl/intl.dart';
 import 'package:fitpilot/core/ui/semicircle_progress.dart';
 import 'package:fitpilot/core/ui/profile_avatar.dart';
-import 'package:fitpilot/core/ui/food_image.dart';
 import 'package:fitpilot/features/programs/presentation/widgets/training_program_card.dart';
+import 'package:fitpilot/features/today/presentation/widgets/log_list_item.dart';
+
+/// How many meals the Today summary shows before deferring to "View all".
+///
+/// Deliberately one: Today's job is to surface the ring and the main action
+/// cards without a scroll, so the meal list stays a single-row teaser and the
+/// full list lives on its own screen.
+const int kTodayMealPreviewCount = 1;
 
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
@@ -39,7 +42,16 @@ class TodayScreen extends ConsumerWidget {
             final profile = profileAsync.valueOrNull;
             final weightKg = profile?.weightKg ?? 70.0;
             final name = profile?.name;
-            
+
+            final logs = state.logs;
+            final previewCount = logs.length < kTodayMealPreviewCount
+                ? logs.length
+                : kTodayMealPreviewCount;
+            // The full list is always one tap away once anything is logged,
+            // since the preview only ever shows the most recent meal.
+            final showViewAll = logs.isNotEmpty;
+            final hiddenMealCount = logs.length - previewCount;
+
             return CustomScrollView(
               slivers: [
                 SliverPadding(
@@ -49,9 +61,67 @@ class TodayScreen extends ConsumerWidget {
                       status: state.dayStatus,
                       userName: name,
                       avatarUrl: profile?.avatarUrl,
+                      profile: profile,
                     ),
                   ),
                 ),
+
+                // Meals sit directly under the ring: it is the list users
+                // check most, so it earns the space above the fold.
+                if (logs.isNotEmpty) ...[
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Today\'s meals',
+                              style: theme.textTheme.h2,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (showViewAll)
+                            _ViewAllButton(
+                              count: logs.length,
+                              onTap: () => context.push('/meals'),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: StaggeredEntrance(
+                            index: index,
+                            child: LogListItem(
+                              log: logs[index],
+                              weightKg: weightKg,
+                            ),
+                          ),
+                        ),
+                        childCount: previewCount,
+                      ),
+                    ),
+                  ),
+                  if (hiddenMealCount > 0)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                      sliver: SliverToBoxAdapter(
+                        child: Text(
+                          '+ $hiddenMealCount more logged today',
+                          style: theme.textTheme.caption,
+                        ),
+                      ),
+                    ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                ],
 
                 // Only renders once enrolled — the Planner tile below is the
                 // discovery path, so an extra promo here would be noise.
@@ -105,43 +175,17 @@ class TodayScreen extends ConsumerWidget {
                         const SizedBox(height: 16),
                         _ImageCard(
                           title: 'Training\nPrograms',
-                          imagePath: 'assets/illustrations/today_programs.png',
-                          fallbackImagePath:
-                              'assets/illustrations/athletic_hero.png',
-                          onTap: () => context.push('/programs'),
+                          imagePath: 'assets/illustrations/athletic_hero.png',
+                          // Programs is a tab now: switch to it rather than
+                          // pushing a second copy over the shell.
+                          onTap: () => context.go('/programs'),
                         ),
                       ],
                     ),
                   ),
                 ),
 
-                if (state.logs.isNotEmpty) ...[
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    sliver: SliverToBoxAdapter(
-                      child: Text('Today\'s meals', style: theme.textTheme.h2),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: StaggeredEntrance(
-                            index: index,
-                            child: _LogListItem(
-                              log: state.logs[index],
-                              weightKg: weightKg,
-                            ),
-                          ),
-                        ),
-                        childCount: state.logs.length,
-                      ),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                ],
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             );
           },
@@ -159,24 +203,74 @@ class TodayScreen extends ConsumerWidget {
   }
 }
 
+/// Pill affordance that opens the full meal list.
+class _ViewAllButton extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+
+  const _ViewAllButton({required this.count, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return Material(
+      color: ext.accentSoft,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'View all ($count)',
+                style: theme.textTheme.caption.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _HeroSection extends ConsumerWidget {
   final DayStatus status;
   final String? userName;
   final String? avatarUrl;
+  final Profile? profile;
 
-  const _HeroSection({required this.status, this.userName, this.avatarUrl});
+  const _HeroSection({
+    required this.status,
+    this.userName,
+    this.avatarUrl,
+    this.profile,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
-    
+
     final bool isAllClear = status.state == DayState.cleared;
     final bool isCleanDay = status.state == DayState.noData;
-    
-    // Using a target of 2000 for visual progress if we don't have a specific target
-    // We can also just use the upper bound of the wiggle room or target.
-    final targetKcal = 2000.0;
+
+    // Track the user's own daily limit (target + wiggle room) so the ring
+    // means something; 2000 is only the fallback before a profile loads.
+    final targetKcal = (profile?.effectiveDailyLimit ?? 2000).toDouble();
     double progress = (status.total.min / targetKcal).clamp(0.0, 1.0);
     final ringColor = ext.energy;
 
@@ -251,8 +345,7 @@ class _HeroSection extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-            const SizedBox(height: 32),
+          const SizedBox(height: 24),
             if (isCleanDay)
               Text(
                 'Ate something heavy? Log it to start a burn plan.',
@@ -299,17 +392,12 @@ class _HeroSection extends ConsumerWidget {
 class _ImageCard extends StatelessWidget {
   final String title;
   final String imagePath;
-
-  /// Used when [imagePath] is not bundled yet, so a card can ship before its
-  /// dedicated artwork does.
-  final String? fallbackImagePath;
   final VoidCallback onTap;
 
   const _ImageCard({
     required this.title,
     required this.imagePath,
     required this.onTap,
-    this.fallbackImagePath,
   });
 
   @override
@@ -335,19 +423,9 @@ class _ImageCard extends StatelessWidget {
             Image.asset(
               imagePath,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  fallbackImagePath == null
-                      ? Container(
-                          color: Theme.of(context).colorScheme.primary,
-                        )
-                      : Image.asset(
-                          fallbackImagePath!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             // Gradient overlay for text readability
             Container(
@@ -429,268 +507,3 @@ class _StatPill extends StatelessWidget {
     );
   }
 }
-
-class _LogListItem extends ConsumerWidget {
-  final FoodLog log;
-  final double weightKg;
-
-  const _LogListItem({required this.log, required this.weightKg});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final ext = theme.extension<AppColors>()!;
-    
-    // Estimate min brisk walk (MET 4.3): min = Kcal * 60 / (4.3 * weight)
-    final double met = 4.3;
-    final int minWalk = (log.kcal.midpoint * 60 / (met * weightKg)).clamp(1, 999).round();
-
-    return Dismissible(
-      key: ValueKey(log.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        decoration: BoxDecoration(
-          color: ext.error,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24.0),
-        child: Icon(Icons.delete, color: theme.colorScheme.onPrimary),
-      ),
-      onDismissed: (_) {
-        final container = ProviderScope.containerOf(context);
-        final notifier = ref.read(todayProvider.notifier);
-        notifier.deleteLog(log.id);
-        AppSnackbar.success(
-          context,
-          'Meal deleted',
-          actionLabel: 'UNDO',
-          onAction: () {
-            container.read(todayProvider.notifier).restoreLog(log);
-          },
-        );
-      },
-      child: AppCard(
-        variant: AppCardVariant.raised,
-        padding: const EdgeInsets.all(12),
-        onTap: () {
-          AppBottomSheet.show(
-            context,
-            child: _FoodLogDetailSheet(log: log),
-          );
-        },
-        child: Row(
-          children: [
-            FoodImage(
-              name: log.displayName ?? '',
-              photoPath: log.photoPath,
-              cacheId: log.foodId,
-              size: 56,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    log.displayName ?? 'Unknown',
-                    style: theme.textTheme.bodyStrong,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      KcalRangeText(
-                        range: log.kcal,
-                        style: theme.textTheme.caption.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700),
-                      ),
-                      Text(' \u2022 ${DateFormat.jm().format(log.loggedAt)}', style: theme.textTheme.caption),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: () {
-                ref.read(burnPlanMealIdProvider.notifier).state = log.id;
-                context.go('/plan');
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Burn it \u2192',
-                      style: theme.textTheme.bodyStrong.copyWith(color: ext.energy),
-                    ),
-                    Text(
-                      '~$minWalk min',
-                      style: theme.textTheme.caption.copyWith(color: ext.energy),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-     );
-  }
-}
-
-class _FoodLogDetailSheet extends ConsumerStatefulWidget {
-  final FoodLog log;
-  const _FoodLogDetailSheet({required this.log});
-
-  @override
-  ConsumerState<_FoodLogDetailSheet> createState() => _FoodLogDetailSheetState();
-}
-
-class _FoodLogDetailSheetState extends ConsumerState<_FoodLogDetailSheet> {
-  late double _quantity;
-  bool _isEditing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _quantity = widget.log.quantity.toDouble();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final log = widget.log;
-
-    final unitKcal = log.kcal.times(1 / (log.quantity == 0 ? 1 : log.quantity));
-    final currentKcal = unitKcal.times(_quantity);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            FoodImage(
-              name: log.displayName ?? '',
-              photoPath: log.photoPath,
-              cacheId: log.foodId,
-              size: 64,
-              radius: 16,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    log.displayName ?? 'Unknown Food',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Logged at ${DateFormat.jm().format(log.loggedAt.toLocal())}',
-                    style: theme.textTheme.caption,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        AppCard(
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Calories', style: theme.textTheme.bodyMedium),
-                  KcalRangeText(
-                    range: currentKcal,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Portion', style: theme.textTheme.bodyMedium),
-                  Text(
-                    '${_quantity.toStringAsFixed(1)} x portion',
-                    style: theme.textTheme.bodyStrong,
-                  ),
-                ],
-              ),
-              if (_isEditing) ...[
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: _quantity <= 0.25 ? null : () => setState(() => _quantity = (_quantity - 0.25).clamp(0.25, 20.0)),
-                    ),
-                    Text(
-                      _quantity.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), ''),
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () => setState(() => _quantity = (_quantity + 0.25).clamp(0.25, 20.0)),
-                    ),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        if (!_isEditing) ...[
-          PrimaryButton(
-            label: 'Edit Portion',
-            onPressed: () => setState(() => _isEditing = true),
-          ),
-          const SizedBox(height: 12),
-          SecondaryButton(
-            label: 'Delete Log',
-            onPressed: () async {
-              await ref.read(todayProvider.notifier).deleteLog(log.id);
-              if (context.mounted) {
-                Navigator.of(context).pop();
-                AppSnackbar.success(context, 'Meal deleted');
-              }
-            },
-          ),
-        ] else ...[
-          PrimaryButton(
-            label: 'Save Changes',
-            onPressed: () async {
-              await ref.read(todayProvider.notifier).updateLogQuantity(log.id, _quantity);
-              if (context.mounted) {
-                Navigator.of(context).pop();
-                AppSnackbar.success(context, 'Portion updated');
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          SecondaryButton(
-            label: 'Cancel',
-            onPressed: () => setState(() {
-              _quantity = log.quantity.toDouble();
-              _isEditing = false;
-            }),
-          ),
-        ],
-      ],
-    );
-  }
-}
-

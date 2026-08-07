@@ -42,7 +42,7 @@ class _ProgramPromoCard extends StatelessWidget {
 
     return AppCard(
       variant: AppCardVariant.raised,
-      onTap: () => context.push('/programs'),
+      onTap: () => context.go('/programs'),
       child: Row(
         children: [
           Container(

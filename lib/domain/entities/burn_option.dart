@@ -12,6 +12,11 @@ class BurnOption extends Equatable {
   final int sessions;
   final int minutesPerSession;
 
+  /// MET value of the underlying exercise. Present for single-exercise options
+  /// so the UI can re-cost an edited duration; null for composite options
+  /// (e.g. a whole program session) whose kcal is already fixed.
+  final double? met;
+
   const BurnOption({
     required this.activity,
     required this.minutes,
@@ -22,10 +27,11 @@ class BurnOption extends Equatable {
     this.mediaAsset,
     this.sessions = 1,
     this.minutesPerSession = 0,
+    this.met,
   });
 
   @override
-  List<Object?> get props => [activity, minutes, kcal, steps, exerciseId, difficulty, mediaAsset, sessions, minutesPerSession];
+  List<Object?> get props => [activity, minutes, kcal, steps, exerciseId, difficulty, mediaAsset, sessions, minutesPerSession, met];
 
   @override
   String toString() =>

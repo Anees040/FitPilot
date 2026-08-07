@@ -93,7 +93,7 @@ class ProgramCompleteScreen extends ConsumerWidget {
               const Spacer(),
               PrimaryButton(
                 label: 'Choose next program',
-                onPressed: () => context.pushReplacement('/programs'),
+                onPressed: () => context.go('/programs'),
               ),
               const SizedBox(height: 12),
               SecondaryButton(
