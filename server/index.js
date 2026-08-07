@@ -21,6 +21,14 @@ if (!apiKey) {
 }
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
+// Model used by every AI endpoint.
+//
+// Defaults to the model this project has always used, so leaving GEMINI_MODEL
+// unset changes nothing. It is overridable because a key can lose free-tier
+// allowance for one specific model ("limit: 0" 429s) — when that happens the
+// fix is a new model name in the Render dashboard, not a redeploy.
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+
 // ---------------------------------------------------------------------------
 // Daily quota: 3 photo estimates per device per day (in-memory)
 // ---------------------------------------------------------------------------
@@ -75,7 +83,7 @@ app.post('/api/estimate-food', quota, async (req, res) => {
       'Keep the name concise.';
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: MODEL,
       contents: [
         {
           role: 'user',
@@ -199,7 +207,7 @@ app.post('/api/analyze-machine', quota, async (req, res) => {
       'of what is actually shown, confidence to your certainty about that, and leave every list empty.';
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: MODEL,
       contents: [
         {
           role: 'user',
