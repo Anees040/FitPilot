@@ -69,10 +69,15 @@ class MachineExerciseMatcher {
       }
     }
 
-    // Pass 2 — muscle matches, primary muscles before secondary.
+    // Pass 2 — muscle matches, primary muscles before secondary. Words drawn
+    // from the machine break ties, so a leg-extension machine ranks "Leg
+    // press" above "Kettlebell swings" even though both train quads.
+    final affinity = <String>{
+      for (final phrase in phrases) ..._significantWords(_normalize(phrase)),
+    };
     for (final muscle in [...analysis.primaryMuscles, ...analysis.secondaryMuscles]) {
       if (results.length >= limit) break;
-      for (final exercise in _byMuscle(muscle, catalog)) {
+      for (final exercise in _byMuscle(muscle, catalog, affinity)) {
         add(exercise);
       }
     }
@@ -89,6 +94,11 @@ class MachineExerciseMatcher {
     if (needle.isEmpty) return const [];
 
     final needleWords = _significantWords(needle);
+    // A phrase of nothing but generic words ("machine", "gym equipment")
+    // identifies no exercise. Without this guard the substring pass below
+    // would match every catalog name containing "machine".
+    if (needleWords.isEmpty) return const [];
+
     final scored = <_Scored>[];
 
     for (final exercise in catalog) {
@@ -117,7 +127,15 @@ class MachineExerciseMatcher {
 
   /// Exercises training [muscle], resolved through the central synonym map so
   /// an AI answer of "Lats" matches the seed's "Back".
-  static List<Exercise> _byMuscle(String muscle, List<Exercise> catalog) {
+  ///
+  /// [affinity] holds significant words taken from the machine name and its
+  /// keywords. An exercise sharing one of those words is the closest thing the
+  /// catalog has to the machine itself, so it sorts first.
+  static List<Exercise> _byMuscle(
+    String muscle,
+    List<Exercise> catalog,
+    Set<String> affinity,
+  ) {
     final group = MuscleSynonyms.normalize(muscle);
     if (group.isEmpty || group == 'full body') return const [];
 
@@ -138,17 +156,24 @@ class MachineExerciseMatcher {
       }
     }
 
-    // Gym-category exercises first: someone standing at a machine wants gym
-    // work suggested before a bodyweight alternative.
-    int gymFirst(Exercise a, Exercise b) {
+    /// Shared words with the machine, then gym equipment, then name.
+    ///
+    /// Someone standing at a machine wants the closest equivalent first and
+    /// gym work before a bodyweight substitute.
+    int rank(Exercise a, Exercise b) {
+      final aShared = _significantWords(_normalize(a.name)).intersection(affinity).length;
+      final bShared = _significantWords(_normalize(b.name)).intersection(affinity).length;
+      if (aShared != bShared) return bShared.compareTo(aShared);
+
       final aGym = a.category == ExerciseCategory.gym ? 0 : 1;
       final bGym = b.category == ExerciseCategory.gym ? 0 : 1;
       if (aGym != bGym) return aGym.compareTo(bGym);
+
       return a.name.compareTo(b.name);
     }
 
-    primary.sort(gymFirst);
-    secondary.sort(gymFirst);
+    primary.sort(rank);
+    secondary.sort(rank);
     return [...primary, ...secondary];
   }
 
