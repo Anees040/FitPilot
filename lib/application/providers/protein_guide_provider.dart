@@ -30,6 +30,10 @@ class ProteinFood extends Equatable {
   final String how;
   final String? caution;
 
+  /// Visual identifier shown in the guide. Emoji rather than a bundled image:
+  /// no licensing, no APK weight, and it renders offline on every platform.
+  final String glyph;
+
   const ProteinFood({
     required this.id,
     required this.name,
@@ -39,6 +43,7 @@ class ProteinFood extends Equatable {
     required this.isDry,
     required this.how,
     this.caution,
+    this.glyph = '🍽',
   });
 
   factory ProteinFood.fromJson(Map<String, dynamic> json) => ProteinFood(
@@ -50,6 +55,7 @@ class ProteinFood extends Equatable {
     isDry: json['dry'] == true,
     how: json['how'] as String,
     caution: json['caution'] as String?,
+    glyph: json['glyph'] as String? ?? '🍽',
   );
 
   @override

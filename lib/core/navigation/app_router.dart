@@ -158,7 +158,12 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'camera',
           parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) => const MachineCameraScreen(),
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return MachineCameraScreen(
+              startInGallery: extra?['source'] == 'gallery',
+            );
+          },
         ),
         GoRoute(
           path: 'result',

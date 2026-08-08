@@ -129,8 +129,10 @@ class _ProgramCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (meta.heroImage != null)
-            SizedBox(
-              height: 120,
+            // 16:9 rather than a fixed 120 px: the artwork is photographic, and
+            // a short box cropped most of it away.
+            AspectRatio(
+              aspectRatio: 16 / 9,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -177,13 +179,29 @@ class _ProgramCard extends ConsumerWidget {
                     left: 14,
                     right: 14,
                     bottom: 10,
-                    child: Text(
-                      meta.name,
-                      style: theme.textTheme.h2.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meta.name,
+                          style: theme.textTheme.h2.copyWith(
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        // The two facts that decide whether a plan fits, read
+                        // straight off the artwork instead of the chip row.
+                        Text(
+                          '${program.totalDays} days · ${meta.level.label}',
+                          style: theme.textTheme.caption.copyWith(
+                            color: theme.colorScheme.onPrimary.withValues(
+                              alpha: 0.85,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -214,7 +232,7 @@ class _ProgramCard extends ConsumerWidget {
                 Text(
                   meta.goal,
                   style: theme.textTheme.caption,
-                  maxLines: 3,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
@@ -222,10 +240,9 @@ class _ProgramCard extends ConsumerWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    ProgramMetaChip(
-                      label: '${program.totalDays} days',
-                      icon: Icons.event_outlined,
-                    ),
+                    // Days and level already sit on the hero, so repeating
+                    // them here would be noise. These two are what the image
+                    // cannot say.
                     ProgramMetaChip(
                       label: meta.daysPerWeek > 0
                           ? '${meta.daysPerWeek}×/week'
@@ -233,13 +250,19 @@ class _ProgramCard extends ConsumerWidget {
                       icon: Icons.repeat,
                     ),
                     ProgramMetaChip(
-                      label: meta.level.label,
-                      icon: Icons.signal_cellular_alt,
-                    ),
-                    ProgramMetaChip(
                       label: meta.equipment.label,
                       icon: Icons.fitness_center,
                     ),
+                    if (meta.heroImage == null)
+                      ProgramMetaChip(
+                        label: '${program.totalDays} days',
+                        icon: Icons.event_outlined,
+                      ),
+                    if (meta.heroImage == null)
+                      ProgramMetaChip(
+                        label: meta.level.label,
+                        icon: Icons.signal_cellular_alt,
+                      ),
                   ],
                 ),
                 if (done > 0) ...[

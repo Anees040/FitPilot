@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/application/providers/notification_inbox_provider.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
+import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/domain/entities/app_notification.dart';
 
@@ -15,6 +16,13 @@ final _filterProvider = StateProvider.autoDispose<Set<NotificationCategory>>(
 
 /// Shows only unread when true.
 final _unreadOnlyProvider = StateProvider.autoDispose<bool>((ref) => false);
+
+/// Shows only entries from today when true.
+///
+/// The commonest question of an inbox is "what happened since I last looked",
+/// and scrolling a week of history to answer it is the thing that makes people
+/// stop opening it.
+final _todayOnlyProvider = StateProvider.autoDispose<bool>((ref) => false);
 
 /// The in-app notification centre.
 ///
@@ -29,6 +37,7 @@ class NotificationScreen extends ConsumerWidget {
     final inboxAsync = ref.watch(notificationInboxProvider);
     final filters = ref.watch(_filterProvider);
     final unreadOnly = ref.watch(_unreadOnlyProvider);
+    final todayOnly = ref.watch(_todayOnlyProvider);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -76,6 +85,7 @@ class NotificationScreen extends ConsumerWidget {
           data: (all) {
             final visible = all.where((n) {
               if (unreadOnly && !n.isUnread) return false;
+              if (todayOnly && !_isToday(n.createdAt)) return false;
               if (filters.isNotEmpty && !filters.contains(n.category)) {
                 return false;
               }
@@ -105,6 +115,7 @@ class NotificationScreen extends ConsumerWidget {
                           onClear: () {
                             ref.read(_filterProvider.notifier).state = {};
                             ref.read(_unreadOnlyProvider.notifier).state = false;
+                            ref.read(_todayOnlyProvider.notifier).state = false;
                           },
                         )
                       : RefreshIndicator(
@@ -144,6 +155,11 @@ class NotificationScreen extends ConsumerWidget {
   }
 }
 
+bool _isToday(DateTime at) {
+  final now = DateTime.now();
+  return at.year == now.year && at.month == now.month && at.day == now.day;
+}
+
 class _FilterBar extends ConsumerWidget {
   final List<NotificationCategory> present;
   final int unreadCount;
@@ -156,6 +172,7 @@ class _FilterBar extends ConsumerWidget {
     final ext = theme.extension<AppColors>()!;
     final filters = ref.watch(_filterProvider);
     final unreadOnly = ref.watch(_unreadOnlyProvider);
+    final todayOnly = ref.watch(_todayOnlyProvider);
 
     return SizedBox(
       height: 46,
@@ -168,6 +185,13 @@ class _FilterBar extends ConsumerWidget {
             selected: unreadOnly,
             onTap: () =>
                 ref.read(_unreadOnlyProvider.notifier).state = !unreadOnly,
+          ),
+          const SizedBox(width: 8),
+          _Chip(
+            label: 'Today',
+            selected: todayOnly,
+            onTap: () =>
+                ref.read(_todayOnlyProvider.notifier).state = !todayOnly,
           ),
           const SizedBox(width: 8),
           Container(
@@ -370,12 +394,63 @@ class _EmptyInbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return EmptyState(
-      message:
-          "You're all caught up.\nReminders you switch on will show up here.",
-      illustration: 'empty_chart',
-      buttonLabel: 'Notification settings',
-      onAction: onOpenSettings,
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    // Deliberately not the shared EmptyState: that renders a chart
+    // illustration, which says nothing about notifications. A bell in a soft
+    // halo reads as "nothing waiting", and naming the categories gives the
+    // settings button an obvious purpose.
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 104,
+              height: 104,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              ),
+              child: Center(
+                child: Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.14),
+                  ),
+                  child: Icon(
+                    Icons.notifications_none_rounded,
+                    size: 34,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 22),
+            Text(
+              "You're all caught up",
+              style: theme.textTheme.h2,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Meal and burn reminders, streak warnings, weigh-in days and '
+              'milestones will appear here once you switch them on.',
+              style: theme.textTheme.caption.copyWith(color: ext.textDisabled),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SecondaryButton(
+              label: 'Choose your reminders',
+              onPressed: onOpenSettings,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

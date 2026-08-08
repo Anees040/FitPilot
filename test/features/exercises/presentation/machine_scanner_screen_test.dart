@@ -54,9 +54,13 @@ void main() {
     await _pump(tester);
 
     expect(find.text('Machine Scanner'), findsOneWidget);
-    expect(find.text('Scan a machine'), findsOneWidget);
+    expect(find.text('Identify a machine'), findsOneWidget);
+    // Both capture routes are offered explicitly rather than hiding the
+    // picker behind an icon inside the camera view.
+    expect(find.text('Camera'), findsOneWidget);
+    expect(find.text('Gallery'), findsOneWidget);
     expect(
-      find.text('Point your camera at any gym machine to learn it'),
+      find.text('Get the muscles worked, step-by-step form, and safety tips'),
       findsOneWidget,
     );
   });

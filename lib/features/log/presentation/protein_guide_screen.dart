@@ -206,6 +206,20 @@ class _FoodTileState extends State<_FoodTile> {
         children: [
           Row(
             children: [
+              // Glyph avatar: the fastest way to find a food in a long list.
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: ext.surfaceRaised,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: ext.hairline),
+                ),
+                child: Center(
+                  child: Text(food.glyph, style: const TextStyle(fontSize: 22)),
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,6 +260,19 @@ class _FoodTileState extends State<_FoodTile> {
                     Text(
                       '${food.kcalPer100g} kcal per 100 g',
                       style: theme.textTheme.caption,
+                    ),
+                    const SizedBox(height: 7),
+                    // Density bar, scaled against the best item in the guide
+                    // (soya at 52 g). Turns a column of numbers into something
+                    // you can compare at a glance.
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: (food.proteinPer100g / 52).clamp(0.04, 1.0),
+                        minHeight: 5,
+                        backgroundColor: ext.hairline,
+                        valueColor: AlwaysStoppedAnimation(ext.energy),
+                      ),
                     ),
                   ],
                 ),

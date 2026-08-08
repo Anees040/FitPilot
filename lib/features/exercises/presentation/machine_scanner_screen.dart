@@ -47,7 +47,8 @@ class MachineScannerScreen extends ConsumerWidget {
             children: [
               _ScanCallToAction(
                 isOnline: isOnline,
-                onTap: () => _startScan(context, ref),
+                onCamera: () => _startScan(context, ref),
+                onGallery: () => _startScan(context, ref, fromGallery: true),
               ),
               const SizedBox(height: 24),
               Row(
@@ -97,19 +98,38 @@ class MachineScannerScreen extends ConsumerWidget {
     );
   }
 
-  void _startScan(BuildContext context, WidgetRef ref) {
+  /// Opens the scanner. [fromGallery] skips straight to the picker.
+  ///
+  /// The two entries are separate because the choice is not a preference — a
+  /// user at the gym wants the camera, a user on the sofa has a screenshot, and
+  /// burying one behind a small icon inside the camera view hid it entirely.
+  void _startScan(
+    BuildContext context,
+    WidgetRef ref, {
+    bool fromGallery = false,
+  }) {
     if (!requireOnline(context, ref, feature: 'Machine Scanner')) return;
-    context.push('/machine-scanner/camera');
+    context.push(
+      '/machine-scanner/camera',
+      extra: <String, dynamic>{'source': fromGallery ? 'gallery' : 'camera'},
+    );
   }
 }
 
-/// The primary action. Stays tappable while offline so the gate can explain
-/// why it isn't available, rather than leaving a dead-looking button.
+/// The primary action, split into camera and gallery.
+///
+/// Both stay tappable while offline so the gate can explain why scanning is
+/// unavailable, rather than leaving two dead-looking buttons.
 class _ScanCallToAction extends StatelessWidget {
   final bool isOnline;
-  final VoidCallback onTap;
+  final VoidCallback onCamera;
+  final VoidCallback onGallery;
 
-  const _ScanCallToAction({required this.isOnline, required this.onTap});
+  const _ScanCallToAction({
+    required this.isOnline,
+    required this.onCamera,
+    required this.onGallery,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -118,48 +138,52 @@ class _ScanCallToAction extends StatelessWidget {
 
     return AppCard(
       variant: AppCardVariant.hero,
-      padding: const EdgeInsets.all(20),
-      onTap: onTap,
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.camera_alt_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      kIsWeb ? 'Upload a machine photo' : 'Scan a machine',
-                      style: theme.textTheme.h2,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      kIsWeb
-                          ? 'Pick a photo of any gym machine to learn it'
-                          : 'Point your camera at any gym machine to learn it',
-                      style: theme.textTheme.caption,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Text('Identify a machine', style: theme.textTheme.h2),
+          const SizedBox(height: 3),
+          Text(
+            'Get the muscles worked, step-by-step form, and safety tips',
+            style: theme.textTheme.caption,
           ),
           const SizedBox(height: 16),
+          // Web has no camera path, so the picker takes the full width there
+          // rather than showing a button that cannot work.
+          if (kIsWeb)
+            _SourceButton(
+              icon: Icons.photo_library_rounded,
+              label: 'Choose a photo',
+              hint: 'From your computer',
+              isPrimary: true,
+              onTap: onGallery,
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: _SourceButton(
+                    icon: Icons.camera_alt_rounded,
+                    label: 'Camera',
+                    hint: "You're at the gym",
+                    isPrimary: true,
+                    onTap: onCamera,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _SourceButton(
+                    icon: Icons.photo_library_rounded,
+                    label: 'Gallery',
+                    hint: 'Use a saved photo',
+                    isPrimary: false,
+                    onTap: onGallery,
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 14),
           Row(
             children: [
               Icon(
@@ -171,7 +195,7 @@ class _ScanCallToAction extends StatelessWidget {
               Expanded(
                 child: Text(
                   isOnline
-                      ? 'Get the muscles worked, step-by-step form, and safety tips'
+                      ? 'Uses AI — needs a connection for a new scan'
                       : "You're offline — connect to scan a new machine",
                   style: theme.textTheme.caption.copyWith(
                     color: isOnline ? ext.energy : ext.textDisabled,
@@ -181,6 +205,74 @@ class _ScanCallToAction extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// One of the two capture routes. Sized to a comfortable tap target and
+/// labelled, so neither option depends on recognising an icon.
+class _SourceButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String hint;
+  final bool isPrimary;
+  final VoidCallback onTap;
+
+  const _SourceButton({
+    required this.icon,
+    required this.label,
+    required this.hint,
+    required this.isPrimary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    final background = isPrimary
+        ? theme.colorScheme.primary
+        : ext.surfaceRaised;
+    final foreground = isPrimary
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurface;
+
+    return Semantics(
+      button: true,
+      label: '$label — $hint',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: background,
+            borderRadius: BorderRadius.circular(14),
+            border: isPrimary ? null : Border.all(color: ext.hairline),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: foreground, size: 24),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: theme.textTheme.bodyStrong.copyWith(color: foreground),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                hint,
+                style: theme.textTheme.caption.copyWith(
+                  color: foreground.withValues(alpha: 0.75),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

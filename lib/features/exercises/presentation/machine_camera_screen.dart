@@ -24,7 +24,11 @@ import 'package:fitpilot/features/capture/presentation/widgets/in_app_camera_vie
 /// and a working Cancel. On web there is no camera, so it falls straight
 /// through to the library picker.
 class MachineCameraScreen extends ConsumerStatefulWidget {
-  const MachineCameraScreen({super.key});
+  /// True when the caller chose "Gallery", so the picker opens immediately and
+  /// the camera is never initialised.
+  final bool startInGallery;
+
+  const MachineCameraScreen({super.key, this.startInGallery = false});
 
   @override
   ConsumerState<MachineCameraScreen> createState() => _MachineCameraScreenState();
@@ -44,8 +48,9 @@ class _MachineCameraScreenState extends ConsumerState<MachineCameraScreen> {
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) {
-      // No camera on web — open the picker as soon as the screen is mounted.
+    // Web has no camera at all; elsewhere the user may have asked for the
+    // picker explicitly. Either way, skip straight to it.
+    if (kIsWeb || widget.startInGallery) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _pickFromGallery());
     }
   }
@@ -56,9 +61,10 @@ class _MachineCameraScreenState extends ConsumerState<MachineCameraScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked == null) {
-      // Web has nothing behind this screen to show, so a cancelled pick closes
-      // it rather than stranding the user on an empty page.
-      if (kIsWeb && mounted) context.pop();
+      // When the picker was the entire purpose of this screen there is nothing
+      // behind it to fall back to, so a cancelled pick closes it rather than
+      // stranding the user on an empty page.
+      if ((kIsWeb || widget.startInGallery) && mounted) context.pop();
       return;
     }
 

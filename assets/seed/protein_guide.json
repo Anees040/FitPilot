@@ -9,7 +9,8 @@
       "dry": true,
       "how": "Cheapest protein per rupee in Pakistan. Soak 30 min, squeeze, bhuno in salan like meat.",
       "caution": "Start with small portions if you are not used to them.",
-      "id": "p00"
+      "id": "p00",
+      "glyph": "🫘"
     },
     {
       "name": "Bhuna chana (roasted)",
@@ -19,7 +20,8 @@
       "dry": false,
       "how": "The famous shake is real: grind with milk and dates. Or eat dry as a snack.",
       "caution": "About 60 g carbs per 100 g - count the kcal.",
-      "id": "p01"
+      "id": "p01",
+      "glyph": "🌰"
     },
     {
       "name": "Sattu",
@@ -29,7 +31,8 @@
       "dry": false,
       "how": "2-3 tbsp with water or milk and a pinch of salt or jaggery - the classic desi shake.",
       "caution": null,
-      "id": "p02"
+      "id": "p02",
+      "glyph": "🥤"
     },
     {
       "name": "Boiled chana",
@@ -39,7 +42,8 @@
       "dry": false,
       "how": "Chana chaat with onion, tomato and lemon - protein plus volume for pennies.",
       "caution": null,
-      "id": "p03"
+      "id": "p03",
+      "glyph": "🍲"
     },
     {
       "name": "Daal (masoor / moong)",
@@ -49,7 +53,8 @@
       "dry": true,
       "how": "Daal with roti or rice together form a complete protein. Cooked is about 9 g per 100 g.",
       "caution": null,
-      "id": "p04"
+      "id": "p04",
+      "glyph": "🍛"
     },
     {
       "name": "Lobia",
@@ -59,7 +64,8 @@
       "dry": true,
       "how": "Lobia ka salan - cheap and filling.",
       "caution": null,
-      "id": "p05"
+      "id": "p05",
+      "glyph": "🫘"
     },
     {
       "name": "Eggs",
@@ -69,7 +75,8 @@
       "dry": false,
       "how": "The cheapest complete protein: 3-4 eggs give 20-26 g. About 6-7 g per egg.",
       "caution": null,
-      "id": "p06"
+      "id": "p06",
+      "glyph": "🥚"
     },
     {
       "name": "Dahi",
@@ -79,7 +86,8 @@
       "dry": false,
       "how": "Strain in a cloth for hung curd - protein nearly doubles per 100 g.",
       "caution": null,
-      "id": "p07"
+      "id": "p07",
+      "glyph": "🥛"
     },
     {
       "name": "Moongphali (peanuts)",
@@ -89,7 +97,8 @@
       "dry": false,
       "how": "Real protein, but very calorie-dense. A fistful, not a bag.",
       "caution": "567 kcal per 100 g - easy to overeat.",
-      "id": "p08"
+      "id": "p08",
+      "glyph": "🥜"
     },
     {
       "name": "Kaleji (chicken liver)",
@@ -99,7 +108,8 @@
       "dry": false,
       "how": "Iron and protein at a throwaway price.",
       "caution": "Very high in vitamin A - a couple of times a week is plenty.",
-      "id": "p09"
+      "id": "p09",
+      "glyph": "🍖"
     },
     {
       "name": "Roti (atta)",
@@ -109,7 +119,8 @@
       "dry": false,
       "how": "Not a protein food - listed so you can see why daal plus roti beats roti alone.",
       "caution": null,
-      "id": "p10"
+      "id": "p10",
+      "glyph": "🫓"
     },
     {
       "name": "Doodh (full-fat)",
@@ -119,7 +130,8 @@
       "dry": false,
       "how": "One big glass is about 8 g, and it is the base for sattu and chana shakes.",
       "caution": null,
-      "id": "p11"
+      "id": "p11",
+      "glyph": "🥛"
     },
     {
       "name": "Homemade paneer",
@@ -129,7 +141,8 @@
       "dry": false,
       "how": "Split doodh with lemon, then use the leftover paani in your atta.",
       "caution": null,
-      "id": "p12"
+      "id": "p12",
+      "glyph": "🧀"
     },
     {
       "name": "Small / canned fish",
@@ -139,7 +152,8 @@
       "dry": false,
       "how": "Sardine-type fish: protein plus omega-3, still cheap.",
       "caution": null,
-      "id": "p13"
+      "id": "p13",
+      "glyph": "🐟"
     },
     {
       "name": "Chicken (whole / leg quarters)",
@@ -149,7 +163,8 @@
       "dry": false,
       "how": "Buy whole or leg quarters instead of breast - same protein, lower price.",
       "caution": null,
-      "id": "p14"
+      "id": "p14",
+      "glyph": "🍗"
     }
   ]
 }
