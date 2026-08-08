@@ -42,6 +42,10 @@ import 'package:fitpilot/core/utils/food_image_resolver.dart';
 ///      LOCAL-ONLY: a per-device transcript, deliberately absent from the
 ///      Supabase schema, so it must never appear in a sync push payload and a
 ///      pull must never write it.
+/// 23 — notification centre: new notifications table (the in-app inbox) and
+///      quiet-hours / per-category columns on notification_prefs. Both
+///      LOCAL-ONLY — per-device delivery state and settings, deliberately
+///      absent from the Supabase schema, never pushed or pulled.
 class AppDatabase {
   static Database? _db;
 
@@ -51,7 +55,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 22,
+      version: 23,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -63,7 +67,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 22,
+      version: 23,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -262,7 +266,30 @@ class AppDatabase {
         meal_times TEXT NOT NULL DEFAULT '["08:00", "13:00", "19:00"]',
         streak_risk_enabled INTEGER NOT NULL DEFAULT 0,
         milestones_enabled INTEGER NOT NULL DEFAULT 0,
-        global_mute INTEGER NOT NULL DEFAULT 0
+        global_mute INTEGER NOT NULL DEFAULT 0,
+        burn_reminders_enabled INTEGER NOT NULL DEFAULT 0,
+        program_reminders_enabled INTEGER NOT NULL DEFAULT 0,
+        weigh_in_enabled INTEGER NOT NULL DEFAULT 0,
+        weigh_in_day INTEGER NOT NULL DEFAULT 1,
+        weigh_in_time TEXT NOT NULL DEFAULT '08:00',
+        water_reminders_enabled INTEGER NOT NULL DEFAULT 0,
+        quiet_hours_enabled INTEGER NOT NULL DEFAULT 0,
+        quiet_from TEXT NOT NULL DEFAULT '22:00',
+        quiet_to TEXT NOT NULL DEFAULT '07:00'
+      )
+    ''');
+
+    // In-app notification inbox: what was actually delivered, plus read state.
+    // LOCAL-ONLY — per-device delivery history, never synced.
+    batch.execute('''
+      CREATE TABLE notifications (
+        id TEXT PRIMARY KEY,
+        category TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        payload TEXT,
+        created_at TEXT NOT NULL,
+        read_at TEXT
       )
     ''');
 
@@ -321,6 +348,9 @@ class AppDatabase {
     );
     batch.execute(
       'CREATE INDEX idx_chat_messages_created ON chat_messages (created_at)',
+    );
+    batch.execute(
+      'CREATE INDEX idx_notifications_created ON notifications (created_at)',
     );
 
     await batch.commit(noResult: true);
@@ -753,6 +783,48 @@ class AppDatabase {
           'CREATE INDEX IF NOT EXISTS idx_chat_messages_created ON chat_messages (created_at)',
         );
       } catch (_) {}
+    }
+    if (oldVersion < 23) {
+      // Notification centre.
+      //
+      // LOCAL-ONLY: the inbox records what this device delivered and whether
+      // the user read it. Deliberately absent from the Supabase schema, so it
+      // must never appear in a sync push payload and a pull must never write
+      // it.
+      //
+      // Additive throughout — the existing notification_prefs row is widened
+      // with defaults, never recreated, so saved settings survive.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+          id TEXT PRIMARY KEY,
+          category TEXT NOT NULL,
+          title TEXT NOT NULL,
+          body TEXT NOT NULL,
+          payload TEXT,
+          created_at TEXT NOT NULL,
+          read_at TEXT
+        )
+      ''');
+      try {
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications (created_at)',
+        );
+      } catch (_) {}
+      for (final column in const [
+        'burn_reminders_enabled INTEGER NOT NULL DEFAULT 0',
+        'program_reminders_enabled INTEGER NOT NULL DEFAULT 0',
+        'weigh_in_enabled INTEGER NOT NULL DEFAULT 0',
+        'weigh_in_day INTEGER NOT NULL DEFAULT 1',
+        "weigh_in_time TEXT NOT NULL DEFAULT '08:00'",
+        'water_reminders_enabled INTEGER NOT NULL DEFAULT 0',
+        'quiet_hours_enabled INTEGER NOT NULL DEFAULT 0',
+        "quiet_from TEXT NOT NULL DEFAULT '22:00'",
+        "quiet_to TEXT NOT NULL DEFAULT '07:00'",
+      ]) {
+        try {
+          await db.execute('ALTER TABLE notification_prefs ADD COLUMN $column');
+        } catch (_) {}
+      }
     }
   }
 

@@ -33,6 +33,7 @@ import 'package:fitpilot/features/programs/presentation/program_detail_screen.da
 import 'package:fitpilot/features/programs/presentation/session_detail_screen.dart';
 import 'package:fitpilot/features/programs/presentation/program_complete_screen.dart';
 import 'package:fitpilot/features/today/presentation/notification_screen.dart';
+import 'package:fitpilot/features/settings/presentation/notification_prefs_screen.dart';
 import 'package:fitpilot/features/today/presentation/all_meals_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/offline_banner.dart';
@@ -178,6 +179,11 @@ final appRouter = GoRouter(
       path: '/notifications',
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const NotificationScreen(),
+    ),
+    GoRoute(
+      path: '/settings/notifications',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const NotificationPrefsScreen(),
     ),
     // Profile moved off the bottom nav: it is a settings destination reached
     // from the Today avatar, so Programs can take the fifth tab.

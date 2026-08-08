@@ -9,6 +9,7 @@ import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/burn_provider.dart';
 
 import 'package:fitpilot/core/ui/states.dart';
+import 'package:fitpilot/application/providers/notification_inbox_provider.dart';
 
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/staggered_list.dart';
@@ -314,12 +315,7 @@ class _HeroSection extends ConsumerWidget {
               ),
               Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none),
-                    onPressed: () {
-                      context.push('/notifications');
-                    },
-                  ),
+                  const _NotificationBell(),
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () => context.push('/profile'),
@@ -518,6 +514,56 @@ class _StatPill extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Bell with an unread badge.
+///
+/// The count comes from the inbox provider rather than its own query, so the
+/// badge and the list can never disagree.
+class _NotificationBell extends ConsumerWidget {
+  const _NotificationBell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final unread = ref.watch(unreadNotificationCountProvider);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          icon: Icon(
+            unread > 0 ? Icons.notifications_rounded : Icons.notifications_none,
+          ),
+          tooltip: unread > 0 ? '$unread unread' : 'Notifications',
+          onPressed: () => context.push('/notifications'),
+        ),
+        if (unread > 0)
+          Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 17),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: theme.colorScheme.surface, width: 1.5),
+              ),
+              child: Text(
+                unread > 9 ? '9+' : '$unread',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.overline.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.w800,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
