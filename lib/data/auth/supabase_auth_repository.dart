@@ -38,6 +38,12 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   AuthFailure _mapException(Object e) {
+    // Already mapped. Without this guard the catch blocks below re-wrap their
+    // own deliberate throws, and the fallback at the end turns them into
+    // UnknownAuthFailure(e.toString()) — which is how "Instance of
+    // 'UnknownAuthFailure'" used to end up on the login screen.
+    if (e is AuthFailure) return e;
+
     if (e is supa.AuthException) {
       final msg = e.message.toLowerCase();
       if (msg.contains('invalid login credentials')) {
@@ -53,13 +59,33 @@ class SupabaseAuthRepository implements AuthRepository {
       if (msg.contains('email not confirmed')) {
         return const UnverifiedEmailFailure();
       }
-      return UnknownAuthFailure(e.message);
+      // Supabase reports a password attempt on a Google-only account as a
+      // generic failure. Naming the real cause saves the user retyping a
+      // password they never set.
+      if (msg.contains('no password') ||
+          msg.contains('oauth') ||
+          msg.contains('identity not found')) {
+        return const WrongSignInMethodFailure();
+      }
+      if (msg.contains('user not found')) {
+        return const AccountNotFoundFailure();
+      }
+      // Supabase's own text is written for developers. Passing it through put
+      // strings like "AuthApiException(message: ...)" in front of users, so
+      // anything unrecognised gets neutral wording instead.
+      if (kDebugMode) debugPrint('Unmapped AuthException: ${e.message}');
+      return const UnknownAuthFailure(
+        'Something went wrong signing you in. Please try again.',
+      );
     }
     if (e.toString().contains('SocketException') ||
         e.toString().contains('ClientException')) {
       return const NetworkUnavailableFailure();
     }
-    return UnknownAuthFailure(e.toString());
+    if (kDebugMode) debugPrint('Unmapped auth error: $e');
+    return const UnknownAuthFailure(
+      'Something went wrong. Please try again in a moment.',
+    );
   }
 
   @override
@@ -69,7 +95,7 @@ class SupabaseAuthRepository implements AuthRepository {
       final user = _client.auth.currentUser;
       if (user != null && user.userMetadata?['deleted'] == true) {
         await signOut();
-        throw const UnknownAuthFailure('This account has been deleted. You cannot log in.');
+        throw const AccountDeletedFailure();
       }
     } catch (e) {
       throw _mapException(e);
@@ -152,7 +178,7 @@ class SupabaseAuthRepository implements AuthRepository {
       final user = _client.auth.currentUser;
       if (user != null && user.userMetadata?['deleted'] == true) {
         await signOut();
-        throw const UnknownAuthFailure('This account has been deleted. You cannot log in.');
+        throw const AccountDeletedFailure();
       }
     } catch (e) {
       if (e is UnknownAuthFailure) rethrow;

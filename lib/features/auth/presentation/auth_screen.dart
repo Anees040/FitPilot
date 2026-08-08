@@ -67,17 +67,38 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     super.dispose();
   }
 
+  /// Turns a failure into something worth reading.
+  ///
+  /// Every branch names what happened AND what to do about it — an error that
+  /// only says "invalid" leaves the user guessing whether they mistyped, used
+  /// the wrong account, or need to sign up.
   String _mapError(Object e) {
-    if (e is RateLimitedFailure) return 'Too many attempts, wait a minute.';
-    if (e is NetworkUnavailableFailure) return 'No connection.';
+    if (e is RateLimitedFailure) return 'Too many attempts. Wait a minute and try again.';
+    if (e is NetworkUnavailableFailure) {
+      return "You're offline. Reconnect and try again.";
+    }
     if (e is EmailAlreadyRegisteredFailure) {
-      return 'That email is already registered. Try logging in.';
+      return 'That email already has an account. Switch to Log in instead.';
     }
     if (e is InvalidCredentialsFailure) {
-      return 'Email or password is incorrect.';
+      return 'Email or password is incorrect. Check both and try again.';
     }
+    if (e is AccountDeletedFailure) {
+      return 'That account was deleted. Switch to Sign up to start again with this email.';
+    }
+    if (e is WrongSignInMethodFailure) {
+      return 'This email is registered with Google. Use "Continue with Google" below.';
+    }
+    if (e is AccountNotFoundFailure) {
+      return "No account for that email. Switch to Sign up to create one.";
+    }
+    if (e is UnverifiedEmailFailure) {
+      return 'Confirm your email first — check your inbox for the code.';
+    }
+    // Every AuthFailure message is user-facing by construction, so this is a
+    // safe default rather than a leak of internal text.
     if (e is AuthFailure) return e.message;
-    return 'An error occurred. Please try again.';
+    return 'Something went wrong. Please try again.';
   }
 
   Future<void> _submit() async {
