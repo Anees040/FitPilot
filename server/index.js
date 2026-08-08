@@ -23,11 +23,14 @@ const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // Model used by every AI endpoint.
 //
-// Defaults to the model this project has always used, so leaving GEMINI_MODEL
-// unset changes nothing. It is overridable because a key can lose free-tier
-// allowance for one specific model ("limit: 0" 429s) — when that happens the
-// fix is a new model name in the Render dashboard, not a redeploy.
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+// Defaults to 2.5-flash rather than the 2.0-flash this project started on:
+// 2.0 is being retired and already returns "limit: 0" on new free-tier keys,
+// while 2.5-flash carries a documented free allowance (~250 requests/day).
+//
+// Overridable because a key can lose its allowance for one specific model, and
+// because the 2.5 family is itself scheduled for retirement — when that
+// happens the fix is a new model name in the Render dashboard, not a redeploy.
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 // ---------------------------------------------------------------------------
 // Model fallback chain.
@@ -41,12 +44,17 @@ const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 // winner is cached so the happy path stays a single API call; the cache is
 // dropped as soon as that model starts failing again.
 // ---------------------------------------------------------------------------
+// Ordered best-quality-first, then by how much free allowance each has:
+// 2.5-flash (~250/day) reads a food photo more reliably than flash-lite, but
+// flash-lite (~1000/day) keeps the app working after flash is exhausted.
+// `flash-latest` tracks whatever Google currently ships, so it survives a model
+// retirement that would otherwise take every pinned name down at once.
 const FALLBACK_MODELS = [
   MODEL,
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
   'gemini-flash-latest',
-  'gemini-2.0-flash-lite',
+  'gemini-2.0-flash',
 ].filter((m, i, all) => all.indexOf(m) === i);
 
 let preferredModel = null;
