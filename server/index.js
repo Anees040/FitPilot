@@ -69,8 +69,13 @@ function quotaMessage() {
   );
 }
 
-// True when the failure is "this model is unavailable to this key" rather than
+// True when the failure is "this model cannot serve this right now" rather than
 // "this request was bad" — only those are worth retrying on another model.
+//
+// 503 UNAVAILABLE is included deliberately: Google returns it when a model is
+// briefly overloaded ("experiencing high demand"), which is transient and
+// affects one model at a time. Without it a busy spell on the preferred model
+// takes the whole feature down while the next model in the chain is idle.
 function isModelUnavailable(err) {
   const status = err?.status ?? err?.code;
   const msg = String(err?.message || err);
@@ -78,8 +83,18 @@ function isModelUnavailable(err) {
     status === 429 ||
     status === 404 ||
     status === 403 ||
-    /quota|RESOURCE_EXHAUSTED|not found|NOT_FOUND|unsupported|permission/i.test(msg)
+    status === 500 ||
+    status === 503 ||
+    /quota|RESOURCE_EXHAUSTED|not found|NOT_FOUND|unsupported|permission|UNAVAILABLE|overloaded|high demand|internal error/i.test(msg)
   );
+}
+
+// True when the model rejected the thinking budget rather than the request.
+// Some models require a non-zero budget, so the retry below simply drops it.
+function isThinkingConfigRejected(err) {
+  const status = err?.status ?? err?.code;
+  const msg = String(err?.message || err);
+  return status === 400 && /thinking/i.test(msg);
 }
 
 async function generate(request) {
@@ -90,12 +105,7 @@ async function generate(request) {
   let lastError = null;
   for (const model of order) {
     try {
-      const response = await ai.models.generateContent({ ...request, model });
-      if (preferredModel !== model) {
-        console.log(`Gemini: using model ${model}`);
-        preferredModel = model;
-      }
-      return response;
+      return await callModel(model, request);
     } catch (err) {
       lastError = err;
       if (!isModelUnavailable(err)) throw err;
@@ -104,6 +114,26 @@ async function generate(request) {
     }
   }
   throw lastError || new Error('No Gemini model available.');
+}
+
+async function callModel(model, request) {
+  try {
+    const response = await ai.models.generateContent({ ...request, model });
+    if (preferredModel !== model) {
+      console.log(`Gemini: using model ${model}`);
+      preferredModel = model;
+    }
+    return response;
+  } catch (err) {
+    // A model that insists on a thinking budget gets one more try without the
+    // override, rather than being skipped as if it were unavailable.
+    if (!isThinkingConfigRejected(err)) throw err;
+    console.warn(`Gemini: ${model} rejected thinkingConfig, retrying without it`);
+    const { thinkingConfig, ...config } = request.config || {};
+    const response = await ai.models.generateContent({ ...request, config, model });
+    preferredModel = model;
+    return response;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -434,7 +464,13 @@ app.post('/api/chat', chatQuota, async (req, res) => {
       config: {
         systemInstruction,
         temperature: 0.7,
-        maxOutputTokens: 400,
+        // 2.5 models spend "thinking" tokens from this same budget before they
+        // write anything, so a tight cap gets consumed by reasoning and the
+        // reply arrives truncated mid-sentence. Disabling thinking keeps the
+        // whole budget for the answer, and a coach reply is short prose that
+        // gains nothing from a reasoning pass.
+        thinkingConfig: { thinkingBudget: 0 },
+        maxOutputTokens: 800,
       },
     });
 
