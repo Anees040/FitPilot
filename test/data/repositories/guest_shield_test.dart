@@ -39,7 +39,8 @@ void main() {
         logged_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         deleted_at TEXT,
-        photo_path TEXT
+        photo_path TEXT,
+        protein_g REAL
       )
     ''');
   });

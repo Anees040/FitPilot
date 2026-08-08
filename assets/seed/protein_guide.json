@@ -1,0 +1,155 @@
+{
+  "note": "Protein per 100 g as eaten unless marked DRY.",
+  "items": [
+    {
+      "name": "Soya chunks",
+      "protein": 52,
+      "kcal": 345,
+      "tier": 1,
+      "dry": true,
+      "how": "Cheapest protein per rupee in Pakistan. Soak 30 min, squeeze, bhuno in salan like meat.",
+      "caution": "Start with small portions if you are not used to them.",
+      "id": "p00"
+    },
+    {
+      "name": "Bhuna chana (roasted)",
+      "protein": 21,
+      "kcal": 370,
+      "tier": 1,
+      "dry": false,
+      "how": "The famous shake is real: grind with milk and dates. Or eat dry as a snack.",
+      "caution": "About 60 g carbs per 100 g - count the kcal.",
+      "id": "p01"
+    },
+    {
+      "name": "Sattu",
+      "protein": 20,
+      "kcal": 400,
+      "tier": 1,
+      "dry": false,
+      "how": "2-3 tbsp with water or milk and a pinch of salt or jaggery - the classic desi shake.",
+      "caution": null,
+      "id": "p02"
+    },
+    {
+      "name": "Boiled chana",
+      "protein": 9,
+      "kcal": 164,
+      "tier": 1,
+      "dry": false,
+      "how": "Chana chaat with onion, tomato and lemon - protein plus volume for pennies.",
+      "caution": null,
+      "id": "p03"
+    },
+    {
+      "name": "Daal (masoor / moong)",
+      "protein": 24,
+      "kcal": 350,
+      "tier": 1,
+      "dry": true,
+      "how": "Daal with roti or rice together form a complete protein. Cooked is about 9 g per 100 g.",
+      "caution": null,
+      "id": "p04"
+    },
+    {
+      "name": "Lobia",
+      "protein": 24,
+      "kcal": 340,
+      "tier": 1,
+      "dry": true,
+      "how": "Lobia ka salan - cheap and filling.",
+      "caution": null,
+      "id": "p05"
+    },
+    {
+      "name": "Eggs",
+      "protein": 13,
+      "kcal": 155,
+      "tier": 1,
+      "dry": false,
+      "how": "The cheapest complete protein: 3-4 eggs give 20-26 g. About 6-7 g per egg.",
+      "caution": null,
+      "id": "p06"
+    },
+    {
+      "name": "Dahi",
+      "protein": 4,
+      "kcal": 60,
+      "tier": 1,
+      "dry": false,
+      "how": "Strain in a cloth for hung curd - protein nearly doubles per 100 g.",
+      "caution": null,
+      "id": "p07"
+    },
+    {
+      "name": "Moongphali (peanuts)",
+      "protein": 26,
+      "kcal": 567,
+      "tier": 1,
+      "dry": false,
+      "how": "Real protein, but very calorie-dense. A fistful, not a bag.",
+      "caution": "567 kcal per 100 g - easy to overeat.",
+      "id": "p08"
+    },
+    {
+      "name": "Kaleji (chicken liver)",
+      "protein": 24,
+      "kcal": 165,
+      "tier": 1,
+      "dry": false,
+      "how": "Iron and protein at a throwaway price.",
+      "caution": "Very high in vitamin A - a couple of times a week is plenty.",
+      "id": "p09"
+    },
+    {
+      "name": "Roti (atta)",
+      "protein": 3,
+      "kcal": 110,
+      "tier": 1,
+      "dry": false,
+      "how": "Not a protein food - listed so you can see why daal plus roti beats roti alone.",
+      "caution": null,
+      "id": "p10"
+    },
+    {
+      "name": "Doodh (full-fat)",
+      "protein": 3.3,
+      "kcal": 64,
+      "tier": 2,
+      "dry": false,
+      "how": "One big glass is about 8 g, and it is the base for sattu and chana shakes.",
+      "caution": null,
+      "id": "p11"
+    },
+    {
+      "name": "Homemade paneer",
+      "protein": 18,
+      "kcal": 265,
+      "tier": 2,
+      "dry": false,
+      "how": "Split doodh with lemon, then use the leftover paani in your atta.",
+      "caution": null,
+      "id": "p12"
+    },
+    {
+      "name": "Small / canned fish",
+      "protein": 25,
+      "kcal": 200,
+      "tier": 2,
+      "dry": false,
+      "how": "Sardine-type fish: protein plus omega-3, still cheap.",
+      "caution": null,
+      "id": "p13"
+    },
+    {
+      "name": "Chicken (whole / leg quarters)",
+      "protein": 27,
+      "kcal": 215,
+      "tier": 3,
+      "dry": false,
+      "how": "Buy whole or leg quarters instead of breast - same protein, lower price.",
+      "caution": null,
+      "id": "p14"
+    }
+  ]
+}

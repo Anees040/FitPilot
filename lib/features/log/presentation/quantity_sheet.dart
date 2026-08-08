@@ -97,6 +97,7 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
               label: 'Add & see burn',
               onPressed: () {
                 final logId = const Uuid().v4();
+                final proteinPerPortion = widget.food.proteinPerPortionG;
                 final log = FoodLog(
                   id: logId,
                   foodId: widget.food.id,
@@ -104,6 +105,11 @@ class _QuantitySheetState extends ConsumerState<QuantitySheet> {
                   kcal: multipliedRange,
                   source: LogSource.search,
                   loggedAt: DateTime.now(),
+                  // Scales with quantity exactly like kcal. Stays null when the
+                  // catalog has no figure, so "unknown" is never shown as 0 g.
+                  proteinG: proteinPerPortion == null
+                      ? null
+                      : proteinPerPortion * _quantity,
                 );
                 ref.read(todayProvider.notifier).addLog(log);
                 

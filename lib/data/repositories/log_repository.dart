@@ -29,6 +29,7 @@ class LogRepository {
       'updated_at': now,
       'deleted_at': log.deletedAt?.toIso8601String(),
       'photo_path': log.photoPath,
+      'protein_g': log.proteinG,
     });
     await _enqueue('food_logs', log.id, 'insert');
   }
@@ -51,6 +52,7 @@ class LogRepository {
         'updated_at': now,
         'deleted_at': log.deletedAt?.toIso8601String(),
         'photo_path': log.photoPath,
+        'protein_g': log.proteinG,
       },
       where: 'id = ?',
       whereArgs: [log.id],
@@ -155,6 +157,7 @@ class LogRepository {
             ? DateTime.parse(row['deleted_at'] as String)
             : null,
         photoPath: row['photo_path'] as String?,
+        proteinG: TolerantReader.readDouble(row['protein_g']),
       );
     } catch (e) {
       assert(() {

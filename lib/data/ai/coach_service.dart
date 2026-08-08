@@ -22,6 +22,12 @@ class CoachContext {
   final int? streakDays;
   final String? activeProgram;
 
+  /// Protein eaten and targeted today. The server's system instruction uses
+  /// these to answer diet questions with cheap local food rather than
+  /// supplements.
+  final int? proteinTodayG;
+  final int? proteinTargetG;
+
   const CoachContext({
     this.name,
     this.todayKcal,
@@ -29,6 +35,8 @@ class CoachContext {
     this.toBurn,
     this.streakDays,
     this.activeProgram,
+    this.proteinTodayG,
+    this.proteinTargetG,
   });
 
   Map<String, dynamic> toJson() => {
@@ -38,6 +46,8 @@ class CoachContext {
     if (toBurn != null) 'toBurn': toBurn,
     if (streakDays != null) 'streakDays': streakDays,
     if (activeProgram != null) 'activeProgram': activeProgram,
+    if (proteinTodayG != null) 'proteinTodayG': proteinTodayG,
+    if (proteinTargetG != null) 'proteinTargetG': proteinTargetG,
   };
 }
 

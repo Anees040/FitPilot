@@ -91,6 +91,7 @@ flutter:
     - assets/seed/foods_cheat.json
     - assets/seed/exercises.json
     - assets/seed/programs.json
+    - assets/seed/protein_guide.json
     - assets/illustrations/
     - assets/images/
     - assets/exercise_media/

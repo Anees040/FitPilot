@@ -46,6 +46,11 @@ import 'package:fitpilot/core/utils/food_image_resolver.dart';
 ///      quiet-hours / per-category columns on notification_prefs. Both
 ///      LOCAL-ONLY — per-device delivery state and settings, deliberately
 ///      absent from the Supabase schema, never pushed or pulled.
+/// 24 — protein tracking: protein_g on food_catalog and food_logs,
+///      protein_goal_g on profile. All three are LOCAL-ONLY — they are absent
+///      from the Supabase schema, so they must never appear in a sync push
+///      payload and a pull must never overwrite them. NULL means "unknown",
+///      never zero: a food with no protein data is not a food with no protein.
 class AppDatabase {
   static Database? _db;
 
@@ -55,7 +60,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 23,
+      version: 24,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -67,7 +72,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 23,
+      version: 24,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -89,7 +94,8 @@ class AppDatabase {
         kcal_max INTEGER NOT NULL,
         image_url TEXT,
         image_key TEXT,
-        is_verified INTEGER NOT NULL DEFAULT 1
+        is_verified INTEGER NOT NULL DEFAULT 1,
+        protein_g REAL
       )
     ''');
 
@@ -106,7 +112,8 @@ class AppDatabase {
         logged_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         deleted_at TEXT,
-        photo_path TEXT
+        photo_path TEXT,
+        protein_g REAL
       )
     ''');
 
@@ -176,6 +183,7 @@ class AppDatabase {
         active_program_day INTEGER,
         onboarding_complete INTEGER NOT NULL DEFAULT 0,
         avatar_url TEXT,
+        protein_goal_g REAL,
         updated_at TEXT NOT NULL
       )
     ''');
@@ -823,6 +831,27 @@ class AppDatabase {
       ]) {
         try {
           await db.execute('ALTER TABLE notification_prefs ADD COLUMN $column');
+        } catch (_) {}
+      }
+    }
+    if (oldVersion < 24) {
+      // Protein tracking.
+      //
+      // LOCAL-ONLY: all three columns are deliberately absent from the Supabase
+      // schema, so they must never appear in a sync push payload and a pull
+      // must never overwrite them. See sync_service.dart, which builds payloads
+      // from explicit column lists.
+      //
+      // Nullable on purpose. NULL means "we do not know this food's protein",
+      // which is different from zero — the UI counts unknowns separately rather
+      // than quietly treating them as no protein.
+      for (final statement in const [
+        'ALTER TABLE food_catalog ADD COLUMN protein_g REAL',
+        'ALTER TABLE food_logs ADD COLUMN protein_g REAL',
+        'ALTER TABLE profile ADD COLUMN protein_goal_g REAL',
+      ]) {
+        try {
+          await db.execute(statement);
         } catch (_) {}
       }
     }

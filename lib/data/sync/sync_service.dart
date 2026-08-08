@@ -453,8 +453,9 @@ class SyncService {
   /// Columns that exist only in the local SQLite schema and have no
   /// counterpart in Supabase. A pull must never null these out.
   static const Map<String, List<String>> _localOnlyColumns = {
-    'food_catalog': ['image_key'],
-    'food_logs': ['photo_path'],
+    'food_catalog': ['image_key', 'protein_g'],
+    'food_logs': ['photo_path', 'protein_g'],
+    'profile': ['protein_goal_g'],
   };
 
   /// Reads the local-only column values for [rowId] and merges them into

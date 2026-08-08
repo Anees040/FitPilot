@@ -10,7 +10,19 @@ import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 
 class ManualEntrySheet extends ConsumerStatefulWidget {
-  const ManualEntrySheet({super.key});
+  /// Prefilled when the sheet is opened from somewhere that already knows the
+  /// food — the protein guide's "Log it", for instance. The user still sets the
+  /// portion, so the numbers are per 100 g and stay editable.
+  final String? initialName;
+  final int? initialKcal;
+  final double? initialProteinG;
+
+  const ManualEntrySheet({
+    super.key,
+    this.initialName,
+    this.initialKcal,
+    this.initialProteinG,
+  });
 
   @override
   ConsumerState<ManualEntrySheet> createState() => _ManualEntrySheetState();
@@ -20,13 +32,33 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
   final _nameController = TextEditingController();
   final _kcalController = TextEditingController();
   final _portionController = TextEditingController();
+  final _proteinController = TextEditingController();
   String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialName != null) _nameController.text = widget.initialName!;
+    if (widget.initialKcal != null) {
+      _kcalController.text = widget.initialKcal!.toString();
+    }
+    if (widget.initialProteinG != null) {
+      _proteinController.text = _trim(widget.initialProteinG!);
+    }
+    // The guide's figures are per 100 g, so say so rather than leaving the
+    // user to guess what the prefilled numbers refer to.
+    if (widget.initialKcal != null) _portionController.text = '100g';
+  }
+
+  static String _trim(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : v.toString();
 
   @override
   void dispose() {
     _nameController.dispose();
     _kcalController.dispose();
     _portionController.dispose();
+    _proteinController.dispose();
     super.dispose();
   }
 
@@ -49,6 +81,15 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
 
     setState(() => _errorText = null);
 
+    // Optional. Left blank means "unknown", which the day's protein row counts
+    // separately rather than treating as zero.
+    final proteinText = _proteinController.text.trim();
+    final protein = proteinText.isEmpty ? null : double.tryParse(proteinText);
+    if (proteinText.isNotEmpty && (protein == null || protein < 0 || protein > 300)) {
+      setState(() => _errorText = 'Protein must be between 0 and 300 g');
+      return;
+    }
+
     final log = FoodLog(
       id: const Uuid().v4(),
       customName: displayName,
@@ -56,6 +97,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
       kcal: KcalRange.exact(kcal),
       source: LogSource.manual,
       loggedAt: DateTime.now(),
+      proteinG: protein,
     );
 
     ref.read(todayProvider.notifier).addLog(log);
@@ -101,6 +143,13 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
             label: 'CALORIES (KCAL)',
             controller: _kcalController,
             keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            label: 'PROTEIN IN GRAMS (OPTIONAL)',
+            controller: _proteinController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),

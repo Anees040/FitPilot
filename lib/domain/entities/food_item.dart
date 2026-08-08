@@ -17,6 +17,11 @@ class FoodItem extends Equatable {
   final String? imageKey;
   final bool isVerified;
 
+  /// Protein in grams for one portion. Null means unknown, not zero — most
+  /// user-added and barcode foods carry no protein figure.
+  /// Local-only — never synced.
+  final double? proteinPerPortionG;
+
   FoodItem({
     required this.id,
     required this.name,
@@ -27,6 +32,7 @@ class FoodItem extends Equatable {
     this.imageUrl,
     this.imageKey,
     this.isVerified = true,
+    this.proteinPerPortionG,
   }) {
     if (id.isEmpty) {
       throw ArgumentError('id must not be empty');
@@ -53,6 +59,7 @@ class FoodItem extends Equatable {
     imageUrl,
     imageKey,
     isVerified,
+    proteinPerPortionG,
   ];
 
   @override

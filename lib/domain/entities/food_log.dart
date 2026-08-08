@@ -21,6 +21,14 @@ class FoodLog extends Equatable {
   /// Local-only — never synced (the file lives in app documents).
   final String? photoPath;
 
+  /// Protein in grams for this entry, already multiplied by [quantity].
+  ///
+  /// Null means unknown, which is deliberately different from zero: most of the
+  /// food catalog has no protein figure, and counting those as 0 g would make
+  /// the day's total look like a shortfall the user could not fix. The UI
+  /// reports unknowns separately instead. Local-only — never synced.
+  final double? proteinG;
+
   FoodLog({
     required this.id,
     this.foodId,
@@ -32,6 +40,7 @@ class FoodLog extends Equatable {
     required this.loggedAt,
     this.deletedAt,
     this.photoPath,
+    this.proteinG,
   }) {
     if (foodId == null && customName == null && foodName == null) {
       throw ArgumentError(
@@ -58,6 +67,7 @@ class FoodLog extends Equatable {
     source,
     loggedAt,
     deletedAt,
+    proteinG,
     photoPath,
   ];
 
@@ -76,6 +86,7 @@ class FoodLog extends Equatable {
     DateTime? loggedAt,
     DateTime? deletedAt,
     String? photoPath,
+    double? proteinG,
   }) {
     return FoodLog(
       id: id ?? this.id,
@@ -88,6 +99,7 @@ class FoodLog extends Equatable {
       loggedAt: loggedAt ?? this.loggedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       photoPath: photoPath ?? this.photoPath,
+      proteinG: proteinG ?? this.proteinG,
     );
   }
 }

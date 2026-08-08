@@ -17,6 +17,7 @@ import 'package:fitpilot/core/ui/semicircle_progress.dart';
 import 'package:fitpilot/core/ui/profile_avatar.dart';
 import 'package:fitpilot/features/programs/presentation/widgets/training_program_card.dart';
 import 'package:fitpilot/features/today/presentation/widgets/log_list_item.dart';
+import 'package:fitpilot/features/today/presentation/widgets/protein_row.dart';
 
 /// How many meals the Today summary shows before deferring to "View all".
 ///
@@ -75,7 +76,7 @@ class TodayScreen extends ConsumerWidget {
             return CustomScrollView(
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   sliver: SliverToBoxAdapter(
                     child: _HeroSection(
                       status: state.dayStatus,
@@ -84,6 +85,14 @@ class TodayScreen extends ConsumerWidget {
                       profile: profile,
                     ),
                   ),
+                ),
+
+                // Directly under the ring: calories say when to stop eating,
+                // protein says what to eat, and someone in a deficit without
+                // enough protein loses muscle with the fat.
+                const SliverPadding(
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  sliver: SliverToBoxAdapter(child: ProteinRow()),
                 ),
 
                 // Meals sit directly under the ring: it is the list users

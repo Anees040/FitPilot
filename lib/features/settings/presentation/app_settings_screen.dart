@@ -9,6 +9,7 @@ import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
+import 'package:fitpilot/application/providers/protein_provider.dart';
 import 'package:fitpilot/data/services/data_export_service.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 
@@ -89,6 +90,16 @@ class _Body extends ConsumerWidget {
             if (v) HapticFeedback.selectionClick();
             await _saveProfile(ref, profile.copyWith(hapticsOn: v));
           },
+        ),
+
+        const SizedBox(height: 20),
+        _Section(label: 'Nutrition'),
+        _ProteinGoalRow(profile: profile),
+        _NavRow(
+          icon: Icons.egg_alt_outlined,
+          title: 'Cheap protein guide',
+          subtitle: 'Hit your target on daal, chana and eggs',
+          onTap: () => context.push('/protein-guide'),
         ),
 
         const SizedBox(height: 20),
@@ -276,6 +287,105 @@ class _Body extends ConsumerWidget {
           'the equipment you actually have.',
         ),
       ],
+    );
+  }
+}
+
+/// Protein goal with a stepper and a reset back to the recommendation.
+///
+/// The recommendation is 1.6 g/kg. Showing it alongside the override means a
+/// user who has typed a number can always find their way back to a sane one.
+class _ProteinGoalRow extends ConsumerWidget {
+  final Profile profile;
+
+  const _ProteinGoalRow({required this.profile});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    final recommended = ref.watch(recommendedProteinProvider);
+    final target = ref.watch(proteinTargetProvider);
+    final isOverridden = profile.proteinGoalG != null;
+
+    Future<void> save(double? grams) async {
+      final repo = await ref.read(profileRepositoryProvider.future);
+      await repo.save(profile.copyWith(proteinGoalG: grams, clearProteinGoal: grams == null));
+      ref.invalidate(profileProvider);
+    }
+
+    if (target == null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: AppCard(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Icon(Icons.egg_alt_outlined, size: 20, color: ext.textDisabled),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  'Set your weight to get a protein target',
+                  style: theme.textTheme.caption,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: AppCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(Icons.egg_alt_outlined, size: 20, color: theme.colorScheme.primary),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Daily protein goal', style: theme.textTheme.bodyStrong),
+                      const SizedBox(height: 2),
+                      Text(
+                        isOverridden && recommended != null
+                            ? 'Your own goal. We suggest ${recommended}g.'
+                            : '1.6 g per kg of bodyweight',
+                        style: theme.textTheme.caption,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: target <= 40
+                      ? null
+                      : () => save((target - 5).toDouble()),
+                ),
+                Text('${target}g', style: theme.textTheme.bodyStrong),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: target >= 250
+                      ? null
+                      : () => save((target + 5).toDouble()),
+                ),
+              ],
+            ),
+            if (isOverridden && recommended != null && target != recommended)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => save(null),
+                  child: const Text('Reset to recommended'),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

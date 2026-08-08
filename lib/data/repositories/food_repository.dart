@@ -96,6 +96,7 @@ class FoodRepository {
         imageUrl: row['image_url'] as String?,
         imageKey: row['image_key'] as String?,
         isVerified: TolerantReader.readBool(row['is_verified']) ?? false,
+        proteinPerPortionG: TolerantReader.readDouble(row['protein_g']),
       );
     } catch (e) {
       assert(() {

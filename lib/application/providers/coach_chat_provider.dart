@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
+import 'package:fitpilot/application/providers/protein_provider.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/data/ai/coach_service.dart';
 import 'package:fitpilot/data/repositories/chat_repository.dart';
@@ -139,12 +140,15 @@ class CoachChatNotifier extends AsyncNotifier<CoachChatState> {
     try {
       final today = await ref.read(todayProvider.future);
       final profile = await ref.read(profileProvider.future);
+      final protein = ref.read(proteinTodayProvider);
       return CoachContext(
         name: profile.name,
         todayKcal: today.dayStatus.total.midpoint,
         targetKcal: profile.targetOverride,
         toBurn: today.dayStatus.toBurn,
         activeProgram: profile.activeProgramId,
+        proteinTodayG: protein.consumedG.round(),
+        proteinTargetG: protein.targetG,
       );
     } catch (_) {
       return null;

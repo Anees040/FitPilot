@@ -38,6 +38,12 @@ class Profile extends Equatable {
   final String? activeProgramId;
   final int? activeProgramWeek;
   final int? activeProgramDay;
+  /// The user's own daily protein goal in grams, overriding the weight-based
+  /// recommendation. Null means "use the recommendation".
+  ///
+  /// LOCAL-ONLY: absent from the Supabase schema, never pushed or pulled.
+  final double? proteinGoalG;
+
   final DateTime updatedAt;
 
   static const int defaultAllowanceKcal = 300;
@@ -66,6 +72,7 @@ class Profile extends Equatable {
     this.activeProgramId,
     this.activeProgramWeek,
     this.activeProgramDay,
+    this.proteinGoalG,
     required this.updatedAt,
   }) {
     if (weightKg < 25 || weightKg > 300) {
@@ -141,7 +148,11 @@ class Profile extends Equatable {
     String? activeProgramId,
     int? activeProgramWeek,
     int? activeProgramDay,
+    double? proteinGoalG,
     bool clearProgram = false,
+    /// copyWith cannot pass null to mean "unset", so clearing the protein goal
+    /// (back to the weight-based recommendation) needs its own flag.
+    bool clearProteinGoal = false,
     DateTime? updatedAt,
     bool clearOverride = false,
   }) {
@@ -162,6 +173,7 @@ class Profile extends Equatable {
       themeColor: themeColor ?? this.themeColor,
       planCategoryPref: planCategoryPref ?? this.planCategoryPref,
       planPacePref: planPacePref ?? this.planPacePref,
+      proteinGoalG: clearProteinGoal ? null : (proteinGoalG ?? this.proteinGoalG),
       unitKgLb: unitKgLb ?? this.unitKgLb,
       weekStartsMon: weekStartsMon ?? this.weekStartsMon,
       hapticsOn: hapticsOn ?? this.hapticsOn,
@@ -198,6 +210,7 @@ class Profile extends Equatable {
     activeProgramId,
     activeProgramWeek,
     activeProgramDay,
+    proteinGoalG,
     updatedAt,
   ];
 

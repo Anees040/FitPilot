@@ -24,6 +24,7 @@ class SeedImporter {
     int cheats = await _importCheatFoods();
     int exercises = await _importExercises();
     int programs = await _importPrograms();
+    await _backfillFoodProtein();
     debugPrint(
       '[Seed] foods=$foods (cheat=$cheats) '
       'exercises=$exercises programs=$programs',
@@ -52,6 +53,7 @@ class SeedImporter {
         'kcal_min': TolerantReader.readInt(f['kcal_min']) ?? 0,
         'kcal_max': TolerantReader.readInt(f['kcal_max']) ?? 0,
         'image_key': resolveImageKey(name),
+        'protein_g': TolerantReader.readDouble(f['protein_g']),
         'is_verified': 1,
       });
     }
@@ -74,6 +76,45 @@ class SeedImporter {
   ///
   /// Writes through a raw batch, which deliberately bypasses `sync_queue`:
   /// seed rows are bundled with the app and must not be pushed to Supabase.
+  /// Fills in protein for seeded foods that predate the protein columns.
+  ///
+  /// [_importFoods] returns early once the catalog has rows, so an existing
+  /// install would otherwise keep NULL protein for every food forever. This
+  /// runs on each launch but does nothing once the values are in place: the
+  /// guard query is a single indexed COUNT.
+  ///
+  /// Only rows still missing a value are touched, so a figure the user edited
+  /// is never overwritten.
+  Future<void> _backfillFoodProtein() async {
+    final pending = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM food_catalog WHERE protein_g IS NULL',
+      ),
+    );
+    if (pending == null || pending == 0) return;
+
+    final jsonStr = await rootBundle.loadString('assets/seed/foods.json');
+    final foods = json.decode(jsonStr) as List<dynamic>;
+
+    final batch = db.batch();
+    var updated = 0;
+    for (final food in foods) {
+      final f = food as Map<String, dynamic>;
+      final protein = TolerantReader.readDouble(f['protein_g']);
+      if (protein == null) continue;
+      batch.update(
+        'food_catalog',
+        {'protein_g': protein},
+        where: 'id = ? AND protein_g IS NULL',
+        whereArgs: [f['id']],
+      );
+      updated++;
+    }
+    if (updated == 0) return;
+    await batch.commit(noResult: true);
+    debugPrint('[Seed] backfilled protein for up to $updated foods');
+  }
+
   Future<int> _importCheatFoods() async {
     final jsonStr = await rootBundle.loadString('assets/seed/foods_cheat.json');
     final List<dynamic> foods = json.decode(jsonStr) as List<dynamic>;
@@ -103,6 +144,7 @@ class SeedImporter {
           'kcal_min': TolerantReader.readInt(f['kcal_min']) ?? 0,
           'kcal_max': TolerantReader.readInt(f['kcal_max']) ?? 0,
           'image_key': resolveImageKey(name),
+          'protein_g': TolerantReader.readDouble(f['protein_g']),
           'is_verified': 1,
         },
         conflictAlgorithm: ConflictAlgorithm.ignore,
