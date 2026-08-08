@@ -4,14 +4,19 @@ import 'package:go_router/go_router.dart';
 
 import 'package:fitpilot/application/providers/coach_chat_provider.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
+import 'package:fitpilot/core/ui/coach_mark.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/utils/require_online.dart';
+import 'package:fitpilot/domain/entities/chat_conversation.dart';
 import 'package:fitpilot/domain/entities/chat_message.dart';
+import 'package:fitpilot/features/coach/presentation/chat_markdown.dart';
 
 /// The in-app AI coach.
 ///
-/// Scope is enforced server-side by the system instruction, so this screen
-/// stays a plain transcript: bubbles, a typing indicator and an input bar.
+/// Threaded like any modern assistant: a drawer lists past chats, each with its
+/// own actions, and the coach mark in the app bar starts a fresh one. Scope is
+/// enforced server-side by the system instruction, so this screen stays a
+/// transcript plus navigation.
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 
@@ -22,11 +27,13 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _input = TextEditingController();
   final _scroll = ScrollController();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  static const _starters = [
+  static const starters = [
     'How do I burn 300 kcal fast?',
     'What should I eat for dinner?',
     'How does the burn plan work?',
+    'Cheap ways to hit my protein target?',
   ];
 
   @override
@@ -37,7 +44,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _scrollToBottom() {
-    // Runs after the new bubble is laid out, otherwise the extent is stale.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scroll.hasClients) return;
       _scroll.animateTo(
@@ -57,69 +63,64 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _scrollToBottom();
   }
 
-  Future<void> _confirmClear() async {
-    final theme = Theme.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Clear conversation?'),
-        content: Text(
-          'This deletes every message on this device. It cannot be undone.',
-          style: theme.textTheme.body,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await ref.read(coachChatProvider.notifier).clear();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final chat = ref.watch(coachChatProvider);
+    final state = chat.valueOrNull ?? const CoachChatState();
 
     ref.listen(coachChatProvider, (_, next) {
       if (next.valueOrNull?.messages.isNotEmpty ?? false) _scrollToBottom();
     });
 
-    final state = chat.valueOrNull ?? const CoachChatState();
-
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: theme.colorScheme.surface,
+      drawer: const _ConversationDrawer(),
       appBar: AppBar(
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          tooltip: 'Chat history',
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         title: Row(
           children: [
-            Icon(Icons.auto_awesome, size: 18, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
-            const Text('Coach'),
+            const CoachMark(size: 26),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Coach', style: theme.textTheme.h2),
+                  if (state.conversation != null)
+                    Text(
+                      state.conversation!.title,
+                      style: theme.textTheme.overline.copyWith(
+                        color: theme.extension<AppColors>()!.textDisabled,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'clear') _confirmClear();
+          IconButton(
+            tooltip: 'New chat',
+            icon: const Icon(Icons.add_comment_outlined),
+            onPressed: () async {
+              await ref.read(coachChatProvider.notifier).startNew();
+              _input.clear();
             },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'clear', child: Text('Clear conversation')),
-            ],
+          ),
+          IconButton(
+            tooltip: 'Close',
+            icon: const Icon(Icons.close_rounded),
+            onPressed: () => context.pop(),
           ),
         ],
       ),
@@ -135,26 +136,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     )
                   : state.isEmpty
                   ? _EmptyState(onStarter: _send)
-                  : ListView.builder(
-                      controller: _scroll,
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                      itemCount: state.messages.length +
-                          (state.isTyping ? 1 : 0) +
-                          (state.error != null ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index < state.messages.length) {
-                          return _Bubble(message: state.messages[index]);
-                        }
-                        if (state.isTyping && index == state.messages.length) {
-                          return const _TypingBubble();
-                        }
-                        return _ErrorRow(
-                          message: state.error!,
-                          onRetry: () =>
-                              ref.read(coachChatProvider.notifier).retry(),
-                        );
-                      },
-                    ),
+                  : _Transcript(state: state, controller: _scroll),
             ),
             _InputBar(
               controller: _input,
@@ -165,6 +147,291 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
       ),
     );
+  }
+}
+
+class _Transcript extends ConsumerWidget {
+  final CoachChatState state;
+  final ScrollController controller;
+
+  const _Transcript({required this.state, required this.controller});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final extras = (state.isTyping ? 1 : 0) + (state.error != null ? 1 : 0);
+
+    return ListView.builder(
+      controller: controller,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      itemCount: state.messages.length + extras,
+      itemBuilder: (context, index) {
+        if (index < state.messages.length) {
+          return _Bubble(message: state.messages[index]);
+        }
+        if (state.isTyping && index == state.messages.length) {
+          return const _TypingBubble();
+        }
+        return _ErrorRow(
+          message: state.error!,
+          onRetry: () => ref.read(coachChatProvider.notifier).retry(),
+        );
+      },
+    );
+  }
+}
+
+/// The drawer: past chats, each with rename and delete.
+class _ConversationDrawer extends ConsumerWidget {
+  const _ConversationDrawer();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+    final listAsync = ref.watch(conversationListProvider);
+    final active = ref.watch(coachChatProvider).valueOrNull?.conversation?.id;
+
+    return Drawer(
+      backgroundColor: theme.colorScheme.surface,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
+              child: Row(
+                children: [
+                  const CoachMark(size: 30),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text('Your chats', style: theme.textTheme.h2),
+                  ),
+                  IconButton(
+                    tooltip: 'New chat',
+                    icon: const Icon(Icons.add_rounded),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      await ref.read(coachChatProvider.notifier).startNew();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Divider(color: ext.hairline, height: 1),
+            Expanded(
+              child: listAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(
+                  child: Text(
+                    "Couldn't load your chats.",
+                    style: theme.textTheme.caption,
+                  ),
+                ),
+                data: (conversations) {
+                  if (conversations.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.forum_outlined,
+                            size: 34,
+                            color: ext.textDisabled,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No chats yet.\nAsk the coach something to start one.',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.caption,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: conversations.length,
+                    itemBuilder: (context, i) => _ConversationRow(
+                      conversation: conversations[i],
+                      isActive: conversations[i].id == active,
+                    ),
+                  );
+                },
+              ),
+            ),
+            if (listAsync.valueOrNull?.isNotEmpty ?? false) ...[
+              Divider(color: ext.hairline, height: 1),
+              TextButton.icon(
+                onPressed: () => _confirmDeleteAll(context, ref),
+                icon: Icon(Icons.delete_sweep_outlined, size: 18, color: ext.error),
+                label: Text(
+                  'Delete all chats',
+                  style: theme.textTheme.caption.copyWith(color: ext.error),
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteAll(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Delete all chats?'),
+        content: const Text(
+          'Every conversation on this device is removed. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(true),
+            child: const Text('Delete all'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(coachChatProvider.notifier).deleteAll();
+    if (context.mounted) Navigator.of(context).pop();
+  }
+}
+
+class _ConversationRow extends ConsumerWidget {
+  final ChatConversation conversation;
+  final bool isActive;
+
+  const _ConversationRow({required this.conversation, required this.isActive});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: isActive
+            ? theme.colorScheme.primary.withValues(alpha: 0.12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        dense: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(
+          conversation.title,
+          style: theme.textTheme.body.copyWith(
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            color: isActive ? theme.colorScheme.primary : null,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          '${conversation.messageCount} message'
+          '${conversation.messageCount == 1 ? '' : 's'} · '
+          '${conversation.relativeAge()}',
+          style: theme.textTheme.overline.copyWith(color: ext.textDisabled),
+        ),
+        trailing: PopupMenuButton<String>(
+          icon: Icon(Icons.more_vert_rounded, size: 18, color: ext.textDisabled),
+          onSelected: (value) async {
+            if (value == 'rename') {
+              await _rename(context, ref);
+            } else if (value == 'delete') {
+              await _delete(context, ref);
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(
+              value: 'rename',
+              child: Row(
+                children: [
+                  Icon(Icons.edit_outlined, size: 17),
+                  SizedBox(width: 10),
+                  Text('Rename'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete_outline_rounded, size: 17),
+                  SizedBox(width: 10),
+                  Text('Delete'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        onTap: () async {
+          Navigator.of(context).pop();
+          await ref.read(coachChatProvider.notifier).open(conversation.id);
+        },
+      ),
+    );
+  }
+
+  Future<void> _rename(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController(text: conversation.title);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Rename chat'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 60,
+          decoration: const InputDecoration(hintText: 'Chat name'),
+          onSubmitted: (v) => Navigator.of(c).pop(v),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    if (result == null || result.trim().isEmpty) return;
+    await ref.read(coachChatProvider.notifier).rename(conversation.id, result);
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Delete this chat?'),
+        content: Text('"${conversation.title}" will be removed permanently.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(coachChatProvider.notifier).delete(conversation.id);
   }
 }
 
@@ -181,24 +448,15 @@ class _EmptyState extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: 32),
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.14),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.auto_awesome,
-              color: theme.colorScheme.primary,
-              size: 30,
-            ),
+          const SizedBox(height: 28),
+          const CoachMark(size: 68),
+          const SizedBox(height: 18),
+          Text(
+            'Ask your coach',
+            style: theme.textTheme.h1,
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
-          Text('Ask your coach', style: theme.textTheme.h1, textAlign: TextAlign.center),
           const SizedBox(height: 8),
           Text(
             'Training, food, calories and how to use FitPilot — ask anything.',
@@ -206,7 +464,7 @@ class _EmptyState extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 28),
-          for (final starter in _ChatScreenState._starters)
+          for (final starter in _ChatScreenState.starters)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: InkWell(
@@ -214,7 +472,10 @@ class _EmptyState extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 13,
+                  ),
                   decoration: BoxDecoration(
                     color: ext.surfaceRaised,
                     borderRadius: BorderRadius.circular(24),
@@ -225,7 +486,11 @@ class _EmptyState extends StatelessWidget {
                       Expanded(
                         child: Text(starter, style: theme.textTheme.body),
                       ),
-                      Icon(Icons.north_east_rounded, size: 15, color: ext.textDisabled),
+                      Icon(
+                        Icons.north_east_rounded,
+                        size: 15,
+                        color: ext.textDisabled,
+                      ),
                     ],
                   ),
                 ),
@@ -249,36 +514,60 @@ class _Bubble extends StatelessWidget {
     final isUser = message.isUser;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment:
-            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.78,
+          if (!isUser) ...[
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: CoachMark(size: 26),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: isUser
-                  ? theme.colorScheme.primary.withValues(alpha: 0.16)
-                  : ext.surfaceRaised,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(18),
-                topRight: const Radius.circular(18),
-                bottomLeft: Radius.circular(isUser ? 18 : 4),
-                bottomRight: Radius.circular(isUser ? 4 : 18),
-              ),
-              border: isUser ? null : Border.all(color: ext.hairline),
-            ),
-            child: Text(message.content, style: theme.textTheme.body),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(
-              message.clockLabel,
-              style: theme.textTheme.caption.copyWith(color: ext.textDisabled),
+            const SizedBox(width: 9),
+          ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment:
+                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.74,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isUser
+                        ? theme.colorScheme.primary.withValues(alpha: 0.16)
+                        : ext.surfaceRaised,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(18),
+                      topRight: const Radius.circular(18),
+                      bottomLeft: Radius.circular(isUser ? 18 : 5),
+                      bottomRight: Radius.circular(isUser ? 5 : 18),
+                    ),
+                    border: isUser ? null : Border.all(color: ext.hairline),
+                  ),
+                  // Coach replies arrive with light markdown; rendering it is
+                  // what makes an answer scannable rather than a wall of
+                  // asterisks.
+                  child: ChatMessageBody(content: message.content),
+                ),
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text(
+                    message.clockLabel,
+                    style: theme.textTheme.overline.copyWith(
+                      color: ext.textDisabled,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -287,7 +576,7 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-/// Three dots that fade in sequence while the coach is thinking.
+/// The coach mark turning, plus three fading dots.
 class _TypingBubble extends StatefulWidget {
   const _TypingBubble();
 
@@ -297,16 +586,10 @@ class _TypingBubble extends StatefulWidget {
 
 class _TypingBubbleState extends State<_TypingBubble>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    )..repeat();
-  }
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat();
 
   @override
   void dispose() {
@@ -319,48 +602,54 @@ class _TypingBubbleState extends State<_TypingBubble>
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
 
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: ext.surfaceRaised,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomLeft: Radius.circular(4),
-            bottomRight: Radius.circular(18),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: ThinkingCoachMark(size: 26),
           ),
-          border: Border.all(color: ext.hairline),
-        ),
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(3, (i) {
-                // Stagger each dot by a third of the cycle.
-                final t = (_controller.value - i * 0.2) % 1.0;
-                final opacity = t < 0.5 ? 0.3 + t : 1.3 - t;
-                return Padding(
-                  padding: EdgeInsets.only(right: i == 2 ? 0 : 5),
-                  child: Opacity(
-                    opacity: opacity.clamp(0.3, 1.0),
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        shape: BoxShape.circle,
+          const SizedBox(width: 9),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            decoration: BoxDecoration(
+              color: ext.surfaceRaised,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(5),
+                bottomRight: Radius.circular(18),
+              ),
+              border: Border.all(color: ext.hairline),
+            ),
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(3, (i) {
+                  final t = (_controller.value - i * 0.2) % 1.0;
+                  final opacity = t < 0.5 ? 0.3 + t : 1.3 - t;
+                  return Padding(
+                    padding: EdgeInsets.only(right: i == 2 ? 0 : 5),
+                    child: Opacity(
+                      opacity: opacity.clamp(0.3, 1.0),
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }),
-            );
-          },
-        ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -421,7 +710,6 @@ class _InputBarState extends State<_InputBar> {
   @override
   void initState() {
     super.initState();
-    // Keeps the send button's enabled state in step with the text.
     widget.controller.addListener(_onChanged);
   }
 
@@ -460,14 +748,18 @@ class _InputBarState extends State<_InputBar> {
                 controller: widget.controller,
                 enabled: widget.enabled,
                 minLines: 1,
-                maxLines: 4,
+                maxLines: 5,
                 textCapitalization: TextCapitalization.sentences,
                 style: theme.textTheme.body,
                 cursorColor: theme.colorScheme.primary,
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: widget.enabled ? 'Ask about food or training…' : 'Coach is typing…',
-                  hintStyle: theme.textTheme.caption.copyWith(color: ext.textDisabled),
+                  hintText: widget.enabled
+                      ? 'Ask about food or training…'
+                      : 'Coach is thinking…',
+                  hintStyle: theme.textTheme.caption.copyWith(
+                    color: ext.textDisabled,
+                  ),
                 ),
                 onSubmitted: canSend ? widget.onSend : null,
               ),
@@ -481,7 +773,9 @@ class _InputBarState extends State<_InputBar> {
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
-              onTap: canSend ? () => widget.onSend(widget.controller.text) : null,
+              onTap: canSend
+                  ? () => widget.onSend(widget.controller.text)
+                  : null,
               child: SizedBox(
                 width: 46,
                 height: 46,

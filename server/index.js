@@ -466,7 +466,12 @@ const COACH_SYSTEM_INSTRUCTION =
   'Keep answers under 120 words, encouraging, plain language, metric units. ' +
   'Never give medical diagnoses or medication advice - suggest seeing a professional instead. ' +
   "Use the provided user context when relevant (today's calories, streak, active program). " +
-  'When asked about diet or protein, prefer cheap local foods (daal, chana, soya chunks, eggs, dahi) over supplements.';
+  'When asked about diet or protein, prefer cheap local foods (daal, chana, soya chunks, eggs, dahi) over supplements. ' +
+  // The app renders a small markdown subset. Naming it here is what turns a
+  // wall of prose into something scannable on a phone; asking for anything
+  // richer would just print literal syntax the renderer ignores.
+  'Formatting: reply in short prose. When listing options or steps, use "- " bullets, one per line. ' +
+  'Use **bold** only for the single most important number or action. Never use headings, tables, or links.';
 
 // Renders the caller's context into a line the model can actually use. Every
 // field is optional — a guest with an empty profile still gets a useful coach.

@@ -46,6 +46,10 @@ import 'package:fitpilot/core/utils/food_image_resolver.dart';
 ///      quiet-hours / per-category columns on notification_prefs. Both
 ///      LOCAL-ONLY — per-device delivery state and settings, deliberately
 ///      absent from the Supabase schema, never pushed or pulled.
+/// 25 — coach conversations: new chat_conversations table and conversation_id
+///      on chat_messages, so the coach keeps separate, titled threads instead
+///      of one endless transcript. LOCAL-ONLY, never synced. Existing messages
+///      are migrated into a single "Previous chat" thread rather than dropped.
 /// 24 — protein tracking: protein_g on food_catalog and food_logs,
 ///      protein_goal_g on profile. All three are LOCAL-ONLY — they are absent
 ///      from the Supabase schema, so they must never appear in a sync push
@@ -60,7 +64,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 24,
+      version: 25,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -72,7 +76,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 24,
+      version: 25,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -314,9 +318,20 @@ class AppDatabase {
     batch.execute('''
       CREATE TABLE chat_messages (
         id TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL,
         role TEXT NOT NULL,
         content TEXT NOT NULL,
         created_at TEXT NOT NULL
+      )
+    ''');
+
+    // One coach thread. LOCAL-ONLY, like the messages themselves.
+    batch.execute('''
+      CREATE TABLE chat_conversations (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
       )
     ''');
 
@@ -356,6 +371,12 @@ class AppDatabase {
     );
     batch.execute(
       'CREATE INDEX idx_chat_messages_created ON chat_messages (created_at)',
+    );
+    batch.execute(
+      'CREATE INDEX idx_chat_messages_conversation ON chat_messages (conversation_id)',
+    );
+    batch.execute(
+      'CREATE INDEX idx_chat_conversations_updated ON chat_conversations (updated_at)',
     );
     batch.execute(
       'CREATE INDEX idx_notifications_created ON notifications (created_at)',
@@ -852,6 +873,49 @@ class AppDatabase {
       ]) {
         try {
           await db.execute(statement);
+        } catch (_) {}
+      }
+    }
+    if (oldVersion < 25) {
+      // Coach conversations.
+      //
+      // LOCAL-ONLY, like the messages. Existing messages predate threads, so
+      // rather than dropping them they are adopted into one thread named
+      // "Previous chat" — losing a user's history to a schema change would be
+      // indefensible for something they may have asked real questions in.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS chat_conversations (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+      try {
+        await db.execute(
+          "ALTER TABLE chat_messages ADD COLUMN conversation_id TEXT NOT NULL DEFAULT 'legacy'",
+        );
+      } catch (_) {}
+
+      final existing = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM chat_messages'),
+      );
+      if (existing != null && existing > 0) {
+        final now = DateTime.now().toIso8601String();
+        await db.insert('chat_conversations', {
+          'id': 'legacy',
+          'title': 'Previous chat',
+          'created_at': now,
+          'updated_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+
+      for (final index in const [
+        'CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation ON chat_messages (conversation_id)',
+        'CREATE INDEX IF NOT EXISTS idx_chat_conversations_updated ON chat_conversations (updated_at)',
+      ]) {
+        try {
+          await db.execute(index);
         } catch (_) {}
       }
     }
