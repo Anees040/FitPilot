@@ -1,6 +1,16 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+/// The user's avatar, from either a remote URL or a local file.
+///
+/// Google sign-in supplies an https URL; a photo the user picks themselves is
+/// written into the app sandbox and stored as a plain filesystem path. Both end
+/// up in the same profile field, so this widget decides which loader to use
+/// rather than making every caller care.
 class ProfileAvatar extends StatefulWidget {
+  /// An https URL or an absolute file path.
   final String? avatarUrl;
   final String? name;
   final double radius;
@@ -43,16 +53,30 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool hasValidUrl = widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty;
-    final bool showImage = hasValidUrl && !_hasError;
+    final source = widget.avatarUrl?.trim();
+    final hasSource = source != null && source.isNotEmpty;
+    final showImage = hasSource && !_hasError;
     final initials = _getInitials();
+
+    // A picked photo is a file path, not a URL. NetworkImage on a path throws,
+    // which is why a locally chosen avatar used to silently fall back to
+    // initials.
+    ImageProvider? provider;
+    if (showImage) {
+      final isRemote = source.startsWith('http://') || source.startsWith('https://');
+      if (isRemote) {
+        provider = NetworkImage(source);
+      } else if (!kIsWeb) {
+        provider = FileImage(File(source));
+      }
+    }
 
     return CircleAvatar(
       radius: widget.radius,
       backgroundColor: theme.colorScheme.primaryContainer,
       foregroundColor: theme.colorScheme.onPrimaryContainer,
-      backgroundImage: showImage ? NetworkImage(widget.avatarUrl!) : null,
-      onBackgroundImageError: showImage
+      backgroundImage: provider,
+      onBackgroundImageError: provider != null
           ? (exception, stackTrace) {
               if (mounted) {
                 setState(() {
@@ -61,7 +85,7 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
               }
             }
           : null,
-      child: showImage
+      child: provider != null
           ? null
           : (initials != null
               ? Text(

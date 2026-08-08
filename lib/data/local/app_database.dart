@@ -963,7 +963,24 @@ class AppDatabase {
     batch.delete('weight_entries');
     batch.delete('burn_completions');
     batch.delete('sync_queue');
-    
+    batch.delete('program_completions');
+    batch.delete('saved_products');
+
+    // Local-only tables. These never reach Supabase, so nothing else would
+    // ever clear them — leaving one account's coach conversations, machine
+    // scans or notifications visible to whoever signs in next on this phone.
+    // Each is wrapped because an older install may predate the table.
+    for (final table in const [
+      'chat_messages',
+      'chat_conversations',
+      'machine_scans',
+      'notifications',
+    ]) {
+      try {
+        batch.delete(table);
+      } catch (_) {}
+    }
+
     // Clear sync metadata so the next user triggers a full initial pull
     try {
       batch.delete('sync_metadata');

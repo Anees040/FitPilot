@@ -16,12 +16,13 @@ import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/collapsible_group.dart';
 import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/profile_avatar.dart';
+import 'package:fitpilot/data/services/avatar_service.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
-import 'package:fitpilot/features/settings/presentation/image_credits_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -276,59 +277,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                CollapsibleGroup(
-                  title: 'App Settings',
-                  icon: Icons.settings,
-                  child: Column(
+                // Units, week start, haptics and image credits used to be
+                // duplicated here and in /settings, so a change in one place
+                // looked like it had not taken effect in the other. /settings
+                // is the single home for them now; this is just the door.
+                AppCard(
+                  padding: const EdgeInsets.all(14),
+                  onTap: () => context.push('/settings'),
+                  child: Row(
                     children: [
-
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('Unit', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        trailing: DropdownButton<String>(
-                          value: const ['kg', 'lb'].contains(profile.unitKgLb) ? profile.unitKgLb : 'kg',
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(value: 'kg', child: Text('Kilograms (kg)')),
-                            DropdownMenuItem(value: 'lb', child: Text('Pounds (lb)')),
+                      Icon(Icons.settings_outlined,
+                          size: 20, color: theme.colorScheme.primary),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('App settings', style: theme.textTheme.bodyStrong),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Units, reminders, protein goal, data export and about',
+                              style: theme.textTheme.caption,
+                            ),
                           ],
-                          onChanged: (v) => _updateProfile(profile.copyWith(unitKgLb: v)),
                         ),
                       ),
-                      Divider(color: theme.dividerColor, height: 1),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('Week Starts On', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        trailing: DropdownButton<bool>(
-                          value: profile.weekStartsMon,
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(value: true, child: Text('Monday')),
-                            DropdownMenuItem(value: false, child: Text('Sunday')),
-                          ],
-                          onChanged: (v) => _updateProfile(profile.copyWith(weekStartsMon: v)),
-                        ),
-                      ),
-                      Divider(color: theme.dividerColor, height: 1),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('Haptics', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        value: profile.hapticsOn,
-                        activeThumbColor: theme.colorScheme.primary,
-                        onChanged: (v) => _updateProfile(profile.copyWith(hapticsOn: v)),
-                      ),
-                      Divider(color: theme.dividerColor, height: 1),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('Image Credits', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        subtitle: Text('Photographers behind the food photos', style: theme.textTheme.bodySmall),
-                        trailing: Icon(Icons.chevron_right, color: theme.textTheme.bodySmall?.color),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ImageCreditsScreen(),
-                          ),
-                        ),
-                      ),
+                      Icon(Icons.chevron_right, color: ext.textDisabled),
                     ],
                   ),
                 ),
@@ -349,9 +323,75 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _updateProfile(Profile newProfile) async {
+  Future<void> _updateProfile(Profile newProfile) async {
     await ref.read(profileRepositoryProvider.future).then((r) => r.save(newProfile));
     ref.invalidate(profileProvider);
+  }
+
+  /// Lets the user set or clear their profile photo.
+  ///
+  /// Offers "remove" only when there is something to remove, and clearing puts
+  /// the Google photo back if the account has one — losing it entirely would be
+  /// a surprise, since the user never chose to delete it.
+  Future<void> _changeAvatar(Profile profile) async {
+    final theme = Theme.of(context);
+    final hasCustom = AvatarService.isLocal(profile.avatarUrl);
+
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Text('Profile photo', style: theme.textTheme.h2),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.of(sheetContext).pop('gallery'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.of(sheetContext).pop('camera'),
+            ),
+            if (hasCustom)
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded),
+                title: const Text('Remove photo'),
+                onTap: () => Navigator.of(sheetContext).pop('remove'),
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+
+    if (choice == 'remove') {
+      await AvatarService.clear();
+      // Fall back to the provider's photo when there is one.
+      final session = ref.read(currentUserProvider);
+      final providerPhoto = session?.metadata['avatar_url'] as String?;
+      await _updateProfile(
+        profile.copyWith(
+          avatarUrl: providerPhoto,
+          clearAvatar: providerPhoto == null,
+        ),
+      );
+      return;
+    }
+
+    final path = await AvatarService.pick(
+      source: choice == 'camera' ? ImageSource.camera : ImageSource.gallery,
+    );
+    if (path == null || !mounted) return;
+    await _updateProfile(profile.copyWith(avatarUrl: path));
   }
 
   Widget _buildHeaderAvatar(ThemeData theme, AppColors ext, Profile profile) {
@@ -360,10 +400,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     
     return Column(
       children: [
-        ProfileAvatar(
-          avatarUrl: profile.avatarUrl,
-          name: profile.name,
-          radius: 48.0,
+        // Tappable: the avatar was previously read-only, so a user with no
+        // Google photo had no way to set one at all.
+        Stack(
+          children: [
+            ProfileAvatar(
+              avatarUrl: profile.avatarUrl,
+              name: profile.name,
+              radius: 48.0,
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Material(
+                color: theme.colorScheme.primary,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => _changeAvatar(profile),
+                  child: Padding(
+                    padding: const EdgeInsets.all(7),
+                    child: Icon(
+                      Icons.photo_camera_rounded,
+                      size: 16,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         Text(
@@ -592,6 +658,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     await ref.read(authRepositoryProvider).signOut();
                     final db = await ref.read(databaseProvider.future);
                     await AppDatabase.clearUserData(db);
+                    // The avatar is a file in the sandbox, so a database wipe
+                    // cannot reach it — it would otherwise greet the next user.
+                    await AvatarService.clear();
                     resetApplicationState(ref);
                     if (context.mounted) {
                       context.go('/welcome');
@@ -695,6 +764,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         }
                         final db = await ref.read(databaseProvider.future);
                         await AppDatabase.clearUserData(db);
+                    // The avatar is a file in the sandbox, so a database wipe
+                    // cannot reach it — it would otherwise greet the next user.
+                    await AvatarService.clear();
                         resetApplicationState(ref);
                         if (context.mounted) {
                           Navigator.pop(context);

@@ -153,12 +153,15 @@ class Profile extends Equatable {
     /// copyWith cannot pass null to mean "unset", so clearing the protein goal
     /// (back to the weight-based recommendation) needs its own flag.
     bool clearProteinGoal = false,
+    /// copyWith cannot pass null to mean "unset", so removing the avatar
+    /// entirely (rather than replacing it) needs its own flag.
+    bool clearAvatar = false,
     DateTime? updatedAt,
     bool clearOverride = false,
   }) {
     return Profile(
       name: name ?? this.name,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
+      avatarUrl: clearAvatar ? null : (avatarUrl ?? this.avatarUrl),
       weightKg: weightKg ?? this.weightKg,
       goalWeightKg: goalWeightKg ?? this.goalWeightKg,
       heightCm: heightCm ?? this.heightCm,

@@ -20,6 +20,11 @@ class SupabaseAuthRepository implements AuthRepository {
         id: user.id,
         email: user.email ?? '',
         emailConfirmed: user.emailConfirmedAt != null,
+        createdAt: DateTime.tryParse(user.createdAt),
+        // Carries the provider's display name and photo. Dropping these meant
+        // a Google sign-in arrived with nothing to populate the profile from,
+        // so the app greeted the user as "Pilot" with a generic avatar.
+        metadata: user.userMetadata ?? const {},
       );
     });
   }
