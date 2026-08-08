@@ -59,6 +59,37 @@ const FALLBACK_MODELS = [
 
 let preferredModel = null;
 
+// Models known to be out of quota, and when to try them again.
+//
+// Without this the fallback chain multiplies cost: every request walks all five
+// models, so one user action can spend five quota units and a handful of failed
+// requests can drain a day's free-tier allowance. A model that reports quota
+// exhaustion is skipped entirely until its cooldown expires, which turns the
+// chain back into roughly one API call per request.
+const cooldowns = new Map(); // model -> epoch ms when it may be retried
+
+// Quota on the free tier resets daily, but a shorter window is used so a
+// temporary spike does not sideline a model for the rest of the day.
+const QUOTA_COOLDOWN_MS = 30 * 60 * 1000;
+
+function isCoolingDown(model) {
+  const until = cooldowns.get(model);
+  if (until === undefined) return false;
+  if (Date.now() >= until) {
+    cooldowns.delete(model);
+    return false;
+  }
+  return true;
+}
+
+// Only quota failures earn a cooldown. A transient 503 overload should be
+// retried promptly, not parked for half an hour.
+function isQuotaExhausted(err) {
+  const status = err?.status ?? err?.code;
+  const msg = String(err?.message || err);
+  return status === 429 || /quota|RESOURCE_EXHAUSTED/i.test(msg);
+}
+
 // Shown to the user when every model in the chain is refused. Deliberately
 // actionable: this state is almost always a billing/quota problem on the key,
 // not something the user did wrong.
@@ -106,14 +137,28 @@ async function generate(request) {
     ? [preferredModel, ...FALLBACK_MODELS.filter((m) => m !== preferredModel)]
     : FALLBACK_MODELS;
 
+  const available = order.filter((m) => !isCoolingDown(m));
+  if (available.length === 0) {
+    // Every model is known to be out of quota. Failing here costs nothing,
+    // rather than spending five more doomed calls to learn the same thing.
+    const err = new Error('All models are out of quota.');
+    err.status = 429;
+    throw err;
+  }
+
   let lastError = null;
-  for (const model of order) {
+  for (const model of available) {
     try {
       return await callModel(model, request);
     } catch (err) {
       lastError = err;
       if (!isModelUnavailable(err)) throw err;
-      console.warn(`Gemini: ${model} unavailable (${err?.status || '?'}), trying next`);
+      if (isQuotaExhausted(err)) {
+        cooldowns.set(model, Date.now() + QUOTA_COOLDOWN_MS);
+        console.warn(`Gemini: ${model} out of quota, cooling down`);
+      } else {
+        console.warn(`Gemini: ${model} unavailable (${err?.status || '?'}), trying next`);
+      }
       if (preferredModel === model) preferredModel = null;
     }
   }
