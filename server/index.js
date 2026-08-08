@@ -89,12 +89,16 @@ function isModelUnavailable(err) {
   );
 }
 
-// True when the model rejected the thinking budget rather than the request.
-// Some models require a non-zero budget, so the retry below simply drops it.
+// True when a 400 might be down to the thinking override.
+//
+// Matched on the status alone, not on the message: the API commonly answers
+// with a bare "Request contains an invalid argument", naming nothing. Since
+// this is only consulted when thinkingConfig was actually sent, retrying
+// without it is safe — a 400 from any other cause simply fails again and is
+// surfaced to the caller.
 function isThinkingConfigRejected(err) {
   const status = err?.status ?? err?.code;
-  const msg = String(err?.message || err);
-  return status === 400 && /thinking/i.test(msg);
+  return status === 400;
 }
 
 async function generate(request) {
@@ -125,11 +129,13 @@ async function callModel(model, request) {
     }
     return response;
   } catch (err) {
-    // A model that insists on a thinking budget gets one more try without the
-    // override, rather than being skipped as if it were unavailable.
-    if (!isThinkingConfigRejected(err)) throw err;
+    // Only meaningful if we actually sent the override; otherwise there is
+    // nothing to drop and the error stands.
+    const sentThinking = request.config?.thinkingConfig !== undefined;
+    if (!sentThinking || !isThinkingConfigRejected(err)) throw err;
+
     console.warn(`Gemini: ${model} rejected thinkingConfig, retrying without it`);
-    const { thinkingConfig, ...config } = request.config || {};
+    const { thinkingConfig, ...config } = request.config;
     const response = await ai.models.generateContent({ ...request, config, model });
     preferredModel = model;
     return response;
