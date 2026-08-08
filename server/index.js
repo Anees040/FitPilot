@@ -341,6 +341,116 @@ app.post('/api/analyze-machine', quota, async (req, res) => {
   }
 });
 
+
+// ---------------------------------------------------------------------------
+// In-app AI coach. Text in, text out — no responseSchema.
+//
+// Separate, larger quota from the photo endpoints: a conversation is many
+// cheap turns, whereas a photo estimate is one expensive call.
+// ---------------------------------------------------------------------------
+const CHAT_DAILY_LIMIT = 40;
+const chatUsage = new Map();
+
+function chatQuota(req, res, next) {
+  const deviceId = req.header('X-Device-Id') || req.ip || 'unknown';
+  const today = new Date().toISOString().slice(0, 10);
+  const entry = chatUsage.get(deviceId);
+  if (entry && entry.day === today && entry.count >= CHAT_DAILY_LIMIT) {
+    return res.status(429).json({
+      error: 'Daily coach limit reached (' + CHAT_DAILY_LIMIT + ' messages/day). Try again tomorrow.',
+    });
+  }
+  req.deviceId = deviceId;
+  req.today = today;
+  return next();
+}
+
+const COACH_SYSTEM_INSTRUCTION =
+  'You are FitPilot Coach, the friendly in-app assistant of the FitPilot calorie & fitness app. ' +
+  'ONLY answer questions about: fitness, exercise technique, workouts, calories, nutrition, weight goals, ' +
+  'and how to use the FitPilot app (logging food by search/photo/label/barcode, burn plan, programs, progress, profile). ' +
+  'If asked anything else, reply in ONE friendly sentence redirecting to fitness topics. ' +
+  'Keep answers under 120 words, encouraging, plain language, metric units. ' +
+  'Never give medical diagnoses or medication advice - suggest seeing a professional instead. ' +
+  "Use the provided user context when relevant (today's calories, streak, active program). " +
+  'When asked about diet or protein, prefer cheap local foods (daal, chana, soya chunks, eggs, dahi) over supplements.';
+
+// Renders the caller's context into a line the model can actually use. Every
+// field is optional — a guest with an empty profile still gets a useful coach.
+function contextLine(context) {
+  if (!context || typeof context !== 'object') return '';
+  const bits = [];
+  if (context.name) bits.push('Name: ' + context.name);
+  if (Number.isFinite(context.todayKcal)) bits.push("Eaten today: " + Math.round(context.todayKcal) + ' kcal');
+  if (Number.isFinite(context.targetKcal)) bits.push('Daily target: ' + Math.round(context.targetKcal) + ' kcal');
+  if (Number.isFinite(context.toBurn)) bits.push('Still to burn: ' + Math.round(context.toBurn) + ' kcal');
+  if (Number.isFinite(context.streakDays)) bits.push('Streak: ' + context.streakDays + ' days');
+  if (context.activeProgram) bits.push('Active program: ' + context.activeProgram);
+  if (Number.isFinite(context.proteinTodayG)) bits.push('Protein today: ' + Math.round(context.proteinTodayG) + ' g');
+  if (Number.isFinite(context.proteinTargetG)) bits.push('Protein target: ' + Math.round(context.proteinTargetG) + ' g');
+  if (bits.length === 0) return '';
+  return 'Current user context - ' + bits.join('; ') + '.';
+}
+
+app.post('/api/chat', chatQuota, async (req, res) => {
+  try {
+    if (!ai) {
+      return res.status(503).json({ error: 'Server is not configured (missing API key).' });
+    }
+
+    const rawMessages = Array.isArray(req.body.messages) ? req.body.messages : [];
+    // Only the tail matters, and it bounds the token cost per request.
+    const messages = rawMessages
+      .filter((m) => m && typeof m.text === 'string' && m.text.trim())
+      .slice(-20)
+      .map((m) => ({
+        role: m.role === 'model' ? 'model' : 'user',
+        parts: [{ text: String(m.text).slice(0, 2000) }],
+      }));
+
+    if (messages.length === 0) {
+      return res.status(400).json({ error: 'No message to answer.' });
+    }
+
+    const line = contextLine(req.body.context);
+    const systemInstruction = line
+      ? [COACH_SYSTEM_INSTRUCTION, line].join(' ')
+      : COACH_SYSTEM_INSTRUCTION;
+
+    const response = await generate({
+      contents: messages,
+      config: {
+        systemInstruction,
+        temperature: 0.7,
+        maxOutputTokens: 400,
+      },
+    });
+
+    const reply = (response.text || '').trim();
+    if (!reply) {
+      return res.status(502).json({ error: 'Coach did not reply. Try again.' });
+    }
+
+    const entry = chatUsage.get(req.deviceId);
+    if (!entry || entry.day !== req.today) {
+      chatUsage.set(req.deviceId, { day: req.today, count: 1 });
+    } else {
+      entry.count += 1;
+    }
+
+    return res.json({ reply });
+  } catch (error) {
+    console.error('Error in coach chat:', error && error.message ? error.message : error);
+    if (isModelUnavailable(error)) {
+      return res.status(429).json({ error: quotaMessage() });
+    }
+    return res.status(500).json({
+      error: 'Coach is unavailable right now.',
+      details: error && error.message ? error.message : String(error),
+    });
+  }
+});
+
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {

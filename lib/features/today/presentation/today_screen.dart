@@ -34,6 +34,26 @@ class TodayScreen extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
+      // Ask Coach. Today already reserves 100px of bottom padding below its
+      // last card, so the button floats over empty space rather than content,
+      // and this Scaffold sits inside the shell so it clears the bottom nav.
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(right: 4, bottom: 4),
+        child: Tooltip(
+          message: 'Ask Coach',
+          child: FloatingActionButton(
+            heroTag: 'today-coach-fab',
+            onPressed: () => context.push('/coach'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            elevation: 4,
+            child: Icon(
+              Icons.auto_awesome,
+              color: Theme.of(context).colorScheme.onPrimary,
+              size: 24,
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         bottom: false,
         child: stateAsync.when(

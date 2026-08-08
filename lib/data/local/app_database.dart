@@ -38,6 +38,10 @@ import 'package:fitpilot/core/utils/food_image_resolver.dart';
 ///      absent from the Supabase schema, so it must never appear in a sync push
 ///      payload and a pull must never write it. Capped at 20 rows by
 ///      MachineScanRepository (oldest deleted first).
+/// 22 — added chat_messages table for the in-app AI Coach conversation.
+///      LOCAL-ONLY: a per-device transcript, deliberately absent from the
+///      Supabase schema, so it must never appear in a sync push payload and a
+///      pull must never write it.
 class AppDatabase {
   static Database? _db;
 
@@ -47,7 +51,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 21,
+      version: 22,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -59,7 +63,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 21,
+      version: 22,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -269,6 +273,18 @@ class AppDatabase {
       )
     ''');
 
+    // In-app AI Coach transcript.
+    // LOCAL-ONLY: deliberately absent from the Supabase schema, never enqueued
+    // to sync_queue.
+    batch.execute('''
+      CREATE TABLE chat_messages (
+        id TEXT PRIMARY KEY,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
     // Gym machine scanner history.
     // LOCAL-ONLY: deliberately absent from the Supabase schema. It caches AI
     // results so a scan stays readable offline, and is capped at 20 rows by
@@ -302,6 +318,9 @@ class AppDatabase {
     );
     batch.execute(
       'CREATE INDEX idx_machine_scans_created ON machine_scans (created_at)',
+    );
+    batch.execute(
+      'CREATE INDEX idx_chat_messages_created ON chat_messages (created_at)',
     );
 
     await batch.commit(noResult: true);
@@ -710,6 +729,28 @@ class AppDatabase {
       try {
         await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_machine_scans_created ON machine_scans (created_at)',
+        );
+      } catch (_) {}
+    }
+    if (oldVersion < 22) {
+      // In-app AI Coach transcript.
+      //
+      // LOCAL-ONLY: the conversation lives on this device only. It is
+      // deliberately absent from the Supabase schema, so it must never appear
+      // in a sync push payload and a pull must never write it.
+      //
+      // Additive — no existing table is touched, so no user data can be lost.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS chat_messages (
+          id TEXT PRIMARY KEY,
+          role TEXT NOT NULL,
+          content TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
+      try {
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_chat_messages_created ON chat_messages (created_at)',
         );
       } catch (_) {}
     }
