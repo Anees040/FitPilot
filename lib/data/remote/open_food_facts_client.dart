@@ -28,7 +28,16 @@ class OffFoundMissingEnergy extends OffResult {
   OffFoundMissingEnergy(this.productName);
 }
 
-class OffNotFound extends OffResult {}
+class OffNotFound extends OffResult {
+  /// Product name recovered from a secondary barcode directory, when one knew
+  /// the item even though no nutrition database did.
+  ///
+  /// Lets the "add this product" sheet prefill the name so the user only has
+  /// to supply the calories.
+  final String? suggestedName;
+
+  OffNotFound({this.suggestedName});
+}
 
 class OffMalformed extends OffResult {}
 
@@ -60,7 +69,7 @@ class HttpOpenFoodFactsClient implements OpenFoodFactsClient {
           .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 404) {
-        return OffNotFound();
+        return OffNotFound(suggestedName: await _lookupNameOnly(barcode));
       }
       if (response.statusCode != 200) {
         return OffNetworkError();
@@ -68,7 +77,7 @@ class HttpOpenFoodFactsClient implements OpenFoodFactsClient {
 
       final json = jsonDecode(response.body);
       if (json['status'] == 0) {
-        return OffNotFound();
+        return OffNotFound(suggestedName: await _lookupNameOnly(barcode));
       }
 
       final product = json['product'];
@@ -132,6 +141,51 @@ class HttpOpenFoodFactsClient implements OpenFoodFactsClient {
     } catch (e) {
       if (e is FormatException) return OffMalformed();
       return OffNetworkError();
+    }
+  }
+
+  /// Asks a general barcode directory for the product's *name* only.
+  ///
+  /// Open Food Facts is nutrition-first and misses most local brands. A generic
+  /// UPC directory sometimes still knows the name, which turns "unknown
+  /// product" into one field to fill instead of three.
+  ///
+  /// Measured coverage: the directory answers for international items (a
+  /// Coca-Cola EAN resolves) but NOT for Pakistani 896-prefix barcodes, which
+  /// are exactly the ones Open Food Facts already missed. Those are skipped so
+  /// the common local-product path reaches the "add it" sheet immediately
+  /// instead of waiting out a lookup that is known to fail.
+  ///
+  /// Strictly best-effort: short timeout, null on any failure.
+  Future<String?> _lookupNameOnly(String barcode) async {
+    // GS1 prefix 890–899 is South Asia (896 = Pakistan). No public directory
+    // covers these, so do not spend the user's time asking.
+    if (barcode.length >= 3) {
+      final prefix = int.tryParse(barcode.substring(0, 3));
+      if (prefix != null && prefix >= 890 && prefix <= 899) return null;
+    }
+
+    try {
+      final response = await client
+          .get(Uri.parse('https://api.upcitemdb.com/prod/trial/lookup?upc=$barcode'))
+          .timeout(const Duration(seconds: 4));
+      if (response.statusCode != 200) return null;
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map) return null;
+      final items = decoded['items'];
+      if (items is! List || items.isEmpty) return null;
+
+      final first = items.first;
+      if (first is! Map) return null;
+
+      final title = first['title']?.toString().trim();
+      if (title == null || title.isEmpty) return null;
+      return title;
+    } catch (_) {
+      // Directory unavailable, rate-limited, or offline — the user can still
+      // type the name.
+      return null;
     }
   }
 }

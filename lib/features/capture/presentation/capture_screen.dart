@@ -151,7 +151,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     }
 
     if (result is OffNotFound || result is OffMalformed) {
-      await _addUnknownProduct(barcode);
+      await _addUnknownProduct(
+        barcode,
+        suggestedName: result is OffNotFound ? result.suggestedName : null,
+      );
       if (mounted) {
         _lastScannedBarcode = null;
         await _cameraController?.start();
@@ -178,11 +181,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   /// On save the product is stored against its barcode, so the flow continues
   /// straight into the normal quantity step and every future scan resolves
   /// locally.
-  Future<void> _addUnknownProduct(String barcode) async {
+  Future<void> _addUnknownProduct(String barcode, {String? suggestedName}) async {
     final saved = await AppBottomSheet.show<OffResult?>(
       context,
       child: UnknownBarcodeSheet(
         barcode: barcode,
+        initialName: suggestedName,
         onScanLabel: () {
           Navigator.of(context).pop();
           _onModeChanged(CaptureMode.foodLabel);
