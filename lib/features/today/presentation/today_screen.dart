@@ -197,12 +197,31 @@ class TodayScreen extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _ImageCard(
-                          title: 'Training\nPrograms',
-                          imagePath: 'assets/illustrations/athletic_hero.png',
-                          // Programs is a tab now: switch to it rather than
-                          // pushing a second copy over the shell.
-                          onTap: () => context.go('/programs'),
+                        Row(
+                          children: [
+                            // Sits next to the machine scanner: both answer
+                            // "am I doing this right?" — one from a photo of
+                            // the machine, one from a photo of you.
+                            Expanded(
+                              child: _ImageCard(
+                                title: 'Form\nCheck',
+                                imagePath:
+                                    'assets/illustrations/calisthenics_hero.png',
+                                onTap: () => context.push('/form-check'),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _ImageCard(
+                                title: 'Training\nPrograms',
+                                imagePath:
+                                    'assets/illustrations/athletic_hero.png',
+                                // Programs is a tab now: switch to it rather
+                                // than pushing a second copy over the shell.
+                                onTap: () => context.go('/programs'),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
