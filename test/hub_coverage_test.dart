@@ -38,5 +38,25 @@ void main() {
       final exercises = await container.read(hubCategoryExercisesProvider(c).future);
       expect(exercises, isNotEmpty, reason: 'Category tile "$c" should return > 0 exercises');
     }
+
+    // "Train by style" tiles on the hub. These select by discipline rather than
+    // muscle, so they need their own guard — a card that opens an empty list is
+    // exactly the bug that got "View All Categories" removed.
+    final styles = [
+      'calisthenics',
+      'cardio',
+      'stretching',
+      'home',
+      'machines',
+      'free_weights',
+    ];
+    for (final s in styles) {
+      final exercises = await container.read(hubCategoryExercisesProvider(s).future);
+      expect(
+        exercises,
+        isNotEmpty,
+        reason: 'Train-by-style tile "$s" should return > 0 exercises',
+      );
+    }
   });
 }

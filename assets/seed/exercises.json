@@ -1664,5 +1664,248 @@
     ],
     "media_asset": null,
     "video_url": null
+  },
+  {
+    "id": "standing-hamstring-stretch",
+    "name": "Standing hamstring stretch",
+    "category": "indoor",
+    "subcategory": "stretching",
+    "met": 2.3,
+    "equipment": null,
+    "primary_muscles": [
+      "Hams"
+    ],
+    "secondary_muscles": [
+      "Lower back"
+    ],
+    "difficulty": 1,
+    "pace_tier": "easy",
+    "steps": [
+      "Stand tall and step one foot a short pace forward, heel down, toes up.",
+      "Keep that leg straight and hinge forward from the hips, not the waist.",
+      "Rest both hands on the front thigh and keep your back flat.",
+      "Breathe out and settle into the stretch until you feel a firm pull, never pain.",
+      "Hold 30 seconds, then swap legs. Two rounds each side."
+    ],
+    "mistakes": [
+      "Rounding the back instead of hinging at the hips.",
+      "Bouncing to push deeper, which makes the muscle tighten.",
+      "Holding your breath while you stretch."
+    ],
+    "media_asset": null,
+    "video_url": null
+  },
+  {
+    "id": "quad-stretch",
+    "name": "Standing quad stretch",
+    "category": "indoor",
+    "subcategory": "stretching",
+    "met": 2.3,
+    "equipment": null,
+    "primary_muscles": [
+      "Quads"
+    ],
+    "secondary_muscles": [
+      "Hip flexors"
+    ],
+    "difficulty": 1,
+    "pace_tier": "easy",
+    "steps": [
+      "Stand next to a wall and rest one hand on it for balance.",
+      "Bend one knee and take that ankle in your hand behind you.",
+      "Draw the heel toward your glute and keep both knees close together.",
+      "Push the hip of the stretching leg gently forward and stand tall.",
+      "Hold 30 seconds, then swap sides. Two rounds each."
+    ],
+    "mistakes": [
+      "Letting the knee drift out to the side.",
+      "Arching the lower back instead of tucking the hips.",
+      "Yanking the ankle rather than easing it in."
+    ],
+    "media_asset": null,
+    "video_url": null
+  },
+  {
+    "id": "hip-flexor-lunge-stretch",
+    "name": "Kneeling hip flexor stretch",
+    "category": "indoor",
+    "subcategory": "stretching",
+    "met": 2.5,
+    "equipment": null,
+    "primary_muscles": [
+      "Hip flexors"
+    ],
+    "secondary_muscles": [
+      "Quads",
+      "Glutes"
+    ],
+    "difficulty": 1,
+    "pace_tier": "easy",
+    "steps": [
+      "Kneel on one knee with the other foot flat in front, knee over ankle.",
+      "Put something soft under the down knee if the floor is hard.",
+      "Squeeze the glute of the kneeling leg and tuck your hips under.",
+      "Shift your weight slightly forward, keeping your chest upright.",
+      "Hold 30 seconds each side. Two rounds."
+    ],
+    "mistakes": [
+      "Leaning the chest forward instead of tucking the hips.",
+      "Letting the front knee travel past the toes.",
+      "Skipping the glute squeeze, which is what makes this work."
+    ],
+    "media_asset": null,
+    "video_url": null
+  },
+  {
+    "id": "cat-cow",
+    "name": "Cat-cow spinal flow",
+    "category": "indoor",
+    "subcategory": "stretching",
+    "met": 2.5,
+    "equipment": null,
+    "primary_muscles": [
+      "Lower back"
+    ],
+    "secondary_muscles": [
+      "Core"
+    ],
+    "difficulty": 1,
+    "pace_tier": "easy",
+    "steps": [
+      "Start on hands and knees, hands under shoulders, knees under hips.",
+      "Breathe in and drop your belly, lifting your chest and tailbone.",
+      "Breathe out and round the spine, tucking your chin and tailbone.",
+      "Move slowly with the breath, one cycle every four to five seconds.",
+      "Do 10 slow cycles. Great as a warm-up or a desk-day reset."
+    ],
+    "mistakes": [
+      "Rushing the movement instead of following the breath.",
+      "Locking the elbows and shrugging the shoulders.",
+      "Forcing range through the neck rather than the whole spine."
+    ],
+    "media_asset": null,
+    "video_url": null
+  },
+  {
+    "id": "childs-pose",
+    "name": "Child's pose",
+    "category": "indoor",
+    "subcategory": "stretching",
+    "met": 2.3,
+    "equipment": null,
+    "primary_muscles": [
+      "Lower back"
+    ],
+    "secondary_muscles": [
+      "Shoulders"
+    ],
+    "difficulty": 1,
+    "pace_tier": "easy",
+    "steps": [
+      "Kneel with your big toes together and knees roughly hip-width apart.",
+      "Sit your hips back toward your heels.",
+      "Walk your hands forward and let your forehead rest down.",
+      "Let the ribs sink between the thighs and breathe into your back.",
+      "Hold 45 to 60 seconds. Use it to cool down after any session."
+    ],
+    "mistakes": [
+      "Holding tension in the shoulders instead of letting them soften.",
+      "Forcing the hips down if the knees complain — widen them instead.",
+      "Shallow chest breathing rather than slow belly breaths."
+    ],
+    "media_asset": null,
+    "video_url": null
+  },
+  {
+    "id": "chest-doorway-stretch",
+    "name": "Doorway chest stretch",
+    "category": "indoor",
+    "subcategory": "stretching",
+    "met": 2.3,
+    "equipment": null,
+    "primary_muscles": [
+      "Chest"
+    ],
+    "secondary_muscles": [
+      "Shoulders"
+    ],
+    "difficulty": 1,
+    "pace_tier": "easy",
+    "steps": [
+      "Stand in a doorway and place a forearm flat on the frame, elbow at shoulder height.",
+      "Step the same-side foot through the doorway.",
+      "Turn your chest gently away from that arm.",
+      "Keep the shoulder down, away from your ear.",
+      "Hold 30 seconds each side. Two rounds — ideal after a pressing session."
+    ],
+    "mistakes": [
+      "Letting the shoulder ride up toward the ear.",
+      "Pushing until it pinches at the front of the shoulder.",
+      "Twisting the lower back instead of rotating the chest."
+    ],
+    "media_asset": null,
+    "video_url": null
+  },
+  {
+    "id": "neck-shoulder-release",
+    "name": "Neck and shoulder release",
+    "category": "indoor",
+    "subcategory": "stretching",
+    "met": 2.0,
+    "equipment": null,
+    "primary_muscles": [
+      "Traps"
+    ],
+    "secondary_muscles": [
+      "Shoulders"
+    ],
+    "difficulty": 1,
+    "pace_tier": "easy",
+    "steps": [
+      "Sit or stand tall and let your arms hang heavy.",
+      "Tip one ear toward that shoulder until you feel a gentle pull.",
+      "For more, reach the opposite hand down toward the floor.",
+      "Keep your jaw loose and breathe slowly.",
+      "Hold 20 to 30 seconds each side. Repeat twice — good for phone and desk neck."
+    ],
+    "mistakes": [
+      "Pulling hard on the head with your hand.",
+      "Rolling the neck in full circles, which grinds the joints.",
+      "Hunching the opposite shoulder up as you tilt."
+    ],
+    "media_asset": null,
+    "video_url": null
+  },
+  {
+    "id": "full-body-mobility-flow",
+    "name": "Full-body mobility flow",
+    "category": "indoor",
+    "subcategory": "stretching",
+    "met": 3.0,
+    "equipment": null,
+    "primary_muscles": [
+      "Full body"
+    ],
+    "secondary_muscles": [
+      "Core",
+      "Hip flexors"
+    ],
+    "difficulty": 2,
+    "pace_tier": "easy",
+    "steps": [
+      "Start standing. Roll the shoulders back five times.",
+      "Do 10 slow bodyweight squats to the depth you own comfortably.",
+      "Step into a lunge and rotate your chest over the front leg, five each side.",
+      "Move into cat-cow for five cycles.",
+      "Finish with 10 slow hip circles each direction.",
+      "Run through twice before training, or once on a rest day."
+    ],
+    "mistakes": [
+      "Treating it as a workout and rushing for a burn.",
+      "Holding the breath through the harder positions.",
+      "Pushing into sharp pain instead of stopping at firm tension."
+    ],
+    "media_asset": null,
+    "video_url": null
   }
 ]

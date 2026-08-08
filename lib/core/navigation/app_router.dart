@@ -21,7 +21,6 @@ import 'package:fitpilot/features/capture/presentation/capture_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/exercise_library_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/exercise_detail_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/workout_hub_screen.dart';
-import 'package:fitpilot/features/exercises/presentation/all_categories_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/category_detail_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/muscle_detail_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/machine_scanner_screen.dart';
@@ -121,10 +120,6 @@ final appRouter = GoRouter(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const WorkoutHubScreen(),
       routes: [
-        GoRoute(
-          path: 'all',
-          builder: (context, state) => const AllCategoriesScreen(),
-        ),
         GoRoute(
           path: 'category/:id',
           builder: (context, state) => CategoryDetailScreen(

@@ -27,6 +27,49 @@ const _categoryData = <String, Map<String, dynamic>>{
       {'id': 'glutes', 'title': 'Glutes', 'subtitle': 'Stronger glutes and hips',       'image': 'assets/illustrations/legs_hero.png'},
     ],
   },
+  // Discipline categories: no muscle sub-tiles, the exercise list is the content.
+  'calisthenics': {
+    'title': 'Calisthenics',
+    'subtitle': 'Bodyweight strength — no equipment, train anywhere.',
+    'imagePath': 'assets/illustrations/calisthenics_hero.png',
+    'muscles': <Map<String, dynamic>>[],
+  },
+  'cardio': {
+    'title': 'Cardio',
+    'subtitle': 'Get your heart rate up and burn the surplus.',
+    'imagePath': 'assets/illustrations/cardio_hero.png',
+    'muscles': <Map<String, dynamic>>[],
+  },
+  'stretching': {
+    'title': 'Stretching & Mobility',
+    'subtitle': 'Loosen up, move better, recover faster.',
+    'imagePath': 'assets/illustrations/stretching_hero.png',
+    'muscles': <Map<String, dynamic>>[],
+  },
+  'home': {
+    'title': 'Home Workouts',
+    'subtitle': 'Everything you can do in a room, no gym needed.',
+    'imagePath': 'assets/illustrations/recovery_hero.png',
+    'muscles': <Map<String, dynamic>>[],
+  },
+  'machines': {
+    'title': 'Machines',
+    'subtitle': 'Guided movement — the easiest place to start.',
+    'imagePath': 'assets/illustrations/equip_gym.png',
+    'muscles': <Map<String, dynamic>>[],
+  },
+  'free_weights': {
+    'title': 'Free Weights',
+    'subtitle': 'Barbells and dumbbells for real strength.',
+    'imagePath': 'assets/illustrations/powerlifting_hero.png',
+    'muscles': <Map<String, dynamic>>[],
+  },
+  'outdoor': {
+    'title': 'Outdoor',
+    'subtitle': 'Run, cycle, hike — training outside the four walls.',
+    'imagePath': 'assets/illustrations/athletic_hero.png',
+    'muscles': <Map<String, dynamic>>[],
+  },
 };
 
 class CategoryDetailScreen extends ConsumerWidget {

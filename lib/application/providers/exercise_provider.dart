@@ -65,8 +65,43 @@ final hubCategoryExercisesProvider = FutureProvider.autoDispose.family<List<Exer
     }).toList();
   }
 
+  // Discipline categories select by how the exercise is done, not by the muscle
+  // it trains, so they read `category`/`subcategory` instead of the muscle map.
+  final discipline = _disciplineFilter(target);
+  if (discipline != null) return all.where(discipline).toList();
+
   // Any other category id follows the same muscle-group rules as the tiles.
   return all
       .where((e) => MuscleSynonyms.matches(e.primaryMuscles, target))
       .toList();
 });
+
+/// Predicate for a discipline-style hub category, or null when [id] is not one.
+///
+/// Kept separate from the muscle map because "cardio" and "calisthenics"
+/// describe a training style; matching them against muscle synonyms would
+/// return nothing.
+bool Function(Exercise)? _disciplineFilter(String id) {
+  switch (id) {
+    case 'calisthenics':
+      return (e) =>
+          e.category == ExerciseCategory.calisthenics ||
+          e.subcategory == 'bodyweight';
+    case 'cardio':
+      return (e) => e.subcategory == 'cardio';
+    case 'stretching':
+      return (e) => e.subcategory == 'stretching';
+    case 'machines':
+      return (e) => e.subcategory == 'machine';
+    case 'free_weights':
+      return (e) => e.subcategory == 'free_weight';
+    case 'outdoor':
+      return (e) => e.category == ExerciseCategory.outdoor;
+    case 'home':
+      return (e) =>
+          e.category == ExerciseCategory.indoor ||
+          e.category == ExerciseCategory.calisthenics;
+    default:
+      return null;
+  }
+}

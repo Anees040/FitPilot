@@ -23,6 +23,7 @@ import 'package:image_picker/image_picker.dart';
 import 'widgets/barcode_quantity_sheet.dart';
 import 'widgets/ocr_review_sheet.dart';
 import 'widgets/in_app_camera_view.dart';
+import 'widgets/unknown_barcode_sheet.dart';
 
 enum CaptureMode { scanFood, barcode, foodLabel, library }
 
@@ -128,14 +129,29 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
     if (!mounted) return;
 
-    if (result == null) {
+    // `null` and OffNetworkError mean "we could not ask", which is worth a
+    // retry. OffNotFound / OffMalformed mean the databases genuinely do not
+    // know this product — common for local brands — so offer to add it
+    // instead of dead-ending the scan.
+    final unreachable = result == null || result is OffNetworkError;
+    if (unreachable) {
       AppSnackbar.error(
         context,
-        'Product not found or network error.',
-        actionLabel: 'Enter Manually',
-        onAction: () => context.go('/log'),
+        "Couldn't reach the food database. Check your connection.",
+        actionLabel: 'Add manually',
+        onAction: () => _addUnknownProduct(barcode),
       );
       await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        _lastScannedBarcode = null;
+        await _cameraController?.start();
+        setState(() => _isProcessing = false);
+      }
+      return;
+    }
+
+    if (result is OffNotFound || result is OffMalformed) {
+      await _addUnknownProduct(barcode);
       if (mounted) {
         _lastScannedBarcode = null;
         await _cameraController?.start();
@@ -155,6 +171,31 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       await _cameraController?.start();
       setState(() => _isProcessing = false);
     }
+  }
+
+  /// Lets the user teach the app a product no database knows.
+  ///
+  /// On save the product is stored against its barcode, so the flow continues
+  /// straight into the normal quantity step and every future scan resolves
+  /// locally.
+  Future<void> _addUnknownProduct(String barcode) async {
+    final saved = await AppBottomSheet.show<OffResult?>(
+      context,
+      child: UnknownBarcodeSheet(
+        barcode: barcode,
+        onScanLabel: () {
+          Navigator.of(context).pop();
+          _onModeChanged(CaptureMode.foodLabel);
+        },
+      ),
+    );
+
+    if (!mounted || saved is! OffFound) return;
+
+    await AppBottomSheet.show(
+      context,
+      child: BarcodeQuantitySheet(barcode: barcode, offResult: saved),
+    );
   }
 
   Future<void> _handleBarcode(BarcodeCapture capture) async {

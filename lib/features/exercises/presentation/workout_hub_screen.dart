@@ -169,43 +169,7 @@ class WorkoutHubScreen extends ConsumerWidget {
                 ]),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    onTap: () => context.push('/workout-hub/all'),
-                    borderRadius: BorderRadius.circular(100),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(100),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'View All Categories',
-                            style: theme.textTheme.bodyStrong.copyWith(color: Colors.white, fontSize: 16),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded, size: 20, color: Colors.white),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            const SliverToBoxAdapter(child: _TrainingStyleSection()),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
@@ -586,6 +550,151 @@ class _CategoryTile extends StatelessWidget {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Training styles
+// ─────────────────────────────────────────────
+
+/// The muscle-group grid above answers "what do I want to train?".
+/// This section answers "how do I want to train?" — the same catalog sliced by
+/// discipline, which is how a beginner without a plan actually browses.
+///
+/// Replaces the old "View All Categories" button: that opened a screen listing
+/// only Upper and Lower Body, both already on this page.
+class _TrainingStyleSection extends StatelessWidget {
+  const _TrainingStyleSection();
+
+  static const _styles = <Map<String, String>>[
+    {
+      'id': 'calisthenics',
+      'title': 'Calisthenics',
+      'subtitle': 'Bodyweight only, train anywhere',
+      'image': 'assets/illustrations/calisthenics_hero.png',
+    },
+    {
+      'id': 'cardio',
+      'title': 'Cardio',
+      'subtitle': 'Raise the heart rate, burn the surplus',
+      'image': 'assets/illustrations/cardio_hero.png',
+    },
+    {
+      'id': 'stretching',
+      'title': 'Stretching',
+      'subtitle': 'Move better, recover faster',
+      'image': 'assets/illustrations/stretching_hero.png',
+    },
+    {
+      'id': 'home',
+      'title': 'Home Workouts',
+      'subtitle': 'No gym, no equipment',
+      'image': 'assets/illustrations/recovery_hero.png',
+    },
+    {
+      'id': 'machines',
+      'title': 'Machines',
+      'subtitle': 'Guided movement, beginner friendly',
+      'image': 'assets/illustrations/equip_gym.png',
+    },
+    {
+      'id': 'free_weights',
+      'title': 'Free Weights',
+      'subtitle': 'Barbells and dumbbells',
+      'image': 'assets/illustrations/powerlifting_hero.png',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Train by style', style: theme.textTheme.h2),
+          const SizedBox(height: 4),
+          Text(
+            'Pick how you want to train, not just what',
+            style: theme.textTheme.caption,
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < _styles.length; i += 2)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Expanded(child: _styleTile(context, _styles[i])),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: i + 1 < _styles.length
+                        ? _styleTile(context, _styles[i + 1])
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+          _BrowseAllRow(),
+        ],
+      ),
+    );
+  }
+
+  Widget _styleTile(BuildContext context, Map<String, String> style) {
+    return _CategoryTile(
+      title: style['title']!,
+      subtitle: style['subtitle']!,
+      color: Theme.of(context).colorScheme.primary,
+      imagePath: style['image']!,
+      isSmall: true,
+      onTap: () => context.push('/workout-hub/category/${style['id']}'),
+    );
+  }
+}
+
+/// Search and filter entry. The library screen already owns the search field,
+/// category and pace filters, so this routes there rather than duplicating them.
+class _BrowseAllRow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return InkWell(
+      onTap: () => context.push('/exercises'),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          color: ext.surfaceRaised,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ext.hairline),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search_rounded, color: theme.colorScheme.primary, size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Search all exercises', style: theme.textTheme.bodyStrong),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Filter by style, pace and difficulty',
+                    style: theme.textTheme.caption,
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: ext.textDisabled),
           ],
         ),
       ),

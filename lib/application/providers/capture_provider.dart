@@ -88,6 +88,32 @@ class CaptureNotifier extends Notifier<void> {
     }
   }
 
+  /// Saves a product the online database did not know about.
+  ///
+  /// Open Food Facts has very thin coverage of local brands, so a "not found"
+  /// scan is common. Storing the product under its barcode in `food_catalog`
+  /// means the next scan of that item resolves from the local row — instantly
+  /// and with no network. `is_verified: 0` marks it as user-supplied rather
+  /// than seed or database content.
+  Future<void> saveUnknownProduct({
+    required String barcode,
+    required String name,
+    required int kcalPer100g,
+    double? netWeightGrams,
+  }) async {
+    final db = await ref.read(databaseProvider.future);
+    await db.insert('food_catalog', {
+      'id': barcode,
+      'name': name,
+      'portion_label': '100g',
+      'grams': netWeightGrams,
+      'kcal_min': kcalPer100g,
+      'kcal_max': kcalPer100g,
+      'image_key': resolveImageKey(name),
+      'is_verified': 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   Future<double?> getSavedQuantity(String barcode) async {
     final db = await ref.read(databaseProvider.future);
     final rows = await db.query(

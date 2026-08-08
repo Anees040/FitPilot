@@ -30,6 +30,75 @@ const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
 // ---------------------------------------------------------------------------
+// Model fallback chain.
+//
+// Google cut free-tier allowances to zero for most models (Dec 2025), so a key
+// that worked yesterday can start returning 429 "limit: 0" for one specific
+// model while others still answer. Pinning a single model makes every AI
+// feature in the app fail at once.
+//
+// generate() walks this chain and returns the first model that answers. The
+// winner is cached so the happy path stays a single API call; the cache is
+// dropped as soon as that model starts failing again.
+// ---------------------------------------------------------------------------
+const FALLBACK_MODELS = [
+  MODEL,
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-flash-latest',
+  'gemini-2.0-flash-lite',
+].filter((m, i, all) => all.indexOf(m) === i);
+
+let preferredModel = null;
+
+// Shown to the user when every model in the chain is refused. Deliberately
+// actionable: this state is almost always a billing/quota problem on the key,
+// not something the user did wrong.
+function quotaMessage() {
+  return (
+    'AI features are temporarily unavailable — the daily AI allowance is used up. ' +
+    'Please try again later.'
+  );
+}
+
+// True when the failure is "this model is unavailable to this key" rather than
+// "this request was bad" — only those are worth retrying on another model.
+function isModelUnavailable(err) {
+  const status = err?.status ?? err?.code;
+  const msg = String(err?.message || err);
+  return (
+    status === 429 ||
+    status === 404 ||
+    status === 403 ||
+    /quota|RESOURCE_EXHAUSTED|not found|NOT_FOUND|unsupported|permission/i.test(msg)
+  );
+}
+
+async function generate(request) {
+  const order = preferredModel
+    ? [preferredModel, ...FALLBACK_MODELS.filter((m) => m !== preferredModel)]
+    : FALLBACK_MODELS;
+
+  let lastError = null;
+  for (const model of order) {
+    try {
+      const response = await ai.models.generateContent({ ...request, model });
+      if (preferredModel !== model) {
+        console.log(`Gemini: using model ${model}`);
+        preferredModel = model;
+      }
+      return response;
+    } catch (err) {
+      lastError = err;
+      if (!isModelUnavailable(err)) throw err;
+      console.warn(`Gemini: ${model} unavailable (${err?.status || '?'}), trying next`);
+      if (preferredModel === model) preferredModel = null;
+    }
+  }
+  throw lastError || new Error('No Gemini model available.');
+}
+
+// ---------------------------------------------------------------------------
 // Daily quota: 3 photo estimates per device per day (in-memory)
 // ---------------------------------------------------------------------------
 const DAILY_LIMIT = 20;
@@ -82,8 +151,7 @@ app.post('/api/estimate-food', quota, async (req, res) => {
       'Be honest about uncertainty: the range must span at least plus/minus 15 percent around your central estimate. ' +
       'Keep the name concise.';
 
-    const response = await ai.models.generateContent({
-      model: MODEL,
+    const response = await generate({
       contents: [
         {
           role: 'user',
@@ -133,7 +201,10 @@ app.post('/api/estimate-food', quota, async (req, res) => {
     return res.json(data);
   } catch (error) {
     console.error('Error estimating food:', error && error.message ? error.message : error);
-    return res.status(500).json({ 
+    if (isModelUnavailable(error)) {
+      return res.status(429).json({ error: quotaMessage() });
+    }
+    return res.status(500).json({
       error: 'Failed to estimate food calories.',
       details: error && error.message ? error.message : String(error)
     });
@@ -206,8 +277,7 @@ app.post('/api/analyze-machine', quota, async (req, res) => {
       'If the photo does NOT show gym or fitness equipment, set isGymMachine=false, machineName to a short description ' +
       'of what is actually shown, confidence to your certainty about that, and leave every list empty.';
 
-    const response = await ai.models.generateContent({
-      model: MODEL,
+    const response = await generate({
       contents: [
         {
           role: 'user',
@@ -261,6 +331,9 @@ app.post('/api/analyze-machine', quota, async (req, res) => {
     return res.json(data);
   } catch (error) {
     console.error('Error analyzing machine:', error && error.message ? error.message : error);
+    if (isModelUnavailable(error)) {
+      return res.status(429).json({ error: quotaMessage() });
+    }
     return res.status(500).json({
       error: 'Failed to analyze the machine.',
       details: error && error.message ? error.message : String(error),
