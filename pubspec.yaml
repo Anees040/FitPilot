@@ -47,6 +47,9 @@ dependencies:
   connectivity_plus: ^6.1.0
   mobile_scanner: ^5.2.3
   google_mlkit_text_recognition: ^0.13.0
+  # On-device pose estimation for the form check. Runs entirely offline: no
+  # video leaves the phone, and it costs nothing per use.
+  google_mlkit_pose_detection: ^0.12.1
   http: ^1.2.1
 
   sqflite_common_ffi: any

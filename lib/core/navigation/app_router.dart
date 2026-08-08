@@ -25,6 +25,7 @@ import 'package:fitpilot/features/exercises/presentation/category_detail_screen.
 import 'package:fitpilot/features/exercises/presentation/muscle_detail_screen.dart';
 import 'package:fitpilot/features/coach/presentation/chat_screen.dart';
 import 'package:fitpilot/features/log/presentation/protein_guide_screen.dart';
+import 'package:fitpilot/features/exercises/presentation/form_check_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/machine_scanner_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/machine_camera_screen.dart';
 import 'package:fitpilot/features/exercises/presentation/machine_result_screen.dart';
@@ -143,6 +144,11 @@ final appRouter = GoRouter(
           },
         ),
       ]
+    ),
+    GoRoute(
+      path: '/form-check',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const FormCheckScreen(),
     ),
     GoRoute(
       path: '/machine-scanner',

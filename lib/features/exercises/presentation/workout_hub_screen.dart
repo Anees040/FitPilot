@@ -51,6 +51,10 @@ class WorkoutHubScreen extends ConsumerWidget {
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               sliver: SliverToBoxAdapter(child: _MachineScannerCard()),
             ),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              sliver: SliverToBoxAdapter(child: _FormCheckCard()),
+            ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               sliver: SliverList(
@@ -697,6 +701,88 @@ class _BrowseAllRow extends StatelessWidget {
             Icon(Icons.chevron_right_rounded, color: ext.textDisabled),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+/// Entry to the on-device form check.
+///
+/// Sits beside the machine scanner: both answer "am I doing this right?", one
+/// from a photo of the machine and one from a photo of you.
+class _FormCheckCard extends StatelessWidget {
+  const _FormCheckCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      onTap: () => context.push('/form-check'),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: ext.energy.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(
+              Icons.accessibility_new_rounded,
+              color: ext.energy,
+              size: 25,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Form check',
+                        style: theme.textTheme.h2,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: ext.hairline,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'BETA',
+                        style: theme.textTheme.overline.copyWith(
+                          color: ext.textDisabled,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Check your squat depth — works offline, on your phone',
+                  style: theme.textTheme.caption,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right_rounded, color: ext.textDisabled),
+        ],
       ),
     );
   }
