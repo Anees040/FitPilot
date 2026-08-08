@@ -21,7 +21,6 @@ import 'package:fitpilot/core/ui/app_text_field.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/core/ui/select_chip.dart';
-import 'package:fitpilot/features/settings/presentation/notification_prefs_screen.dart' as fitpilot_settings;
 import 'package:fitpilot/features/settings/presentation/image_credits_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -260,8 +259,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text('Notifications', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                        subtitle: Text('Reminders, quiet hours and weigh-in day', style: theme.textTheme.bodySmall),
                         trailing: Icon(Icons.chevron_right, color: theme.textTheme.bodySmall?.color),
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const fitpilot_settings.NotificationPrefsScreen())),
+                        onTap: () => context.push('/settings/notifications'),
+                      ),
+                      Divider(color: theme.dividerColor, height: 1),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('All settings', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                        subtitle: Text('Units, data export, about and licences', style: theme.textTheme.bodySmall),
+                        trailing: Icon(Icons.chevron_right, color: theme.textTheme.bodySmall?.color),
+                        onTap: () => context.push('/settings'),
                       ),
                     ],
                   ),
