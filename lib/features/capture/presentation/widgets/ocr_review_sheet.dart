@@ -19,6 +19,7 @@ class OcrReviewSheet extends ConsumerStatefulWidget {
 class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
   late TextEditingController _kcalController;
   late TextEditingController _servingController;
+  late TextEditingController _proteinController;
   late NutritionBasis _basis;
 
   @override
@@ -30,6 +31,9 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
     _servingController = TextEditingController(
       text: widget.result.servingSizeGrams?.value.toString() ?? '',
     );
+    _proteinController = TextEditingController(
+      text: widget.result.proteinG?.value.toString() ?? '',
+    );
     _basis = widget.result.basis?.value ?? NutritionBasis.per100g;
   }
 
@@ -37,6 +41,7 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
   void dispose() {
     _kcalController.dispose();
     _servingController.dispose();
+    _proteinController.dispose();
     super.dispose();
   }
 
@@ -53,6 +58,8 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
           name: 'Scanned Label',
           kcal: kcal,
           grams: _basis == NutritionBasis.per100g ? 100 : serving,
+          // Blank stays null, not 0: an unread protein row means unknown.
+          proteinG: double.tryParse(_proteinController.text.trim()),
         );
 
     if (mounted) {
@@ -181,6 +188,12 @@ class _OcrReviewSheetState extends ConsumerState<OcrReviewSheet> {
             label: 'Serving Size (g/ml)',
             controller: _servingController,
             confidence: widget.result.servingSizeGrams?.confidence,
+          ),
+          const SizedBox(height: 16),
+          _buildField(
+            label: 'Protein (g, optional)',
+            controller: _proteinController,
+            confidence: widget.result.proteinG?.confidence,
           ),
           const SizedBox(height: 32),
           Row(

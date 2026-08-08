@@ -18,6 +18,54 @@ import 'package:fitpilot/features/plan/presentation/widgets/burn_log_sheet.dart'
 import '../../../core/ui/exercise_media.dart';
 
 
+/// Entry to the budget protein guide.
+///
+/// Sits on Plan because burning a surplus and eating enough protein are the
+/// same job: someone in a deficit without protein loses muscle along with the
+/// fat, which is the opposite of what the plan is for.
+class EatForResultsCard extends StatelessWidget {
+  const EatForResultsCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      onTap: () => context.push('/protein-guide'),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: ext.energy.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.egg_alt_outlined, color: ext.energy, size: 23),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Eat for results', style: theme.textTheme.h2),
+                const SizedBox(height: 3),
+                Text(
+                  'Cheap protein, no powders needed',
+                  style: theme.textTheme.caption,
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: ext.textDisabled),
+        ],
+      ),
+    );
+  }
+}
+
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
 
@@ -106,6 +154,8 @@ class PlanScreen extends ConsumerWidget {
               (option) => _BurnOptionCard(option: option, isExtraCredit: true),
             ),
           ],
+          const SizedBox(height: 24),
+          const EatForResultsCard(),
         ],
       );
     }
@@ -123,6 +173,8 @@ class PlanScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           const TrainingProgramCard(),
+          const SizedBox(height: 16),
+          const EatForResultsCard(),
         ],
       );
     }
@@ -196,6 +248,8 @@ class PlanScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           _buildDoneTodaySection(context, state),
         ],
+        const SizedBox(height: 24),
+        const EatForResultsCard(),
       ],
     );
   }

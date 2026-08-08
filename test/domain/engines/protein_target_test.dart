@@ -19,37 +19,37 @@ Profile _profile({
 
 void main() {
   group('recommend', () {
-    test('uses 1.6 g/kg for maintenance', () {
-      expect(ProteinTarget.recommend(_profile(weightKg: 70)), 112);
+    test('70 kg gives 110 g — 1.6 g/kg rounded to the nearest 5', () {
+      expect(ProteinTarget.recommend(_profile(weightKg: 70)), 110);
     });
 
-    test('is higher in a deficit, where muscle is at risk', () {
-      final cut = ProteinTarget.recommend(_profile(weightKg: 70, goal: Goal.lose))!;
-      final maintain = ProteinTarget.recommend(_profile(weightKg: 70))!;
-      expect(cut, greaterThan(maintain));
-      expect(cut, 126); // 1.8 g/kg
+    test('the same target regardless of goal', () {
+      // Deliberately goal-independent: 1.6 g/kg is already the muscle-building
+      // figure, so it covers cutting and building alike.
+      expect(ProteinTarget.recommend(_profile(weightKg: 70, goal: Goal.lose)), 110);
+      expect(ProteinTarget.recommend(_profile(weightKg: 70, goal: Goal.build)), 110);
     });
 
-    test('is moderate when gaining', () {
-      expect(ProteinTarget.recommend(_profile(weightKg: 70, goal: Goal.build)), 119);
+    test('rounds to the nearest 5, not the nearest gram', () {
+      // 80 x 1.6 = 128 -> 130
+      expect(ProteinTarget.recommend(_profile(weightKg: 80)), 130);
     });
 
-    test('a default-shaped profile still yields a sane target', () {
-      // weightKg is non-nullable and defaults to 70 kg for a fresh profile.
-      expect(ProteinTarget.recommend(_profile()), 112);
+    test('a null weight yields no target rather than a guess', () {
+      expect(ProteinTarget.recommendForWeight(null), isNull);
     });
 
-    test('the lightest allowed bodyweight still gets the floor', () {
-      // Profile itself rejects anything under 25 kg, so this is the low bound.
-      expect(ProteinTarget.recommend(_profile(weightKg: 25)), 40);
+    test('a light bodyweight is floored at 50 g', () {
+      expect(ProteinTarget.recommend(_profile(weightKg: 25)), 50);
     });
 
-    test('the heaviest allowed bodyweight is capped at a sane ceiling', () {
-      expect(ProteinTarget.recommend(_profile(weightKg: 300)), 250);
+    test('a heavy bodyweight is capped at 200 g', () {
+      expect(ProteinTarget.recommend(_profile(weightKg: 300)), 200);
     });
 
-    test('a mid-range heavy bodyweight is not capped prematurely', () {
-      expect(ProteinTarget.recommend(_profile(weightKg: 120)), 192);
+    test('a mid-range bodyweight is not capped prematurely', () {
+      // 120 x 1.6 = 192 -> 190
+      expect(ProteinTarget.recommend(_profile(weightKg: 120)), 190);
     });
   });
 
@@ -62,7 +62,7 @@ void main() {
     });
 
     test('falls back to the recommendation when no goal is set', () {
-      expect(ProteinTarget.effectiveTarget(_profile(weightKg: 70)), 112);
+      expect(ProteinTarget.effectiveTarget(_profile(weightKg: 70)), 110);
     });
 
     test('an override applies regardless of weight', () {
@@ -73,11 +73,11 @@ void main() {
       // Falls back to the recommendation rather than showing a 0 g target.
       expect(
         ProteinTarget.effectiveTarget(_profile(weightKg: 70, proteinGoalG: 0)),
-        112,
+        110,
       );
       expect(
         ProteinTarget.effectiveTarget(_profile(weightKg: 70, proteinGoalG: 9999)),
-        112,
+        110,
       );
     });
   });

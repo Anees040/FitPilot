@@ -142,6 +142,7 @@ class CaptureNotifier extends Notifier<void> {
     required int kcal,
     required double grams,
     String? photoPath,
+    double? proteinG,
   }) async {
     // Add a 5% spread to the exact computed kcal
     final spread = (kcal * 0.05).round();
@@ -163,6 +164,7 @@ class CaptureNotifier extends Notifier<void> {
           : LogSource.search,
       loggedAt: DateTime.now(),
       photoPath: photoPath,
+      proteinG: proteinG,
     );
 
     ref.read(todayProvider.notifier).addLog(log);

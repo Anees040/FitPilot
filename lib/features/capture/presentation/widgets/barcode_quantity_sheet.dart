@@ -15,11 +15,16 @@ class BarcodeQuantitySheet extends ConsumerStatefulWidget {
   /// barcode and label scans, which show the product or dish art instead.
   final String? photoPath;
 
+  /// Protein per 100 g, when the source knew it. Scaled by the chosen portion
+  /// exactly like kcal. Null means unknown and is stored as such.
+  final double? proteinPer100g;
+
   const BarcodeQuantitySheet({
     super.key,
     required this.barcode,
     required this.offResult,
     this.photoPath,
+    this.proteinPer100g,
   });
 
   @override
@@ -128,6 +133,11 @@ class _BarcodeQuantitySheetState extends ConsumerState<BarcodeQuantitySheet> {
           kcal: kcal,
           grams: finalGrams,
           photoPath: widget.photoPath,
+          // Same proportional scaling as the calories above, so a half pack
+          // logs half the protein.
+          proteinG: widget.proteinPer100g == null
+              ? null
+              : widget.proteinPer100g! * finalGrams / 100,
         );
 
     if (mounted) {

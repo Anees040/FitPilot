@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/profile_provider.dart';
+import 'package:fitpilot/application/providers/progress_provider.dart';
 import 'package:fitpilot/application/providers/protein_provider.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
 import 'package:fitpilot/data/ai/coach_service.dart';
@@ -141,11 +142,16 @@ class CoachChatNotifier extends AsyncNotifier<CoachChatState> {
       final today = await ref.read(todayProvider.future);
       final profile = await ref.read(profileProvider.future);
       final protein = ref.read(proteinTodayProvider);
+      // The streak lives on progressProvider, which also owns the day history
+      // it is derived from — reading it here keeps one source of truth.
+      final streak = (await ref.read(progressProvider.future)).streak;
+
       return CoachContext(
         name: profile.name,
         todayKcal: today.dayStatus.total.midpoint,
         targetKcal: profile.targetOverride,
         toBurn: today.dayStatus.toBurn,
+        streakDays: streak.currentStreak,
         activeProgram: profile.activeProgramId,
         proteinTodayG: protein.consumedG.round(),
         proteinTargetG: protein.targetG,

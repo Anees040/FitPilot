@@ -11,6 +11,7 @@ import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/application/providers/protein_provider.dart';
 import 'package:fitpilot/data/services/data_export_service.dart';
+import 'package:fitpilot/features/log/presentation/widgets/protein_info_sheet.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
 
 /// App-wide settings that are not about the user's body.
@@ -349,7 +350,24 @@ class _ProteinGoalRow extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Daily protein goal', style: theme.textTheme.bodyStrong),
+                      Row(
+                        children: [
+                          Text('Daily protein goal', style: theme.textTheme.bodyStrong),
+                          const SizedBox(width: 4),
+                          InkWell(
+                            onTap: () => ProteinInfoSheet.show(context),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.all(2),
+                              child: Icon(
+                                Icons.info_outline,
+                                size: 15,
+                                color: ext.textDisabled,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 2),
                       Text(
                         isOverridden && recommended != null

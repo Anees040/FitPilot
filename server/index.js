@@ -141,6 +141,9 @@ app.post('/api/estimate-food', quota, async (req, res) => {
         minKcal: { type: Type.INTEGER, description: 'Minimum estimated kcal for the entire portion shown.' },
         maxKcal: { type: Type.INTEGER, description: 'Maximum estimated kcal for the entire portion shown.' },
         notes: { type: Type.STRING, description: 'One short sentence on what drives the uncertainty.' },
+        // Additive and OPTIONAL. Absent when the model cannot judge it, which
+        // the app stores as "unknown" rather than as zero grams.
+        proteinG: { type: Type.NUMBER, description: 'Estimated protein in grams for the portion shown. Omit if unsure.' },
       },
       required: ['name', 'minKcal', 'maxKcal'],
     };
@@ -149,6 +152,7 @@ app.post('/api/estimate-food', quota, async (req, res) => {
       'Analyze this image. If it does NOT clearly show food or a beverage, return name="Not food" and 0 for calories. ' +
       'If it is food, identify it and estimate the calorie range for the portion shown. ' +
       'Be honest about uncertainty: the range must span at least plus/minus 15 percent around your central estimate. ' +
+      'Also estimate protein in grams for the portion when the food is identifiable enough to judge it; omit proteinG entirely if you cannot. ' +
       'Keep the name concise.';
 
     const response = await generate({

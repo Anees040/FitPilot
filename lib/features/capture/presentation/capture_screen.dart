@@ -361,6 +361,16 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
         isLocal: true,
       );
 
+      // The model reports protein for the whole portion it saw; the sheet works
+      // per 100 g, so convert. Omitted by the model means unknown, so it stays
+      // null rather than becoming zero.
+      final portionGrams =
+          (result['portionGrams'] as num?)?.toDouble() ?? 100.0;
+      final portionProtein = (result['proteinG'] as num?)?.toDouble();
+      final proteinPer100g = (portionProtein != null && portionGrams > 0)
+          ? portionProtein * 100 / portionGrams
+          : null;
+
       // Keep the user's own photo of this meal so the log shows what they
       // actually ate rather than generic dish art. Best-effort: a failure here
       // must not block logging.
@@ -373,6 +383,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
           barcode: aiScanBarcode,
           offResult: offResult,
           photoPath: photoPath,
+          proteinPer100g: proteinPer100g,
         ),
       );
     } catch (e) {

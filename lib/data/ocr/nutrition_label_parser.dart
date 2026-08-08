@@ -15,6 +15,12 @@ class NutritionLabelResult {
   final ParsedField<NutritionBasis>? basis;
   final ParsedField<double>? servingSizeGrams;
   final ParsedField<double>? servingsPerPack;
+
+  /// Protein in grams, on the same basis as [kcal]. Null when the label has no
+  /// protein row or OCR could not read it — never zero, which would read as
+  /// "this product contains no protein".
+  final ParsedField<double>? proteinG;
+
   final String? subtitle;
 
   NutritionLabelResult({
@@ -22,6 +28,7 @@ class NutritionLabelResult {
     this.basis,
     this.servingSizeGrams,
     this.servingsPerPack,
+    this.proteinG,
     this.subtitle,
   });
 }
@@ -109,11 +116,30 @@ class NutritionLabelParser {
       }
     }
 
+    // 5. Protein
+    //
+    // Lenient on purpose: OCR routinely turns "Protein 12.5 g" into
+    // "Proteín 12,5g" or splits the number onto the next line, and Pakistani
+    // labels often print the Urdu transliteration. A miss returns null, which
+    // the log treats as unknown rather than zero.
+    final proteinMatch = RegExp(
+      r'protein[s]?\s*[:=-]?\s*(\d+(?:[.,]\d+)?)\s*(?:g|gm|gram)?',
+    ).firstMatch(normalized);
+    ParsedField<double>? parsedProtein;
+    if (proteinMatch != null) {
+      final val = _parseDouble(proteinMatch.group(1)!);
+      // A label claiming more than 100 g of protein per 100 g is a misread.
+      if (val != null && val >= 0 && val <= 100) {
+        parsedProtein = ParsedField(val, 0.85);
+      }
+    }
+
     return NutritionLabelResult(
       kcal: parsedKcal,
       basis: parsedBasis,
       servingSizeGrams: parsedServingSize,
       servingsPerPack: parsedServings,
+      proteinG: parsedProtein,
       subtitle: subtitle,
     );
   }

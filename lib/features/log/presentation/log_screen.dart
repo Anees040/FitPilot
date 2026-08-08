@@ -48,6 +48,7 @@ class LogScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             FadeScrollRow(
               children: [
+                _buildHighProteinChip(ref),
                 _buildCategoryChip('Rice', ref),
                 _buildCategoryChip('Bread', ref),
                 _buildCategoryChip('Fast Food', ref),
@@ -142,6 +143,26 @@ class LogScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Filters to foods with a known protein figure, best first.
+  ///
+  /// Hidden entirely when the catalog has no protein data, so it can never be
+  /// a chip that returns nothing.
+  Widget _buildHighProteinChip(WidgetRef ref) {
+    final hasData = ref.watch(catalogHasProteinProvider).valueOrNull ?? false;
+    if (!hasData) return const SizedBox.shrink();
+
+    final isSelected = ref.watch(highProteinFilterProvider);
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: SelectChip(
+        label: 'High protein',
+        isSelected: isSelected,
+        onSelected: () =>
+            ref.read(highProteinFilterProvider.notifier).state = !isSelected,
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:fitpilot/core/ui/app_bottom_sheet.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/states.dart';
 import 'package:fitpilot/features/log/presentation/manual_entry_sheet.dart';
+import 'package:fitpilot/features/log/presentation/widgets/protein_info_sheet.dart';
 
 /// Cheap protein from local food, offline.
 ///
@@ -86,7 +87,18 @@ class _HeaderCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Protein without powder', style: theme.textTheme.h1),
+          Row(
+            children: [
+              Expanded(
+                child: Text('Protein without powder', style: theme.textTheme.h1),
+              ),
+              IconButton(
+                tooltip: 'How much protein?',
+                icon: Icon(Icons.info_outline, size: 20, color: ext.textDisabled),
+                onPressed: () => ProteinInfoSheet.show(context),
+              ),
+            ],
+          ),
           const SizedBox(height: 6),
           Text(
             'You do not need supplements. Daal, chana, eggs and dahi will do '
