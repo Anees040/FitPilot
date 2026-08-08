@@ -151,14 +151,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } catch (e) {
       if (mounted) {
         if (e is EmailAlreadyRegisteredFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('That email is already registered. Try logging in.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+          // Telling someone to log in and leaving them on the signup form
+          // makes them find the toggle and retype their email. Switch for
+          // them, keep what they typed, and put the cursor where it is needed.
+          setState(() {
+            _isLogin = true;
+            _formError = 'You already have an account. Enter your password to log in.';
+            _confirmPassCtrl.clear();
+            _passCtrl.clear();
+          });
+        } else if (e is AccountDeletedFailure) {
+          // The opposite move: the account is gone, so signing up is the only
+          // way forward.
+          setState(() {
+            _isLogin = false;
+            _formError = e.message;
+          });
         } else {
           setState(() => _formError = _mapError(e));
         }
