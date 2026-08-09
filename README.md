@@ -63,12 +63,12 @@ To keep the documentation clean and fast to load, screenshots are organized by c
 
 | Welcome Screen | Login | Sign Up |
 | :---: | :---: | :---: |
-| ![Welcome Screen](docs/screenshots/auth/welcome.jpg) | ![Login](docs/screenshots/auth/login.jpg) | ![Sign Up](docs/screenshots/auth/signup.jpg) |
+| <img src="docs/screenshots/auth/welcome.jpg" width="200"> | <img src="docs/screenshots/auth/login.jpg" width="200"> | <img src="docs/screenshots/auth/signup.jpg" width="200"> |
 
 #### Profile Setup Wizard
 | Step 1: Goals | Step 2: Activity | Step 3: Body Info | Step 4: Targets | Step 5: Complete |
 | :---: | :---: | :---: | :---: | :---: |
-| ![Wizard 1](docs/screenshots/auth/wizard_1.jpg) | ![Wizard 2](docs/screenshots/auth/wizard_2.jpg) | ![Wizard 3](docs/screenshots/auth/wizard_3.jpg) | ![Wizard 4](docs/screenshots/auth/wizard_4.jpg) | ![Wizard 5](docs/screenshots/auth/wizard_5.jpg) |
+| <img src="docs/screenshots/auth/wizard_1.jpg" width="200"> | <img src="docs/screenshots/auth/wizard_2.jpg" width="200"> | <img src="docs/screenshots/auth/wizard_3.jpg" width="200"> | <img src="docs/screenshots/auth/wizard_4.jpg" width="200"> | <img src="docs/screenshots/auth/wizard_5.jpg" width="200"> |
 
 </details>
 
@@ -77,7 +77,7 @@ To keep the documentation clean and fast to load, screenshots are organized by c
 
 | Today (Home) | Today (Detailed) | Log Screen | Barcode Scanner |
 | :---: | :---: | :---: | :---: |
-| ![Today Screen](docs/screenshots/log/today_1.jpg) | ![Today Screen 2](docs/screenshots/log/today_2.jpg) | ![Log Screen](docs/screenshots/log/log_screen.jpg) | ![Scanner](docs/screenshots/log/scanner.jpg) |
+| <img src="docs/screenshots/log/today_1.jpg" width="200"> | <img src="docs/screenshots/log/today_2.jpg" width="200"> | <img src="docs/screenshots/log/log_screen.jpg" width="200"> | <img src="docs/screenshots/log/scanner.jpg" width="200"> |
 
 </details>
 
@@ -86,7 +86,7 @@ To keep the documentation clean and fast to load, screenshots are organized by c
 
 | Enter Height | Log Weight | Progress Trend 1 | Progress Trend 2 | Progress Trend 3 |
 | :---: | :---: | :---: | :---: | :---: |
-| ![Enter Height](docs/screenshots/progress/enter_height.jpg) | ![Log Weight](docs/screenshots/progress/log_weight.jpg) | ![Progress 1](docs/screenshots/progress/progress_1.jpg) | ![Progress 2](docs/screenshots/progress/progress_2.jpg) | ![Progress 3](docs/screenshots/progress/progress_3.jpg) |
+| <img src="docs/screenshots/progress/enter_height.jpg" width="200"> | <img src="docs/screenshots/progress/log_weight.jpg" width="200"> | <img src="docs/screenshots/progress/progress_1.jpg" width="200"> | <img src="docs/screenshots/progress/progress_2.jpg" width="200"> | <img src="docs/screenshots/progress/progress_3.jpg" width="200"> |
 
 </details>
 
@@ -95,12 +95,12 @@ To keep the documentation clean and fast to load, screenshots are organized by c
 
 | Programs Hub | Program Details | Workout Hub | Exercises List | Exercise Detail |
 | :---: | :---: | :---: | :---: | :---: |
-| ![Programs](docs/screenshots/workouts/programs.jpg) | ![Program Detail](docs/screenshots/workouts/program_detail.jpg) | ![Workout Hub](docs/screenshots/workouts/workout_hub.jpg) | ![Shoulders](docs/screenshots/workouts/shoulders.jpg) | ![Exercise Detail](docs/screenshots/workouts/exercise_detail.jpg) |
+| <img src="docs/screenshots/workouts/programs.jpg" width="200"> | <img src="docs/screenshots/workouts/program_detail.jpg" width="200"> | <img src="docs/screenshots/workouts/workout_hub.jpg" width="200"> | <img src="docs/screenshots/workouts/shoulders.jpg" width="200"> | <img src="docs/screenshots/workouts/exercise_detail.jpg" width="200"> |
 
 #### Personalized Burn Plans
 | Plan Screen 1 | Plan Screen 2 |
 | :---: | :---: |
-| ![Plan 1](docs/screenshots/workouts/plan_1.jpg) | ![Plan 2](docs/screenshots/workouts/plan_2.jpg) |
+| <img src="docs/screenshots/workouts/plan_1.jpg" width="200"> | <img src="docs/screenshots/workouts/plan_2.jpg" width="200"> |
 
 </details>
 
@@ -109,7 +109,7 @@ To keep the documentation clean and fast to load, screenshots are organized by c
 
 | Coach Screen | Machine Scanner (AI) | Form Check (AI) |
 | :---: | :---: | :---: |
-| ![Coach Screen](docs/screenshots/coach/coach.jpg) | ![Machine Scanner](docs/screenshots/coach/machine_scanner.jpg) | ![Form Check](docs/screenshots/coach/form_check.jpg) |
+| <img src="docs/screenshots/coach/coach.jpg" width="200"> | <img src="docs/screenshots/coach/machine_scanner.jpg" width="200"> | <img src="docs/screenshots/coach/form_check.jpg" width="200"> |
 
 </details>
 
@@ -118,7 +118,7 @@ To keep the documentation clean and fast to load, screenshots are organized by c
 
 | Profile Screen | Profile Settings | Account Settings | App Settings |
 | :---: | :---: | :---: | :---: |
-| ![Profile](docs/screenshots/settings/profile.jpg) | ![Profile Settings](docs/screenshots/settings/profile_setting.jpg) | ![Account Settings](docs/screenshots/settings/account_setting.jpg) | ![App Settings](docs/screenshots/settings/app_settings.jpg) |
+| <img src="docs/screenshots/settings/profile.jpg" width="200"> | <img src="docs/screenshots/settings/profile_setting.jpg" width="200"> | <img src="docs/screenshots/settings/account_setting.jpg" width="200"> | <img src="docs/screenshots/settings/app_settings.jpg" width="200"> |
 
 </details>
 
@@ -127,7 +127,7 @@ To keep the documentation clean and fast to load, screenshots are organized by c
 
 FitPilot supports system-wide Light & Dark theme toggle along with a selection of vibrant accent colors (Orange, Blue, Purple, Red) customizable in preferences.
 
-![Theme Customization](docs/screenshots/custom/theme_customization.jpg)
+<img src="docs/screenshots/custom/theme_customization.jpg" width="600">
 
 </details>
 
