@@ -31,11 +31,12 @@ class _FitPilotAppState extends ConsumerState<FitPilotApp> {
   void initState() {
     super.initState();
     if (Env.isSupabaseConfigured) {
-      _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-        if (data.event == AuthChangeEvent.passwordRecovery) {
-          appRouter.go('/update-password');
-        }
-      });
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange
+          .listen((data) {
+            if (data.event == AuthChangeEvent.passwordRecovery) {
+              appRouter.go('/update-password');
+            }
+          });
     }
   }
 
