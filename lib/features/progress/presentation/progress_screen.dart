@@ -70,7 +70,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         children: [
           _buildStreakCard(context, state.streak),
           const SizedBox(height: 24),
-          _buildHeatmap(context, state.last35Days),
+          _buildHeatmap(context, state),
           const SizedBox(height: 24),
           _buildHistoryList(context, state.last35Days),
           const SizedBox(height: 24),
@@ -159,10 +159,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     );
   }
 
-  Widget _buildHeatmap(BuildContext context, Map<DateTime, DayStatus> last35Days) {
+  Widget _buildHeatmap(BuildContext context, ProgressState state) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
     final now = DateTime.now();
+    final last35Days = state.last35Days;
     
     // Prepare dates
     final sortedDates = last35Days.keys.toList()..sort();
@@ -225,16 +226,34 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                   
                   Widget dot;
                   if (status.state == DayState.noData) {
-                    dot = Container(
-                      decoration: BoxDecoration(
-                        color: ext.hairline.withValues(alpha: 0.5),
-                        border: Border.all(color: ext.hairline, width: 2.0),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Center(
-                        child: Text(date.day.toString(), style: theme.textTheme.caption.copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
-                      ),
-                    );
+                    bool isActiveCleanDay = false;
+                    if (state.firstActiveDate != null && !date.isBefore(state.firstActiveDate!)) {
+                      isActiveCleanDay = true; // Clean day since starting the app
+                    }
+
+                    if (isActiveCleanDay) {
+                      dot = Container(
+                        decoration: BoxDecoration(
+                          color: ext.success,
+                          border: Border.all(color: ext.success.withValues(alpha: 0.5), width: 1.0),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Center(
+                          child: Text(date.day.toString(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ),
+                      );
+                    } else {
+                      dot = Container(
+                        decoration: BoxDecoration(
+                          color: ext.hairline.withValues(alpha: 0.5),
+                          border: Border.all(color: ext.hairline, width: 2.0),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Center(
+                          child: Text(date.day.toString(), style: theme.textTheme.caption.copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                      );
+                    }
                   } else {
                     Color color;
                     switch (status.state) {
@@ -290,13 +309,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildLegendItem(context, 'Cleared', ext.success, isOutline: false),
+                  _buildLegendItem(context, 'Safe/Clean', ext.success, isOutline: false),
                   const SizedBox(width: 8),
                   _buildLegendItem(context, 'Burning', theme.colorScheme.primary, isOutline: false),
                   const SizedBox(width: 8),
                   _buildLegendItem(context, 'Unburned', ext.error, isOutline: false),
                   const SizedBox(width: 8),
-                  _buildLegendItem(context, 'Clean', ext.hairline, isOutline: true),
+                  _buildLegendItem(context, 'Pre-App', ext.hairline, isOutline: true),
                 ],
               ),
             ],

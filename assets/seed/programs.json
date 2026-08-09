@@ -4076,7 +4076,7 @@
     "equipment": "none",
     "duration_days": 10,
     "days_per_week": 5,
-    "hero_image": "assets/illustrations/walker_rope.png",
+    "hero_image": "assets/illustrations/daily_walk_hero.png",
     "sort_index": 30,
     "weeks": [
       {

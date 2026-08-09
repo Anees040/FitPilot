@@ -103,7 +103,7 @@ void main() {
       expect(state.kcalStillToBurn, 0);
     });
 
-    test('noData days neither break nor extend the streak in past', () {
+    test('noData days between active days extend the streak', () {
       final now = DateTime(2026, 7, 27, 10, 0);
       final history = {
         DateTime(2026, 7, 27): makeStatus(DayState.cleared),
@@ -114,7 +114,7 @@ void main() {
       final state = engine.evaluate(dayHistory: history, now: now);
 
       expect(state.phase, StreakPhase.safe);
-      expect(state.currentStreak, 2); // 27th and 25th are cleared. 26th is noData.
+      expect(state.currentStreak, 3); // 27th, 26th, and 25th all count.
     });
 
     test('unburned day in past with enough burn counts as cleared', () {

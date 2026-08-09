@@ -185,7 +185,7 @@ class _ProgramCard extends ConsumerWidget {
                         Text(
                           meta.name,
                           style: theme.textTheme.h2.copyWith(
-                            color: theme.colorScheme.onPrimary,
+                            color: Colors.white,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -196,7 +196,7 @@ class _ProgramCard extends ConsumerWidget {
                         Text(
                           '${program.totalDays} days · ${meta.level.label}',
                           style: theme.textTheme.caption.copyWith(
-                            color: theme.colorScheme.onPrimary.withValues(
+                            color: Colors.white.withValues(
                               alpha: 0.85,
                             ),
                           ),

@@ -138,6 +138,7 @@ class StreakEngine {
     required bool lookFromYesterday,
   }) {
     var count = 0;
+    var pendingNoDataCount = 0;
     var day = lookFromYesterday
         ? referenceDate.subtract(const Duration(days: 1))
         : referenceDate;
@@ -148,15 +149,21 @@ class StreakEngine {
 
       if (status.state == DayState.cleared) {
         count++;
+        count += pendingNoDataCount;
+        pendingNoDataCount = 0;
       } else if (status.state == DayState.noData) {
-        // noData days neither break nor extend the streak
-        // keep counting through them
-        // the loop update step will decrement day
+        // noData days extend the streak, but we only add them if we 
+        // eventually find a cleared/active day (so we don't count pre-install days).
+        // Wait, if today is noData, and yesterday is noData, and they have an active streak,
+        // it SHOULD count. If the user is active, we just accumulate.
+        pendingNoDataCount++;
       } else if (status.state == DayState.unburned || status.state == DayState.inProgress) {
         // Unburned but has enough burn = cleared → counts.
         final kcalStillToBurn = status.toBurn;
         if (kcalStillToBurn <= 0) {
           count++;
+          count += pendingNoDataCount;
+          pendingNoDataCount = 0;
         } else {
           break;
         }
@@ -167,12 +174,21 @@ class StreakEngine {
       day = day.subtract(const Duration(days: 1));
     }
 
-    // If not looking from yesterday, include today in count only if
-    // today was cleared.
-    if (!lookFromYesterday) {
-      // Today is already included in the loop above.
-      return count;
-    }
+    // If we are looking from today and the first day(s) were noData,
+    // and we NEVER hit an active day (count is 0), then the streak is 0 
+    // because they haven't started. But if count > 0, we should add the pending 
+    // noData days because they are just "Clean" days since the last active day.
+    // Wait! If they had an active day in the past, `pendingNoDataCount` would be 0 
+    // when that active day was processed, but what if they haven't been active for 3 days?
+    // Today, Yesterday, Day-2 are noData. Day-3 is cleared.
+    // Day-3 adds the pending (which was 3), so count becomes 4.
+    // Then we go to Day-4 (noData), pending becomes 1. Day-5 (noData), pending becomes 2.
+    // If the loop ends, the remaining pending are pre-install days. So we DON'T add them!
+    
+    // Thus, we DO NOT add pendingNoDataCount here. It only gets added when anchored 
+    // by a cleared/active day in the future (which we process first since we go backwards).
+    // So if today is noData, it's pending. Then yesterday is cleared. Yesterday anchors it, 
+    // we add pending (today) to the count! Perfect.
 
     return count;
   }

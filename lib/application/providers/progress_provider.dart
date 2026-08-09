@@ -20,6 +20,7 @@ class ProgressState {
   final KcalRange weeklyIntake;
   final int weeklyBurned;
   final List<WeightEntry> weightEntries;
+  final DateTime? firstActiveDate;
 
   const ProgressState({
     required this.last35Days,
@@ -27,6 +28,7 @@ class ProgressState {
     required this.weeklyIntake,
     required this.weeklyBurned,
     required this.weightEntries,
+    required this.firstActiveDate,
   });
 }
 
@@ -104,12 +106,34 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       weeklyBurned += status.burnedKcal;
     }
 
+    // Find earliest active date
+    DateTime? firstActive;
+    final firstLogRaw = await db.rawQuery('SELECT MIN(logged_at) as m FROM food_logs');
+    final firstBurnRaw = await db.rawQuery('SELECT MIN(completed_at) as m FROM burn_completions');
+    
+    final firstLogStr = firstLogRaw.first['m'] as String?;
+    final firstBurnStr = firstBurnRaw.first['m'] as String?;
+    
+    if (firstLogStr != null) {
+      firstActive = DateTime.parse(firstLogStr);
+    }
+    if (firstBurnStr != null) {
+      final bDate = DateTime.parse(firstBurnStr);
+      if (firstActive == null || bDate.isBefore(firstActive)) {
+        firstActive = bDate;
+      }
+    }
+    if (firstActive != null) {
+      firstActive = DateTime(firstActive.year, firstActive.month, firstActive.day);
+    }
+
     return ProgressState(
       last35Days: history,
       streak: streak,
       weeklyIntake: weeklyIntake,
       weeklyBurned: weeklyBurned,
       weightEntries: weightEntries,
+      firstActiveDate: firstActive,
     );
   }
 
