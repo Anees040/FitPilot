@@ -61,57 +61,73 @@ To keep the documentation clean and fast to load, screenshots are organized by c
 <details>
 <summary><b>🚀 Onboarding & Authentication</b> (Click to expand)</summary>
 
-| Welcome Screen | Login | Sign Up | Enter Height |
-| :---: | :---: | :---: | :---: |
-| ![Welcome Screen](docs/screenshots/auth/welcome.png) | ![Login](docs/screenshots/auth/login.png) | ![Sign Up](docs/screenshots/auth/signup.png) | ![Enter Height](docs/screenshots/auth/enter_height.png) |
+| Welcome Screen | Login | Sign Up |
+| :---: | :---: | :---: |
+| ![Welcome Screen](docs/screenshots/auth/welcome.jpg) | ![Login](docs/screenshots/auth/login.jpg) | ![Sign Up](docs/screenshots/auth/signup.jpg) |
 
 #### Profile Setup Wizard
 | Step 1: Goals | Step 2: Activity | Step 3: Body Info | Step 4: Targets | Step 5: Complete |
 | :---: | :---: | :---: | :---: | :---: |
-| ![Wizard 1](docs/screenshots/auth/wizard_1.png) | ![Wizard 2](docs/screenshots/auth/wizard_2.png) | ![Wizard 3](docs/screenshots/auth/wizard_3.png) | ![Wizard 4](docs/screenshots/auth/wizard_4.png) | ![Wizard 5](docs/screenshots/auth/wizard_5.png) |
+| ![Wizard 1](docs/screenshots/auth/wizard_1.jpg) | ![Wizard 2](docs/screenshots/auth/wizard_2.jpg) | ![Wizard 3](docs/screenshots/auth/wizard_3.jpg) | ![Wizard 4](docs/screenshots/auth/wizard_4.jpg) | ![Wizard 5](docs/screenshots/auth/wizard_5.jpg) |
 
 </details>
 
 <details>
 <summary><b>📊 Dashboard & Food Logging</b> (Click to expand)</summary>
 
-| Today (Home) | Today (Detailed) | Protein Tracker | Log Screen | Barcode Scanner | Log Weight |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| ![Today Screen](docs/screenshots/log/today_1.png) | ![Today Screen 2](docs/screenshots/log/today_2.png) | ![Protein](docs/screenshots/log/protein.png) | ![Log Screen](docs/screenshots/log/log_screen.png) | ![Scanner](docs/screenshots/log/scanner.png) | ![Log Weight](docs/screenshots/log/log_weight.png) |
+| Today (Home) | Today (Detailed) | Log Screen | Barcode Scanner |
+| :---: | :---: | :---: | :---: |
+| ![Today Screen](docs/screenshots/log/today_1.jpg) | ![Today Screen 2](docs/screenshots/log/today_2.jpg) | ![Log Screen](docs/screenshots/log/log_screen.jpg) | ![Scanner](docs/screenshots/log/scanner.jpg) |
 
 </details>
 
 <details>
-<summary><b>🏋️ Workout Programs & AI Gym Coach</b> (Click to expand)</summary>
+<summary><b>📈 Progress Tracking</b> (Click to expand)</summary>
 
-| Programs Hub | Program Details | Workout Hub | Exercises (Shoulders) | Exercise Detail |
+| Enter Height | Log Weight | Progress Trend 1 | Progress Trend 2 | Progress Trend 3 |
 | :---: | :---: | :---: | :---: | :---: |
-| ![Programs](docs/screenshots/workouts/programs.png) | ![Program Detail](docs/screenshots/workouts/program_detail.png) | ![Workout Hub](docs/screenshots/workouts/workout_hub.png) | ![Shoulders](docs/screenshots/workouts/shoulders.png) | ![Exercise Detail](docs/screenshots/workouts/exercise_detail.png) |
-
-#### AI Coaching & Planning
-| Plan Screen 1 | Plan Screen 2 | Coach Screen | Machine Scanner (AI) | Form Check (AI) |
-| :---: | :---: | :---: | :---: | :---: |
-| ![Plan 1](docs/screenshots/coach/plan_1.png) | ![Plan 2](docs/screenshots/coach/plan_2.png) | ![Coach Screen](docs/screenshots/coach/coach.png) | ![Machine Scanner](docs/screenshots/coach/machine_scanner.png) | ![Form Check](docs/screenshots/coach/form_check.png) |
+| ![Enter Height](docs/screenshots/progress/enter_height.jpg) | ![Log Weight](docs/screenshots/progress/log_weight.jpg) | ![Progress 1](docs/screenshots/progress/progress_1.jpg) | ![Progress 2](docs/screenshots/progress/progress_2.jpg) | ![Progress 3](docs/screenshots/progress/progress_3.jpg) |
 
 </details>
 
 <details>
-<summary><b>⚙️ Settings & Notifications</b> (Click to expand)</summary>
+<summary><b>🏋️ Workout Programs & Plans</b> (Click to expand)</summary>
 
-| Profile Screen | Account Settings | Preference Screen | App Settings | Notifications |
+| Programs Hub | Program Details | Workout Hub | Exercises List | Exercise Detail |
 | :---: | :---: | :---: | :---: | :---: |
-| ![Profile](docs/screenshots/settings/profile.png) | ![Account Settings](docs/screenshots/settings/account.png) | ![Preferences](docs/screenshots/settings/preferences.png) | ![App Settings](docs/screenshots/settings/app_settings.png) | ![Notifications](docs/screenshots/settings/notifications.png) |
+| ![Programs](docs/screenshots/workouts/programs.jpg) | ![Program Detail](docs/screenshots/workouts/program_detail.jpg) | ![Workout Hub](docs/screenshots/workouts/workout_hub.jpg) | ![Shoulders](docs/screenshots/workouts/shoulders.jpg) | ![Exercise Detail](docs/screenshots/workouts/exercise_detail.jpg) |
+
+#### Personalized Burn Plans
+| Plan Screen 1 | Plan Screen 2 |
+| :---: | :---: |
+| ![Plan 1](docs/screenshots/workouts/plan_1.jpg) | ![Plan 2](docs/screenshots/workouts/plan_2.jpg) |
 
 </details>
 
 <details>
-<summary><b>🎨 Dynamic Theme & Colors</b> (Click to expand)</summary>
+<summary><b>🤖 AI Gym Coach</b> (Click to expand)</summary>
 
-FitPilot supports system-wide Light & Dark theme toggle along with a selection of vibrant accent colors that can be customized in the preferences.
+| Coach Screen | Machine Scanner (AI) | Form Check (AI) |
+| :---: | :---: | :---: |
+| ![Coach Screen](docs/screenshots/coach/coach.jpg) | ![Machine Scanner](docs/screenshots/coach/machine_scanner.jpg) | ![Form Check](docs/screenshots/coach/form_check.jpg) |
 
-| Light Mode (Orange) | Dark Mode (Orange) | Blue Accent | Purple Accent | Red Accent |
-| :---: | :---: | :---: | :---: | :---: |
-| ![Light Theme](docs/screenshots/custom/light_theme.png) | ![Dark Theme](docs/screenshots/custom/dark_theme.png) | ![Blue Theme](docs/screenshots/custom/blue_theme.png) | ![Purple Theme](docs/screenshots/custom/purple_theme.png) | ![Red Theme](docs/screenshots/custom/red_theme.png) |
+</details>
+
+<details>
+<summary><b>⚙️ Settings</b> (Click to expand)</summary>
+
+| Profile Screen | Profile Settings | Account Settings | App Settings |
+| :---: | :---: | :---: | :---: |
+| ![Profile](docs/screenshots/settings/profile.jpg) | ![Profile Settings](docs/screenshots/settings/profile_setting.jpg) | ![Account Settings](docs/screenshots/settings/account_setting.jpg) | ![App Settings](docs/screenshots/settings/app_settings.jpg) |
+
+</details>
+
+<details>
+<summary><b>🎨 Theme Customization</b> (Click to expand)</summary>
+
+FitPilot supports system-wide Light & Dark theme toggle along with a selection of vibrant accent colors (Orange, Blue, Purple, Red) customizable in preferences.
+
+![Theme Customization](docs/screenshots/custom/theme_customization.jpg)
 
 </details>
 
