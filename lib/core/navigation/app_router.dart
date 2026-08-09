@@ -338,13 +338,21 @@ class ScaffoldWithNavBar extends StatelessWidget {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
 
-    return Scaffold(
-      body: Column(
-        children: [
-          const OfflineBanner(),
-          Expanded(child: navigationShell),
-        ],
-      ),
+    return PopScope(
+      canPop: navigationShell.currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (navigationShell.currentIndex != 0) {
+          _goBranch(0);
+        }
+      },
+      child: Scaffold(
+        body: Column(
+          children: [
+            const OfflineBanner(),
+            Expanded(child: navigationShell),
+          ],
+        ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
@@ -411,6 +419,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -111,11 +111,11 @@ class MachineResultScreen extends ConsumerWidget {
   /// Returns to the scanner hub. A fresh scan replaced the camera route, so
   /// popping would land back on the camera — go to the hub explicitly instead.
   void _done(BuildContext context) {
-    if (context.canPop() && fromHistory) {
+    if (context.canPop()) {
       context.pop();
-      return;
+    } else {
+      context.go('/machine-scanner');
     }
-    context.go('/machine-scanner');
   }
 }
 
@@ -473,7 +473,13 @@ class _NotAMachineScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/machine-scanner'),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/machine-scanner');
+            }
+          },
         ),
       ),
       body: SafeArea(
@@ -509,7 +515,13 @@ class _NotAMachineScreen extends StatelessWidget {
               const SizedBox(height: 12),
               TertiaryButton(
                 label: 'Back to scanner',
-                onPressed: () => context.go('/machine-scanner'),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/machine-scanner');
+                  }
+                },
               ),
             ],
           ),

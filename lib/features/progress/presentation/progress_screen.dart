@@ -306,15 +306,14 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               ),
               const SizedBox(height: 16),
               // Legend
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   _buildLegendItem(context, 'Safe/Clean', ext.success, isOutline: false),
-                  const SizedBox(width: 8),
                   _buildLegendItem(context, 'Burning', theme.colorScheme.primary, isOutline: false),
-                  const SizedBox(width: 8),
                   _buildLegendItem(context, 'Unburned', ext.error, isOutline: false),
-                  const SizedBox(width: 8),
                   _buildLegendItem(context, 'Pre-App', ext.hairline, isOutline: true),
                 ],
               ),
