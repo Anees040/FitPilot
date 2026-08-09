@@ -274,8 +274,8 @@ This project maintains living documentation designed for both humans and AI codi
 
 **Muhammad Anees** — BS Software Engineering, COMSATS University Islamabad.
 
-FitPilot is a solo Final Year Project exploring disciplined, AI-assisted software engineering: specification-first development, layered architecture, and human acceptance testing over raw test counts.
+FitPilot is a solo personal project exploring disciplined, AI-assisted software engineering: specification-first development, layered architecture, and human acceptance testing over raw test counts.
 
 ---
 
-*This repository currently has no open-source license; all rights reserved. The project is shared publicly for academic evaluation and portfolio purposes.*
+*This repository currently has no open-source license; all rights reserved. The project is shared publicly for portfolio purposes.*
