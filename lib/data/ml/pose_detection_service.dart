@@ -46,6 +46,10 @@ class PoseDetectionService {
       PoseLandmarkType.rightHip: BodyPoint.rightHip,
       PoseLandmarkType.leftKnee: BodyPoint.leftKnee,
       PoseLandmarkType.rightKnee: BodyPoint.rightKnee,
+      PoseLandmarkType.leftElbow: BodyPoint.leftElbow,
+      PoseLandmarkType.rightElbow: BodyPoint.rightElbow,
+      PoseLandmarkType.leftWrist: BodyPoint.leftWrist,
+      PoseLandmarkType.rightWrist: BodyPoint.rightWrist,
       PoseLandmarkType.leftAnkle: BodyPoint.leftAnkle,
       PoseLandmarkType.rightAnkle: BodyPoint.rightAnkle,
     };

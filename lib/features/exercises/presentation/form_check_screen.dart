@@ -10,6 +10,7 @@ import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/app_card.dart';
 import 'package:fitpilot/core/ui/buttons.dart';
 import 'package:fitpilot/data/ml/pose_detection_service.dart';
+import 'package:fitpilot/domain/engines/form_rules.dart';
 import 'package:fitpilot/domain/engines/squat_form_analyzer.dart';
 
 /// On-device squat form check.
@@ -30,8 +31,8 @@ class FormCheckScreen extends ConsumerStatefulWidget {
 
 class _FormCheckScreenState extends ConsumerState<FormCheckScreen> {
   final _service = PoseDetectionService();
-  final _analyzer = SquatFormAnalyzer();
 
+  FormExercise _exercise = FormExercise.squat;
   String? _imagePath;
   FormFeedback? _feedback;
   bool _busy = false;
@@ -62,8 +63,9 @@ class _FormCheckScreenState extends ConsumerState<FormCheckScreen> {
       }
 
       final pose = await _service.detectInFile(picked.path);
-      _analyzer.reset();
-      final feedback = _analyzer.analyze(pose);
+      // Each exercise has its own joint and thresholds; FormChecker routes to
+      // the right rule set rather than judging everything as a squat.
+      final feedback = FormChecker.check(_exercise, pose);
 
       if (!mounted) return;
       setState(() {
@@ -102,7 +104,19 @@ class _FormCheckScreenState extends ConsumerState<FormCheckScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: [
-            const _HowToCard(),
+            _ExercisePicker(
+              selected: _exercise,
+              onSelect: (e) => setState(() {
+                _exercise = e;
+                // The previous verdict was for a different movement, so it
+                // would be nonsense against the new rules.
+                _feedback = null;
+                _imagePath = null;
+                _error = null;
+              }),
+            ),
+            const SizedBox(height: 14),
+            _HowToCard(exercise: _exercise),
             const SizedBox(height: 16),
             if (_imagePath != null && !kIsWeb) ...[
               ClipRRect(
@@ -124,7 +138,7 @@ class _FormCheckScreenState extends ConsumerState<FormCheckScreen> {
             else if (_error != null)
               _ErrorCard(message: _error!)
             else if (_feedback != null)
-              _ResultCard(feedback: _feedback!),
+              _ResultCard(feedback: _feedback!, exercise: _exercise),
             const SizedBox(height: 20),
             Row(
               children: [
@@ -158,18 +172,71 @@ class _FormCheckScreenState extends ConsumerState<FormCheckScreen> {
   }
 }
 
-class _HowToCard extends StatelessWidget {
-  const _HowToCard();
+/// Horizontal picker for the supported movements.
+///
+/// Only six are listed, and that is the honest limit: each needs its own
+/// validated joint thresholds, and a guessed rule gives confident bad advice
+/// to someone under load.
+class _ExercisePicker extends StatelessWidget {
+  final FormExercise selected;
+  final ValueChanged<FormExercise> onSelect;
 
-  static const _steps = [
-    'Prop your phone side-on, about 2 metres away',
-    'Get your whole body in frame — head to feet',
-    'Take the photo at the bottom of your squat',
-  ];
+  const _ExercisePicker({required this.selected, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
+
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: FormExercise.values.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final exercise = FormExercise.values[i];
+          final isSelected = exercise == selected;
+          return Center(
+            child: InkWell(
+              onTap: () => onSelect(exercise),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.colorScheme.primary.withValues(alpha: 0.16)
+                      : ext.surfaceRaised,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected ? theme.colorScheme.primary : ext.hairline,
+                  ),
+                ),
+                child: Text(
+                  exercise.label,
+                  style: theme.textTheme.caption.copyWith(
+                    color: isSelected ? theme.colorScheme.primary : null,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _HowToCard extends StatelessWidget {
+  final FormExercise exercise;
+
+  const _HowToCard({required this.exercise});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
 
     return AppCard(
       padding: const EdgeInsets.all(18),
@@ -184,30 +251,31 @@ class _HowToCard extends StatelessWidget {
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(width: 8),
-              Text('Squat depth check', style: theme.textTheme.h2),
+              Expanded(
+                child: Text(
+                  '${exercise.label} check',
+                  style: theme.textTheme.h2,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          for (var i = 0; i < _steps.length; i++)
-            Padding(
-              padding: EdgeInsets.only(bottom: i == _steps.length - 1 ? 0 : 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${i + 1}.',
-                    style: theme.textTheme.caption.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
+          const SizedBox(height: 10),
+          Text(exercise.setupHint, style: theme.textTheme.caption),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.straighten_rounded, size: 13, color: ext.textDisabled),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Measures: ${exercise.measures}',
+                  style: theme.textTheme.caption.copyWith(
+                    color: ext.textDisabled,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(_steps[i], style: theme.textTheme.caption),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
+          ),
         ],
       ),
     );
@@ -216,8 +284,9 @@ class _HowToCard extends StatelessWidget {
 
 class _ResultCard extends StatelessWidget {
   final FormFeedback feedback;
+  final FormExercise exercise;
 
-  const _ResultCard({required this.feedback});
+  const _ResultCard({required this.feedback, required this.exercise});
 
   @override
   Widget build(BuildContext context) {
@@ -259,7 +328,7 @@ class _ResultCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  SquatFormAnalyzer.cueFor(feedback),
+                  FormChecker.cueFor(exercise, feedback),
                   style: theme.textTheme.h2.copyWith(color: accent),
                 ),
               ),
@@ -267,28 +336,28 @@ class _ResultCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _Metric(
-            label: 'Knee angle',
+            label: 'Joint angle',
             value: feedback.kneeAngle == null
                 ? '—'
                 : '${feedback.kneeAngle!.round()}°',
-            note: 'About 90° is parallel; lower is deeper',
+            note: 'Measured at the joint this movement works',
           ),
           const SizedBox(height: 10),
           _Metric(
-            label: 'Depth',
-            value: switch (feedback.depth) {
-              SquatDepth.deep => 'At or below parallel',
-              SquatDepth.partial => 'Above parallel',
-              SquatDepth.standing => 'Standing',
-            },
-            note: 'Measured from hip, knee and ankle positions',
+            label: 'Position',
+            value: exercise.positionLabel(feedback.depth),
+            note: 'Compared against the target for this movement',
           ),
-          const SizedBox(height: 10),
-          _Metric(
-            label: 'Torso',
-            value: feedback.torsoTooFarForward ? 'Leaning forward' : 'Upright',
-            note: 'Some forward lean is normal in a squat',
-          ),
+          // Only shown when the rule set actually measures lean. A "Torso:
+          // Upright" row on a push-up would report a check that never ran.
+          if (exercise.measuresTorsoLean) ...[
+            const SizedBox(height: 10),
+            _Metric(
+              label: 'Torso',
+              value: feedback.torsoTooFarForward ? 'Leaning forward' : 'Upright',
+              note: exercise.torsoNote!,
+            ),
+          ],
         ],
       ),
     );
@@ -363,10 +432,11 @@ class _LimitsNote extends StatelessWidget {
     final ext = theme.extension<AppColors>()!;
 
     return Text(
-      'Beta. This measures squat depth and torso lean from your joint '
-      'positions — it cannot judge bar path, knee tracking or spinal position, '
-      'and it is not a substitute for a coach. Everything is processed on your '
-      'phone; no photo is uploaded or saved.',
+      'Beta. This measures joint angles for six movements — squat, push-up, '
+      'lunge, plank, glute bridge and overhead press. It cannot judge bar path, '
+      'knee tracking or spinal position, and it is not a substitute for a '
+      'coach. Everything is processed on your phone; no photo is uploaded or '
+      'saved.',
       style: theme.textTheme.caption.copyWith(color: ext.textDisabled),
     );
   }

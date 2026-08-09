@@ -11,6 +11,10 @@ enum BodyPoint {
   rightKnee,
   leftAnkle,
   rightAnkle,
+  leftElbow,
+  rightElbow,
+  leftWrist,
+  rightWrist,
 }
 
 /// One detected joint position, in image coordinates.
