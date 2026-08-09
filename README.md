@@ -54,6 +54,67 @@ FitPilot exists because of three real frustrations that existing fitness apps do
 - Email/password authentication with OTP verification (Supabase Auth); Row Level Security (`auth.uid() = user_id`) on every user table
 - Full light & dark themes, responsive from 320 px phones to landscape tablets, system text-scale support (clamped 0.85–1.15)
 
+## Screenshots & UI Showcase
+
+To keep the documentation clean and fast to load, screenshots are organized by category. Click any category below to expand and view the interface.
+
+<details>
+<summary><b>🚀 Onboarding & Authentication</b> (Click to expand)</summary>
+
+| Welcome Screen | Login | Sign Up | Enter Height |
+| :---: | :---: | :---: | :---: |
+| ![Welcome Screen](docs/screenshots/auth/welcome.png) | ![Login](docs/screenshots/auth/login.png) | ![Sign Up](docs/screenshots/auth/signup.png) | ![Enter Height](docs/screenshots/auth/enter_height.png) |
+
+#### Profile Setup Wizard
+| Step 1: Goals | Step 2: Activity | Step 3: Body Info | Step 4: Targets | Step 5: Complete |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Wizard 1](docs/screenshots/auth/wizard_1.png) | ![Wizard 2](docs/screenshots/auth/wizard_2.png) | ![Wizard 3](docs/screenshots/auth/wizard_3.png) | ![Wizard 4](docs/screenshots/auth/wizard_4.png) | ![Wizard 5](docs/screenshots/auth/wizard_5.png) |
+
+</details>
+
+<details>
+<summary><b>📊 Dashboard & Food Logging</b> (Click to expand)</summary>
+
+| Today (Home) | Today (Detailed) | Protein Tracker | Log Screen | Barcode Scanner | Log Weight |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| ![Today Screen](docs/screenshots/log/today_1.png) | ![Today Screen 2](docs/screenshots/log/today_2.png) | ![Protein](docs/screenshots/log/protein.png) | ![Log Screen](docs/screenshots/log/log_screen.png) | ![Scanner](docs/screenshots/log/scanner.png) | ![Log Weight](docs/screenshots/log/log_weight.png) |
+
+</details>
+
+<details>
+<summary><b>🏋️ Workout Programs & AI Gym Coach</b> (Click to expand)</summary>
+
+| Programs Hub | Program Details | Workout Hub | Exercises (Shoulders) | Exercise Detail |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Programs](docs/screenshots/workouts/programs.png) | ![Program Detail](docs/screenshots/workouts/program_detail.png) | ![Workout Hub](docs/screenshots/workouts/workout_hub.png) | ![Shoulders](docs/screenshots/workouts/shoulders.png) | ![Exercise Detail](docs/screenshots/workouts/exercise_detail.png) |
+
+#### AI Coaching & Planning
+| Plan Screen 1 | Plan Screen 2 | Coach Screen | Machine Scanner (AI) | Form Check (AI) |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Plan 1](docs/screenshots/coach/plan_1.png) | ![Plan 2](docs/screenshots/coach/plan_2.png) | ![Coach Screen](docs/screenshots/coach/coach.png) | ![Machine Scanner](docs/screenshots/coach/machine_scanner.png) | ![Form Check](docs/screenshots/coach/form_check.png) |
+
+</details>
+
+<details>
+<summary><b>⚙️ Settings & Notifications</b> (Click to expand)</summary>
+
+| Profile Screen | Account Settings | Preference Screen | App Settings | Notifications |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Profile](docs/screenshots/settings/profile.png) | ![Account Settings](docs/screenshots/settings/account.png) | ![Preferences](docs/screenshots/settings/preferences.png) | ![App Settings](docs/screenshots/settings/app_settings.png) | ![Notifications](docs/screenshots/settings/notifications.png) |
+
+</details>
+
+<details>
+<summary><b>🎨 Dynamic Theme & Colors</b> (Click to expand)</summary>
+
+FitPilot supports system-wide Light & Dark theme toggle along with a selection of vibrant accent colors that can be customized in the preferences.
+
+| Light Mode (Orange) | Dark Mode (Orange) | Blue Accent | Purple Accent | Red Accent |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Light Theme](docs/screenshots/custom/light_theme.png) | ![Dark Theme](docs/screenshots/custom/dark_theme.png) | ![Blue Theme](docs/screenshots/custom/blue_theme.png) | ![Purple Theme](docs/screenshots/custom/purple_theme.png) | ![Red Theme](docs/screenshots/custom/red_theme.png) |
+
+</details>
+
 ## Architecture
 
 FitPilot follows a strict layered (clean) architecture. Dependencies point inward only — the domain layer imports nothing from Flutter, the database, or the network.
