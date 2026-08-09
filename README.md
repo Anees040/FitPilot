@@ -26,8 +26,8 @@ FitPilot exists because of three real frustrations that existing fitness apps do
 | Pillar | What it does | Status |
 | --- | --- | --- |
 | 🍔 **Eat it, burn it** | Log any food (search, barcode, nutrition label) → honest kcal range → surplus converted into a personalised burn plan with a grace deadline | ✅ Built |
-| 🏋️ **Gym coach** | Machine scanner (what is this, how do I use it) + AI form check with rep-by-rep technique feedback | ⏳ Milestone D |
-| 📅 **Plans that fit you** | Goal + training style + level + duration → customised weekly plan; full exercise library with technique guides | ⏳ Milestone C |
+| 🏋️ **Gym coach** | Machine scanner (what is this, how do I use it) + AI form check with rep-by-rep technique feedback | ✅ Built |
+| 📅 **Plans that fit you** | Goal + training style + level + duration → customised weekly plan; full exercise library with technique guides | ✅ Built |
 
 ## Features (current build)
 
@@ -266,9 +266,9 @@ This project maintains living documentation designed for both humans and AI codi
 | --- | --- | --- | --- |
 | **A — Offline core** | Domain engines, local logging, burn plans, streaks | 🍔 | ✅ Complete |
 | **B — Connected** | Supabase auth & sync, barcode, label OCR, weight, notifications | 🍔 | ✅ Complete |
-| **B.5 — Fix & polish** | Device-verified UX pass, design system enforcement | — | 🔄 In progress |
-| **C — Plans & library** | Exercise library with technique guides, weekly planner, program templates (goal × style × level × duration), AI photo food estimation via server-side proxy | 📅 | ⏳ Planned |
-| **D — Gym coach** | Machine scanner, AI form check with rep-by-rep feedback, push notifications, admin dashboard | 🏋️ | ⏳ Planned |
+| **B.5 — Fix & polish** | Device-verified UX pass, design system enforcement | — | ✅ Complete |
+| **C — Plans & library** | Exercise library with technique guides, weekly planner, program templates (goal × style × level × duration), AI photo food estimation via server-side proxy | 📅 | ✅ Complete |
+| **D — Gym coach** | Machine scanner, AI form check with rep-by-rep feedback, push notifications, admin dashboard | 🏋️ | ✅ Complete |
 
 ## Author
 
