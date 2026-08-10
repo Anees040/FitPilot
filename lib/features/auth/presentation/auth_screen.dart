@@ -8,6 +8,7 @@ import 'package:fitpilot/application/providers/profile_provider.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/app_reset.dart';
 import 'package:fitpilot/data/local/app_database.dart';
+import 'package:fitpilot/data/services/avatar_service.dart';
 import 'package:fitpilot/core/utils/require_online.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/domain/entities/profile.dart';
@@ -209,10 +210,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final merger = ref.read(guestMergeServiceProvider);
     final remote = ref.read(remoteDataSourceProvider);
     final db = await ref.read(databaseProvider.future);
-    
+
+    // Whose rows are actually on this device? Null means a guest made them.
+    // Anything else means a *different* account was signed in here before and
+    // its data was never cleared — in which case there is nothing to ask the
+    // user about. Offering to "keep your data" would merge one person's food
+    // logs into another person's account, and showing it before the pull lands
+    // is why the app briefly displayed the previous account's name.
+    final owner = await AppDatabase.localDataOwner(db);
+    if (owner != null && owner != userId) {
+      await AppDatabase.clearUserData(db);
+      await AvatarService.clear();
+      if (!await _pullWithRetry()) return;
+      await AppDatabase.setLocalDataOwner(db, userId);
+      resetApplicationState(ref);
+      if (mounted) await _navigatePostAuth();
+      return;
+    }
+
     final hasCloudData = await remote.hasCloudData(userId);
     final hasGuestData = await merger?.hasGuestData() ?? false;
-    
+
     if (hasCloudData && hasGuestData) {
       if (!mounted) return;
       final shouldOverwrite = await showDialog<bool>(
@@ -241,15 +259,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       }
       
       await AppDatabase.clearUserData(db);
-      
+
       if (!await _pullWithRetry()) return;
-      
+
+      await AppDatabase.setLocalDataOwner(db, userId);
       resetApplicationState(ref);
-      
+
       if (mounted) context.go('/today');
     } else if (hasCloudData && !hasGuestData) {
       // Just do the pull, there's no local guest data to worry about.
       if (!await _pullWithRetry()) return;
+      await AppDatabase.setLocalDataOwner(db, userId);
       resetApplicationState(ref);
       if (mounted) context.go('/today');
     } else {
@@ -281,6 +301,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (!shouldMerge) {
         await AppDatabase.clearUserData(db);
         if (!await _pullWithRetry()) return;
+        await AppDatabase.setLocalDataOwner(db, userId);
         resetApplicationState(ref);
         if (mounted) await _navigatePostAuth();
       } else {
@@ -288,6 +309,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         try {
           await merger?.mergeGuestData(userId);
           if (!await _pullWithRetry()) return;
+          await AppDatabase.setLocalDataOwner(db, userId);
           resetApplicationState(ref);
           if (mounted) await _navigatePostAuth();
         } catch (e) {

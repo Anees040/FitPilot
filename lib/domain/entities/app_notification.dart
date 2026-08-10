@@ -96,6 +96,12 @@ class AppNotification extends Equatable {
     'payload': payload,
     'created_at': createdAt.toIso8601String(),
     'read_at': readAt?.toIso8601String(),
+    // Bumped whenever read state changes, which is the only mutable part.
+    // UTC because Postgres stores timestamptz in UTC: a naive local-time
+    // string is read back as if it were already UTC, which from UTC+5 makes
+    // every local row look five hours newer than it is and win every
+    // last-write-wins comparison against the cloud.
+    'updated_at': (readAt ?? createdAt).toUtc().toIso8601String(),
   };
 
   factory AppNotification.fromRow(Map<String, Object?> row) {

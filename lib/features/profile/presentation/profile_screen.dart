@@ -47,6 +47,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   bool _initialized = false;
   bool _isSaving = false;
+  /// Guards the sign-out flow. It awaits a drain, a network sign-out and a
+  /// database wipe, and a second tap part-way through used to start the whole
+  /// sequence again — which is what made sign-out look like it needed two taps.
+  bool _isSigningOut = false;
 
   @override
   void dispose() {
@@ -609,7 +613,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 ),
                 TextButton(
-                  onPressed: () async {
+                  onPressed: _isSigningOut ? null : () async {
                     final isOnline = ref.read(isOnlineProvider).value ?? true;
                     if (!isOnline) {
                       final syncService = ref.read(syncServiceProvider);
@@ -653,20 +657,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     );
                     if (confirm != true) return;
-                    
-                    await ref.read(syncTriggerManagerProvider)?.pauseAndDrain();
-                    await ref.read(authRepositoryProvider).signOut();
-                    final db = await ref.read(databaseProvider.future);
-                    await AppDatabase.clearUserData(db);
-                    // The avatar is a file in the sandbox, so a database wipe
-                    // cannot reach it — it would otherwise greet the next user.
-                    await AvatarService.clear();
-                    resetApplicationState(ref);
-                    if (context.mounted) {
-                      context.go('/welcome');
+
+                    setState(() => _isSigningOut = true);
+                    try {
+                      await ref.read(syncTriggerManagerProvider)?.pauseAndDrain();
+                      await ref.read(authRepositoryProvider).signOut();
+                      final db = await ref.read(databaseProvider.future);
+                      await AppDatabase.clearUserData(db);
+                      // The avatar is a file in the sandbox, so a database wipe
+                      // cannot reach it — it would otherwise greet the next user.
+                      await AvatarService.clear();
+                      resetApplicationState(ref);
+                      if (context.mounted) {
+                        context.go('/welcome');
+                      }
+                    } finally {
+                      if (mounted) setState(() => _isSigningOut = false);
                     }
                   },
-                  child: const Text('Sign Out'),
+                  child: Text(_isSigningOut ? 'Signing out…' : 'Sign Out'),
                 ),
               ],
             ),

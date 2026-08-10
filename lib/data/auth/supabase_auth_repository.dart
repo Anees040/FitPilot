@@ -93,19 +93,38 @@ class SupabaseAuthRepository implements AuthRepository {
     );
   }
 
+  /// Clears the `deleted` marker left behind by [deleteAccount].
+  ///
+  /// The marker exists because the client SDK cannot remove an auth user, so a
+  /// deleted account's row survives. Every path back in has to clear it —
+  /// password sign-in, Google sign-in, sign-up and OTP alike. Missing it on the
+  /// sign-up paths is what produced the contradiction the user hit: the app
+  /// said "you can sign up again with this email", then refused the sign-up.
+  ///
+  /// Failures are swallowed on purpose: the user is already authenticated at
+  /// this point, and blocking them because a metadata write failed would be a
+  /// worse outcome than a stale flag.
+  Future<void> _clearDeletedFlag() async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) return;
+      if (user.userMetadata?['deleted'] != true) return;
+      await _client.auth.updateUser(
+        supa.UserAttributes(data: {'deleted': false}),
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('[SupabaseAuthRepo] clear deleted flag: $e');
+    }
+  }
+
   @override
   Future<void> signIn({required String email, required String password}) async {
     try {
       await _client.auth.signInWithPassword(email: email, password: password);
-      final user = _client.auth.currentUser;
-      if (user != null && user.userMetadata?['deleted'] == true) {
-        // The user deleted their account but is signing back in — welcome them
-        // back. Their old data was already purged during deleteAccount(), so
-        // clearing the flag is safe.
-        await _client.auth.updateUser(
-          supa.UserAttributes(data: {'deleted': false}),
-        );
-      }
+      // The user deleted their account but is signing back in — welcome them
+      // back. Their old data was already purged during deleteAccount(), so
+      // clearing the flag is safe.
+      await _clearDeletedFlag();
     } catch (e) {
       throw _mapException(e);
     }
@@ -115,6 +134,10 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> signUp({required String email, required String password}) async {
     try {
       await _client.auth.signUp(email: email, password: password);
+      // Re-signing up with a previously deleted email lands on the same auth
+      // user, still carrying the flag. Clear it here or the next sign-in is
+      // refused for an account the app just told them to create.
+      await _clearDeletedFlag();
     } catch (e) {
       throw _mapException(e);
     }
@@ -128,6 +151,7 @@ class SupabaseAuthRepository implements AuthRepository {
         email: email,
         token: token,
       );
+      await _clearDeletedFlag();
     } catch (e) {
       throw _mapException(e);
     }
@@ -188,9 +212,7 @@ class SupabaseAuthRepository implements AuthRepository {
       if (user != null && user.userMetadata?['deleted'] == true) {
         // The user deleted their account but is signing back in with Google —
         // welcome them back. Old data was already purged.
-        await _client.auth.updateUser(
-          supa.UserAttributes(data: {'deleted': false}),
-        );
+        await _clearDeletedFlag();
       }
     } catch (e) {
       if (e is UnknownAuthFailure) rethrow;

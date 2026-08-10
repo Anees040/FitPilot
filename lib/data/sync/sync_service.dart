@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:fitpilot/data/remote/remote_data_source.dart';
+import 'package:fitpilot/data/sync/sync_tables.dart';
 
 enum SyncState { idle, syncing, error }
 
@@ -37,12 +38,73 @@ class SyncService {
     _emitStatus();
   }
 
+  /// Spec lookup for a local table name, or null if the table does not sync.
+  static SyncTableSpec? _spec(String localTable) {
+    for (final s in kSyncTables) {
+      if (s.local == localTable) return s;
+    }
+    return null;
+  }
+
   /// Maps local SQLite table names to their Supabase counterparts.
   /// The local table is named 'profile' (singleton row) but Supabase
   /// uses 'profiles' (multi-user table).
-  String _remoteTable(String localTable) {
-    if (localTable == 'profile') return 'profiles';
-    return localTable;
+  String _remoteTable(String localTable) =>
+      _spec(localTable)?.remote ?? localTable;
+
+  /// The value a row's primary key takes in the cloud.
+  ///
+  /// Singleton tables (`profile`, `notification_prefs`) hold one row keyed
+  /// `id = 1` on the device; in the cloud that row is keyed by the user's uuid,
+  /// because one row per *account* is the only thing that makes sense there.
+  /// Everything else keeps whatever id the device generated.
+  String _remoteId(SyncTableSpec spec, String localRowId) =>
+      spec.singleton ? userId : localRowId;
+
+  /// Converts one local SQLite row into the payload Supabase expects.
+  Map<String, dynamic> _toRemote(SyncTableSpec spec, Map<String, Object?> local) {
+    final out = <String, dynamic>{
+      'id': _remoteId(spec, local[spec.localPk]?.toString() ?? ''),
+      'user_id': userId,
+      'updated_at': local['updated_at'],
+    };
+    for (final column in spec.columns) {
+      final raw = local[column.name];
+      out[column.name] = switch (column.kind) {
+        // SQLite has no boolean; Postgres will not take 0/1 for one.
+        SyncColumnKind.boolean => TolerantReader.readBool(raw),
+        SyncColumnKind.plain || SyncColumnKind.json => raw,
+      };
+    }
+    return out;
+  }
+
+  /// Converts one Supabase row back into a local SQLite row.
+  Map<String, dynamic> _toLocal(SyncTableSpec spec, Map<String, dynamic> remote) {
+    final out = <String, dynamic>{
+      // A singleton always lands on local row 1 regardless of the cloud key.
+      spec.localPk: spec.singleton ? 1 : remote['id'],
+      'updated_at': remote['updated_at'],
+    };
+    for (final column in spec.columns) {
+      out[column.name] = TolerantReader.toSqliteValue(remote[column.name]);
+    }
+    return out;
+  }
+
+  /// Forces a timestamp to UTC before it crosses the wire.
+  ///
+  /// Postgres stores `timestamptz` in UTC, so a naive local-time string
+  /// (`2026-08-11T14:00:00.000`, no offset) is read back as if it were already
+  /// UTC. From UTC+5 that makes every local row look five hours newer than it
+  /// is, so it wins every last-write-wins comparison and the cloud copy is
+  /// never applied — which is exactly how edits made on another device
+  /// silently failed to arrive.
+  static String? _normalizeUtc(Object? raw) {
+    if (raw is! String || raw.isEmpty) return null;
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return null;
+    return parsed.toUtc().toIso8601String();
   }
 
   void _emitStatus({SyncState? state, String? error}) async {
@@ -176,6 +238,16 @@ class SyncService {
     String table,
     List<Map<String, dynamic>> chunk,
   ) async {
+    final spec = _spec(table);
+    if (spec == null) {
+      // A table that does not sync should never have been queued. Drop the
+      // entries rather than retrying them forever against a table Supabase
+      // does not have.
+      debugPrint('Sync push: dropping queue entries for unsynced table $table');
+      await _removeFromQueue(chunk.map((q) => q['id'] as int).toList());
+      return;
+    }
+
     final rowsToUpsert = <Map<String, dynamic>>[];
     final queueIds = <int>[];
 
@@ -189,52 +261,45 @@ class SyncService {
       if (op == 'delete') {
         // We push a tombstone instead of actual delete
         rowsToUpsert.add({
-          'id': table == 'profile' ? userId : rowId, // profiles pk is user_id
+          'id': _remoteId(spec, rowId),
           'user_id': userId,
           'deleted': true,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         });
       } else {
-        // Query the local table.
-        // For profile, row_id is '1', but in the local DB it's integer 1.
-        final pkVal = table == 'profile' ? 1 : rowId;
+        // Query the local table. A singleton's queue row carries '1'; every
+        // other table carries whatever id the device generated.
+        final pkVal = spec.singleton ? 1 : rowId;
 
         final localData = await db.query(
           table,
-          where: 'id = ?',
+          where: '${spec.localPk} = ?',
           whereArgs: [pkVal],
         );
         if (localData.isNotEmpty) {
-          final data = Map<String, dynamic>.from(localData.first);
-
+          if (table == 'weight_entries' &&
+              localData.first['weight_kg'] == null) {
+            continue;
+          }
+          final data = _toRemote(spec, localData.first);
           if (table == 'profile') {
-            // Supabase 'profiles' table uses a UUID id (the user's auth id).
-            data.remove('id');
-            data['id'] = userId;
-            // Convert equipment JSON string → Dart List for Postgres text[] column
+            // equipment is text[] in Postgres but a JSON string in SQLite.
             _fixProfileArrayFields(data);
-          } else if (table == 'weight_entries') {
-            if (data['weight_kg'] == null) continue;
-            data['user_id'] = userId;
-          } else {
-            data['user_id'] = userId;
           }
-
-          // The push sends the whole local row, so columns that exist only
-          // on this device must be stripped — Supabase has no such columns
-          // and would reject the upsert.
-          for (final column in _localOnlyColumns[table] ?? const <String>[]) {
-            data.remove(column);
+          data['updated_at'] = _normalizeUtc(data['updated_at']);
+          if (data['updated_at'] == null) {
+            // Nothing to order this row by, so the conflict rule cannot run.
+            // Stamp it now rather than pushing a row that can never win or lose.
+            data['updated_at'] = DateTime.now().toIso8601String();
           }
-
           rowsToUpsert.add(data);
         } else if (op == 'soft_delete') {
           // It might have been physically deleted, let's tombstone
           rowsToUpsert.add({
-            'id': rowId,
+            'id': _remoteId(spec, rowId),
             'user_id': userId,
-            'deleted_at': DateTime.now().toIso8601String(),
-            'updated_at': DateTime.now().toIso8601String(),
+            'deleted_at': DateTime.now().toUtc().toIso8601String(),
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
           });
         }
       }
@@ -289,20 +354,13 @@ class SyncService {
 
   Future<void> _pullPhase({bool throwOnFailure = false}) async {
     final failures = <String>[];
-    // Local SQLite table names — _remoteTable() maps them to Supabase names.
-    final tables = [
-      'profile',
-      'food_logs',
-      'burn_completions',
-      'weight_entries',
-      'food_catalog',
-    ];
 
-    for (final table in tables) {
+    for (final spec in kSyncTables) {
+      final table = spec.local;
       final lastPull = await _getLastPull(table);
       try {
         // Pull from the Supabase table (which may have a different name).
-        final remoteRows = await remote.pullSince(_remoteTable(table), lastPull);
+        final remoteRows = await remote.pullSince(spec.remote, lastPull);
         if (remoteRows.isEmpty) continue;
 
         DateTime maxUpdated = DateTime.parse(lastPull);
@@ -315,17 +373,19 @@ class SyncService {
               maxUpdated = remoteUpdated;
             }
 
-            final rowId = table == 'profile' ? 1 : row['id'];
+            final rowId = spec.singleton ? 1 : row['id'];
 
             // Conflict resolution: last write wins
             final localRows = await txn.query(
               table,
-              where: 'id = ?',
+              where: '${spec.localPk} = ?',
               whereArgs: [rowId],
             );
             if (localRows.isNotEmpty) {
               final rawUpdated = localRows.first['updated_at'];
-              final localUpdatedStr = rawUpdated is String ? rawUpdated : DateTime.fromMillisecondsSinceEpoch(0).toIso8601String();
+              final localUpdatedStr = rawUpdated is String
+                  ? rawUpdated
+                  : DateTime.fromMillisecondsSinceEpoch(0).toIso8601String();
               final localUpdated = DateTime.parse(localUpdatedStr);
               if (localUpdated.isAfter(remoteUpdated)) {
                 // Local is newer, ignore remote
@@ -333,96 +393,30 @@ class SyncService {
               }
             }
 
-            // Remote is newer or row doesn't exist locally
-            // Explicit Mappers
-            Map<String, dynamic> dataToInsert = {};
-            if (table == 'profile') {
-              dataToInsert = {
-                'id': 1,
-                'weight_kg': row['weight_kg'],
-                'height_cm': row['height_cm'],
-                'age': row['age'],
-                'gender': row['gender'],
-                'activity_level': row['activity_level'],
-                'goal': row['goal'],
-                'allowance_kcal': row['allowance_kcal'],
-                'target_override': row['target_override'],
-                'equipment': row['equipment'] != null ? jsonEncode(row['equipment']) : null,
-                'name': row['name'],
-                'goal_weight_kg': row['goal_weight_kg'],
-                'theme_mode': row['theme_mode'],
-                'theme_color': row['theme_color'],
-                'plan_category_pref': row['plan_category_pref'],
-                'plan_pace_pref': row['plan_pace_pref'],
-                'unit_kg_lb': row['unit_kg_lb'],
-                'week_starts_mon': TolerantReader.toSqliteValue(row['week_starts_mon']),
-                'haptics_on': TolerantReader.toSqliteValue(row['haptics_on']),
-                'active_program_id': row['active_program_id'],
-                'active_program_week': row['active_program_week'],
-                'active_program_day': row['active_program_day'],
-                'avatar_url': row['avatar_url'],
-                'updated_at': row['updated_at'],
-              };
-            } else if (table == 'food_logs') {
-              dataToInsert = {
-                'id': row['id'],
-                'food_id': row['food_id'],
-                'food_name': row['food_name'],
-                'custom_name': row['custom_name'],
-                'quantity': row['quantity'],
-                'kcal_min': row['kcal_min'],
-                'kcal_max': row['kcal_max'],
-                'source': row['source'],
-                'logged_at': row['logged_at'],
-                'deleted_at': row['deleted_at'],
-                'updated_at': row['updated_at'],
-              };
-            } else if (table == 'weight_entries') {
-              dataToInsert = {
-                'id': row['id'],
-                'weight_kg': row['weight_kg'],
-                'for_date': row['for_date'],
-                'updated_at': row['updated_at'],
-              };
-            } else if (table == 'burn_completions') {
-              dataToInsert = {
-                'id': row['id'],
-                'activity': row['activity'],
-                'minutes': row['minutes'],
-                'kcal': row['kcal'],
-                'for_date': row['for_date'],
-                'completed_at': row['completed_at'],
-                'updated_at': row['updated_at'],
-              };
-            } else if (table == 'food_catalog') {
-              dataToInsert = {
-                'id': row['id'],
-                'name': row['name'],
-                'name_ur': row['name_ur'],
-                'portion_label': row['portion_label'],
-                'grams': row['grams'],
-                'kcal_min': row['kcal_min'],
-                'kcal_max': row['kcal_max'],
-                'image_url': row['image_url'],
-                'is_verified': TolerantReader.toSqliteValue(row['is_verified']),
-              };
-            }
+            // Remote is newer or row doesn't exist locally.
+            final dataToInsert = _toLocal(spec, row);
 
-            // If it's a tombstone, we can physically delete or soft delete
+            // A tombstone arrives either as the `deleted` flag the push writes
+            // or, for food_logs, as a `deleted_at` timestamp. Both are read
+            // from the remote row directly: `deleted` is structural and so is
+            // never part of a spec's column list.
             final isDeleted =
-                (dataToInsert['deleted'] == true) ||
-                (dataToInsert['deleted_at'] != null);
-            dataToInsert.remove('deleted');
+                TolerantReader.readBool(row['deleted']) == true ||
+                dataToInsert['deleted_at'] != null;
 
             if (isDeleted && table != 'food_logs') {
               // physical delete
-              await txn.delete(table, where: 'id = ?', whereArgs: [rowId]);
+              await txn.delete(
+                table,
+                where: '${spec.localPk} = ?',
+                whereArgs: [rowId],
+              );
             } else {
               // ConflictAlgorithm.replace is INSERT OR REPLACE, which deletes
               // the existing row and reinserts it — any column missing from
               // dataToInsert would be reset to NULL. Carry local-only columns
               // (which the remote schema does not have) across the replace.
-              await _preserveLocalOnly(txn, table, rowId, dataToInsert);
+              await _preserveLocalOnly(txn, spec, rowId, dataToInsert);
               // Upsert directly into local db (bypasses queue)
               await txn.insert(
                 table,
@@ -446,34 +440,25 @@ class SyncService {
     }
   }
 
-  /// Columns that exist only in the local SQLite schema and have no
-  /// counterpart in Supabase. A pull must never null these out.
-  static const Map<String, List<String>> _localOnlyColumns = {
-    'food_catalog': ['image_key', 'protein_g'],
-    'food_logs': ['photo_path', 'protein_g'],
-    'profile': ['protein_goal_g'],
-  };
-
   /// Reads the local-only column values for [rowId] and merges them into
   /// [dataToInsert] so the INSERT OR REPLACE writes them back unchanged.
   Future<void> _preserveLocalOnly(
     DatabaseExecutor txn,
-    String table,
+    SyncTableSpec spec,
     Object? rowId,
     Map<String, dynamic> dataToInsert,
   ) async {
-    final columns = _localOnlyColumns[table];
-    if (columns == null || rowId == null) return;
+    if (spec.localOnly.isEmpty || rowId == null) return;
     try {
       final existing = await txn.query(
-        table,
-        columns: columns,
-        where: 'id = ?',
+        spec.local,
+        columns: spec.localOnly,
+        where: '${spec.localPk} = ?',
         whereArgs: [rowId],
         limit: 1,
       );
       if (existing.isEmpty) return;
-      for (final column in columns) {
+      for (final column in spec.localOnly) {
         final value = existing.first[column];
         if (value != null) dataToInsert[column] = value;
       }

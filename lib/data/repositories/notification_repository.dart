@@ -1,16 +1,18 @@
 import 'package:sqflite/sqflite.dart';
 
+import 'package:fitpilot/data/sync/sync_queue_writer.dart';
 import 'package:fitpilot/domain/entities/app_notification.dart';
 
 /// Stores the in-app notification inbox.
 ///
-/// LOCAL-ONLY: this table records what this device delivered and what the user
-/// read. It is deliberately absent from the Supabase schema and must never
-/// appear in a sync push payload.
+/// SYNCED per account, so read state and history follow the user rather than
+/// the install. Delivery is still per-device (the OS notification itself is
+/// local), but the inbox row is the user's.
 class NotificationRepository {
   final Database _db;
+  final SyncQueueWriter? _sync;
 
-  NotificationRepository(this._db);
+  NotificationRepository(this._db, {SyncQueueWriter? sync}) : _sync = sync;
 
   /// Hard ceiling on stored rows. The inbox is a convenience, not an archive —
   /// without a cap it would grow for the life of the install.
@@ -43,33 +45,55 @@ class NotificationRepository {
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
     if (id == 0) return false;
+    await _sync?.enqueue('notifications', notification.id, 'upsert');
     await _trim();
     return true;
   }
 
   Future<void> markRead(String id) async {
-    await _db.update(
+    final now = DateTime.now().toUtc().toIso8601String();
+    final changed = await _db.update(
       'notifications',
-      {'read_at': DateTime.now().toIso8601String()},
+      {'read_at': now, 'updated_at': now},
       where: 'id = ? AND read_at IS NULL',
       whereArgs: [id],
     );
+    if (changed > 0) await _sync?.enqueue('notifications', id, 'upsert');
   }
 
   Future<void> markAllRead() async {
+    final unread = await _db.query(
+      'notifications',
+      columns: ['id'],
+      where: 'read_at IS NULL',
+    );
+    if (unread.isEmpty) return;
+    final now = DateTime.now().toUtc().toIso8601String();
     await _db.update(
       'notifications',
-      {'read_at': DateTime.now().toIso8601String()},
+      {'read_at': now, 'updated_at': now},
       where: 'read_at IS NULL',
+    );
+    await _sync?.enqueueAll(
+      'notifications',
+      unread.map((r) => r['id'] as String),
+      'upsert',
     );
   }
 
   Future<void> delete(String id) async {
     await _db.delete('notifications', where: 'id = ?', whereArgs: [id]);
+    await _sync?.enqueue('notifications', id, 'delete');
   }
 
   Future<void> clearAll() async {
+    final rows = await _db.query('notifications', columns: ['id']);
     await _db.delete('notifications');
+    await _sync?.enqueueAll(
+      'notifications',
+      rows.map((r) => r['id'] as String),
+      'delete',
+    );
   }
 
   /// Drops the oldest rows once the table exceeds [maxRows].
@@ -93,5 +117,8 @@ class NotificationRepository {
       where: 'id IN ($placeholders)',
       whereArgs: ids,
     );
+    // Tombstoned, not just deleted: the cap belongs to the account, and a
+    // local-only delete would be undone by the next pull.
+    await _sync?.enqueueAll('notifications', ids, 'delete');
   }
 }

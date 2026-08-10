@@ -1,17 +1,20 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:fitpilot/data/sync/sync_queue_writer.dart';
 import 'package:fitpilot/domain/entities/chat_conversation.dart';
 import 'package:fitpilot/domain/entities/chat_message.dart';
 
 /// Stores coach threads and their messages.
 ///
-/// LOCAL-ONLY: nothing here ever leaves the device, so this repository never
-/// enqueues anything to `sync_queue`.
+/// SYNCED per account. These used to be per-device, which meant a user's coach
+/// history vanished when they signed out and did not follow them to a second
+/// phone — not what "my chats" means to anyone who has used a messaging app.
 class ChatRepository {
   final Database db;
+  final SyncQueueWriter? sync;
 
-  const ChatRepository(this.db);
+  const ChatRepository(this.db, {this.sync});
 
   /// Messages loaded per thread. The coach replays only the recent tail anyway,
   /// and a thread longer than this is a sign it should have been a new one.
@@ -60,6 +63,7 @@ class ChatRepository {
       updatedAt: now,
     );
     await db.insert('chat_conversations', conversation.toRow());
+    await sync?.enqueue('chat_conversations', conversation.id, 'upsert');
     return conversation;
   }
 
@@ -72,6 +76,7 @@ class ChatRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+    await sync?.enqueue('chat_conversations', id, 'upsert');
   }
 
   /// Deletes a thread and its messages.
@@ -80,15 +85,44 @@ class ChatRepository {
   /// a thread that no longer exists.
   Future<void> deleteConversation(String id) async {
     await db.transaction((txn) async {
+      // Message ids are read before the delete so each can be tombstoned; a
+      // local-only delete would be undone by the next pull.
+      final messages = await txn.query(
+        'chat_messages',
+        columns: ['id'],
+        where: 'conversation_id = ?',
+        whereArgs: [id],
+      );
       await txn.delete('chat_messages', where: 'conversation_id = ?', whereArgs: [id]);
       await txn.delete('chat_conversations', where: 'id = ?', whereArgs: [id]);
+      await sync?.enqueueAll(
+        'chat_messages',
+        messages.map((m) => m['id'] as String),
+        'delete',
+        txn: txn,
+      );
+      await sync?.enqueue('chat_conversations', id, 'delete', txn: txn);
     });
   }
 
   Future<void> deleteAllConversations() async {
     await db.transaction((txn) async {
+      final messages = await txn.query('chat_messages', columns: ['id']);
+      final conversations = await txn.query('chat_conversations', columns: ['id']);
       await txn.delete('chat_messages');
       await txn.delete('chat_conversations');
+      await sync?.enqueueAll(
+        'chat_messages',
+        messages.map((m) => m['id'] as String),
+        'delete',
+        txn: txn,
+      );
+      await sync?.enqueueAll(
+        'chat_conversations',
+        conversations.map((c) => c['id'] as String),
+        'delete',
+        txn: txn,
+      );
     });
   }
 
@@ -153,18 +187,37 @@ class ChatRepository {
         where: 'id = ?',
         whereArgs: [conversationId],
       );
+      await sync?.enqueue('chat_messages', message.id, 'upsert', txn: txn);
+      await sync?.enqueue(
+        'chat_conversations',
+        conversationId,
+        'upsert',
+        txn: txn,
+      );
     });
   }
 
   Future<void> deleteMessage(String id) async {
     await db.delete('chat_messages', where: 'id = ?', whereArgs: [id]);
+    await sync?.enqueue('chat_messages', id, 'delete');
   }
 
   Future<void> clearMessagesIn(String conversationId) async {
+    final rows = await db.query(
+      'chat_messages',
+      columns: ['id'],
+      where: 'conversation_id = ?',
+      whereArgs: [conversationId],
+    );
     await db.delete(
       'chat_messages',
       where: 'conversation_id = ?',
       whereArgs: [conversationId],
+    );
+    await sync?.enqueueAll(
+      'chat_messages',
+      rows.map((r) => r['id'] as String),
+      'delete',
     );
   }
 

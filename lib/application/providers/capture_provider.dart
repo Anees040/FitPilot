@@ -6,6 +6,8 @@ import 'package:fitpilot/domain/entities/kcal_range.dart';
 import 'package:fitpilot/data/remote/open_food_facts_client.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/today_provider.dart';
+import 'package:fitpilot/application/providers/auth_provider.dart';
+import 'package:fitpilot/data/sync/sync_queue_writer.dart';
 import 'package:fitpilot/data/services/image_cache_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:sqflite/sqflite.dart';
@@ -134,6 +136,12 @@ class CaptureNotifier extends Notifier<void> {
       'quantity': quantity,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+    // A barcode the user taught the app is their data: it should follow the
+    // account, not stay on whichever phone happened to scan it first.
+    await SyncQueueWriter(
+      db,
+      isGuest: () => ref.read(currentUserProvider) == null,
+    ).enqueue('saved_products', barcode, 'upsert');
   }
 
   Future<void> logScannedItem({

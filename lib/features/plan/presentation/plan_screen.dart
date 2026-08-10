@@ -331,6 +331,10 @@ class PlanScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           DropdownButtonFormField<String?>(
             initialValue: validSelectedMealId,
+            // Without this the dropdown sizes itself to its widest item, so one
+            // long food name pushed the row past the card and tripped a render
+            // overflow. Expanded + ellipsis keeps it inside the card instead.
+            isExpanded: true,
             decoration: InputDecoration(
               filled: true,
               fillColor: ext.surfaceRaised,
@@ -346,12 +350,20 @@ class PlanScreen extends ConsumerWidget {
             items: [
               DropdownMenuItem(
                 value: null,
-                child: Text('All of today ($totalToBurn kcal)'),
+                child: Text(
+                  'All of today ($totalToBurn kcal)',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               ...logs.map((log) {
                 return DropdownMenuItem(
                   value: log.id,
-                  child: Text('${log.customName ?? log.foodName} (${log.kcal.midpoint} kcal)'),
+                  child: Text(
+                    '${log.customName ?? log.foodName} (${log.kcal.midpoint} kcal)',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }),
             ],

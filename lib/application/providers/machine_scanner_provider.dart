@@ -11,7 +11,7 @@ import 'package:fitpilot/domain/entities/machine_scan.dart';
 /// local-only, so nothing it writes is ever queued for sync.
 final machineScanRepositoryProvider = FutureProvider<MachineScanRepository>((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return MachineScanRepository(db);
+  return MachineScanRepository(db, sync: ref.watch(syncQueueWriterProvider(db)));
 });
 
 /// Saved scans, newest first. Readable with no network.

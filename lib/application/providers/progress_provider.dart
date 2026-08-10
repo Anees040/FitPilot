@@ -150,7 +150,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
       id = existing.first['id'] as String;
       await db.update('weight_entries', {
         'weight_kg': weightKg,
-        'updated_at': now.toIso8601String(),
+        'updated_at': now.toUtc().toIso8601String(),
       }, where: 'id = ?', whereArgs: [id]);
     } else {
       id = const Uuid().v4();
@@ -158,7 +158,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
         'id': id,
         'for_date': forDateStr,
         'weight_kg': weightKg,
-        'updated_at': now.toIso8601String(),
+        'updated_at': now.toUtc().toIso8601String(),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
@@ -191,7 +191,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
 
     await db.update(
       'weight_entries',
-      {'weight_kg': newWeight, 'updated_at': now.toIso8601String()},
+      {'weight_kg': newWeight, 'updated_at': now.toUtc().toIso8601String()},
       where: 'id = ?',
       whereArgs: [id],
     );

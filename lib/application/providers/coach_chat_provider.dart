@@ -15,7 +15,7 @@ import 'package:fitpilot/domain/entities/chat_message.dart';
 /// it writes is ever queued for sync.
 final chatRepositoryProvider = FutureProvider<ChatRepository>((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return ChatRepository(db);
+  return ChatRepository(db, sync: ref.watch(syncQueueWriterProvider(db)));
 });
 
 /// Swapped in tests so the provider can be driven without a network.

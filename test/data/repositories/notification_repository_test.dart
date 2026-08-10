@@ -3,6 +3,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/data/repositories/notification_repository.dart';
+import 'package:fitpilot/data/sync/sync_queue_writer.dart';
 import 'package:fitpilot/domain/entities/app_notification.dart';
 
 AppNotification _n(
@@ -149,8 +150,40 @@ void main() {
     expect(all.single.category, NotificationCategory.system);
   });
 
-  test('writing a notification never enqueues a sync row', () async {
+  test('a guest write never enqueues a sync row', () async {
+    // The repo under test was built with no SyncQueueWriter, which is the
+    // shape a signed-out session gets. Queueing there would upload one
+    // person's inbox into whichever account signs in next on this device.
     await repo.add(_n('a'));
     expect(await db.query('sync_queue'), isEmpty);
+  });
+
+  test('a signed-in write queues the row so the inbox follows the account',
+      () async {
+    final signedIn = NotificationRepository(
+      db,
+      sync: SyncQueueWriter(db, isGuest: () => false),
+    );
+    await signedIn.add(_n('b'));
+
+    final queued = await db.query('sync_queue');
+    expect(queued.single['table_name'], 'notifications');
+    expect(queued.single['row_id'], 'b');
+    expect(queued.single['op'], 'upsert');
+  });
+
+  test('marking read queues an update, so read state is not per-device',
+      () async {
+    final signedIn = NotificationRepository(
+      db,
+      sync: SyncQueueWriter(db, isGuest: () => false),
+    );
+    await signedIn.add(_n('c'));
+    await db.delete('sync_queue');
+
+    await signedIn.markRead('c');
+
+    final queued = await db.query('sync_queue');
+    expect(queued.single['row_id'], 'c');
   });
 }

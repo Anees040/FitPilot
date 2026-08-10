@@ -3,6 +3,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/data/repositories/machine_scan_repository.dart';
+import 'package:fitpilot/data/sync/sync_queue_writer.dart';
 import 'package:fitpilot/domain/entities/machine_analysis.dart';
 
 MachineAnalysis _analysis(String name) => MachineAnalysis(
@@ -117,10 +118,24 @@ void main() {
     expect(scans.map((s) => s.id), ['b']);
   });
 
-  test('saving never enqueues a sync row — the table is local-only', () async {
+  test('a guest save never enqueues a sync row', () async {
+    // `repo` is built without a SyncQueueWriter, which is the signed-out shape.
     await repo.save('scan-1', _analysis('Lat Pulldown Machine'));
 
     final queued = await db.query('sync_queue');
     expect(queued, isEmpty);
+  });
+
+  test('a signed-in save queues the scan so history follows the account',
+      () async {
+    final signedIn = MachineScanRepository(
+      db,
+      sync: SyncQueueWriter(db, isGuest: () => false),
+    );
+    await signedIn.save('scan-2', _analysis('Leg Press'));
+
+    final queued = await db.query('sync_queue');
+    expect(queued.single['table_name'], 'machine_scans');
+    expect(queued.single['row_id'], 'scan-2');
   });
 }

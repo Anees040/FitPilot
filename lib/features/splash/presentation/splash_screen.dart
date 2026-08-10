@@ -54,15 +54,25 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
-    // Wait for the animation to finish
-    await Future.delayed(const Duration(milliseconds: 1200));
+    // Enough for the fade-in to read as intentional rather than a flicker, and
+    // no more. It runs *alongside* the real work below instead of before it, so
+    // on a warm start the two overlap and cost nothing extra.
+    final minimumOnScreen = Future<void>.delayed(
+      const Duration(milliseconds: 450),
+    );
 
     try {
+      // Supabase is initialized after the first frame. Routing before it
+      // resolves would read a session that is not restored yet and bounce a
+      // signed-in user to /welcome.
+      await FitPilotBootstrap.warmUp();
+
       final db = await AppDatabase.instance();
       await FitPilotBootstrap.importSeedData();
       final rows = await db.query('profile');
       final isFirstLaunch = rows.isEmpty;
 
+      await minimumOnScreen;
       if (mounted) {
         if (isFirstLaunch) {
           context.go('/welcome');
@@ -71,6 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
         }
       }
     } catch (e) {
+      await minimumOnScreen;
       if (mounted) {
         // Fallback on error
         context.go('/welcome');

@@ -71,9 +71,21 @@ class SyncTriggerManager with WidgetsBindingObserver {
     _debounceTimer?.cancel();
   }
 
-  /// Pauses triggers and waits for any in-flight sync to finish
-  Future<void> pauseAndDrain() async {
+  /// Pauses triggers and waits for any in-flight sync to finish.
+  ///
+  /// The wait is bounded. Sign-out calls this first, and an in-flight sync
+  /// against a slow or captive network could take tens of seconds — during
+  /// which the Sign Out button looked completely dead, so people tapped it
+  /// again. Whatever has not drained by then stays in `sync_queue`; nothing is
+  /// lost, it just uploads on the next sign-in instead.
+  Future<void> pauseAndDrain({
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
     pause();
-    await _syncService.drain();
+    try {
+      await _syncService.drain().timeout(timeout);
+    } on TimeoutException {
+      // Deliberately swallowed: sign-out must never be blocked by the network.
+    }
   }
 }

@@ -15,7 +15,7 @@ class LogRepository {
   /// Add a new food log.
   Future<void> add(FoodLog log) async {
     _validateLog(log);
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toUtc().toIso8601String();
     await db.insert('food_logs', {
       'id': log.id,
       'food_id': log.foodId,
@@ -37,7 +37,7 @@ class LogRepository {
   /// Update an existing food log.
   Future<void> update(FoodLog log) async {
     _validateLog(log);
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toUtc().toIso8601String();
     await db.update(
       'food_logs',
       {
@@ -65,8 +65,8 @@ class LogRepository {
     await db.update(
       'food_logs',
       {
-        'deleted_at': now.toIso8601String(),
-        'updated_at': now.toIso8601String(),
+        'deleted_at': now.toUtc().toIso8601String(),
+        'updated_at': now.toUtc().toIso8601String(),
       },
       where: 'id = ?',
       whereArgs: [id],

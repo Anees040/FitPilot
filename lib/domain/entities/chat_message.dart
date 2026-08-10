@@ -32,6 +32,10 @@ class ChatMessage extends Equatable {
     'role': role.name,
     'content': content,
     'created_at': createdAt.toUtc().toIso8601String(),
+    // A message never changes after it is written, so updated_at starts equal
+    // to created_at. Sync needs the column regardless: last-write-wins has
+    // nothing to compare without it.
+    'updated_at': createdAt.toUtc().toIso8601String(),
   };
 
   /// Returns null when the row is unreadable, so one bad record cannot break

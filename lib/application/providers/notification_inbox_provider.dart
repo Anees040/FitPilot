@@ -17,7 +17,7 @@ final notificationRepositoryProvider = FutureProvider<NotificationRepository>((
   ref,
 ) async {
   final db = await ref.watch(databaseProvider.future);
-  return NotificationRepository(db);
+  return NotificationRepository(db, sync: ref.watch(syncQueueWriterProvider(db)));
 });
 
 final notificationInboxProvider =

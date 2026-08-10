@@ -8,6 +8,7 @@ import 'package:fitpilot/data/repositories/food_repository.dart';
 import 'package:fitpilot/data/repositories/log_repository.dart';
 import 'package:fitpilot/data/repositories/profile_repository.dart';
 import 'package:fitpilot/data/repositories/program_repository.dart';
+import 'package:fitpilot/data/sync/sync_queue_writer.dart';
 
 import 'package:fitpilot/application/providers/auth_provider.dart';
 
@@ -67,9 +68,21 @@ final exerciseRepositoryProvider = FutureProvider<ExerciseRepository>((
   return ExerciseRepository(db);
 });
 
-/// Exposes the ProgramRepository. Takes no guest guard: every table it touches
-/// is local-only, so nothing it writes is ever queued for sync.
+/// Exposes the ProgramRepository. It needs the guest guard because
+/// `program_completions` is synced: a signed-out user's progress must not be
+/// queued for upload into whichever account signs in next on this device.
 final programRepositoryProvider = FutureProvider<ProgramRepository>((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return ProgramRepository(db);
+  return ProgramRepository(db, sync: ref.watch(syncQueueWriterProvider(db)));
+});
+
+/// A [SyncQueueWriter] bound to the current auth state.
+///
+/// Family-keyed on the database so every repository provider shares one guest
+/// guard rather than each inventing its own.
+final syncQueueWriterProvider = Provider.family<SyncQueueWriter, Database>((
+  ref,
+  db,
+) {
+  return SyncQueueWriter(db, isGuest: () => ref.read(currentUserProvider) == null);
 });

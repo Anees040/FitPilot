@@ -55,6 +55,15 @@ import 'package:fitpilot/core/utils/food_image_resolver.dart';
 ///      from the Supabase schema, so they must never appear in a sync push
 ///      payload and a pull must never overwrite them. NULL means "unknown",
 ///      never zero: a food with no protein data is not a food with no protein.
+/// 26 — program_completions, notification_prefs, chat_messages, chat_conversations,
+///      machine_scans, notifications and saved_products became SYNCED tables, so
+///      the ones that lacked updated_at gained it — last-write-wins has nothing
+///      to compare without it. All seven used to be marked LOCAL-ONLY, which in
+///      practice meant a sign-out threw them away: program progress, coach
+///      threads, scanner history and notification settings all reset. Existing
+///      rows are stamped with their own created_at/completed_at where they have
+///      one, so the first sync pushes real history up instead of pretending
+///      everything was written at migration time.
 class AppDatabase {
   static Database? _db;
 
@@ -64,7 +73,7 @@ class AppDatabase {
     final path = join(await getDatabasesPath(), 'fitpilot.db');
     _db = await openDatabase(
       path,
-      version: 25,
+      version: 26,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -76,7 +85,7 @@ class AppDatabase {
   static Future<Database> inMemory() async {
     final db = await openDatabase(
       inMemoryDatabasePath,
-      version: 25,
+      version: 26,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -99,7 +108,8 @@ class AppDatabase {
         image_url TEXT,
         image_key TEXT,
         is_verified INTEGER NOT NULL DEFAULT 1,
-        protein_g REAL
+        protein_g REAL,
+        updated_at TEXT
       )
     ''');
 
@@ -246,7 +256,8 @@ class AppDatabase {
         week_number INTEGER NOT NULL,
         day_number INTEGER NOT NULL,
         kcal INTEGER NOT NULL DEFAULT 0,
-        completed_at TEXT NOT NULL
+        completed_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00.000Z'
       )
     ''');
 
@@ -287,7 +298,8 @@ class AppDatabase {
         water_reminders_enabled INTEGER NOT NULL DEFAULT 0,
         quiet_hours_enabled INTEGER NOT NULL DEFAULT 0,
         quiet_from TEXT NOT NULL DEFAULT '22:00',
-        quiet_to TEXT NOT NULL DEFAULT '07:00'
+        quiet_to TEXT NOT NULL DEFAULT '07:00',
+        updated_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00.000Z'
       )
     ''');
 
@@ -301,7 +313,8 @@ class AppDatabase {
         body TEXT NOT NULL,
         payload TEXT,
         created_at TEXT NOT NULL,
-        read_at TEXT
+        read_at TEXT,
+        updated_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00.000Z'
       )
     ''');
 
@@ -321,7 +334,8 @@ class AppDatabase {
         conversation_id TEXT NOT NULL,
         role TEXT NOT NULL,
         content TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00.000Z'
       )
     ''');
 
@@ -344,7 +358,8 @@ class AppDatabase {
         id TEXT PRIMARY KEY,
         machine_name TEXT NOT NULL,
         response_json TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00.000Z'
       )
     ''');
 
@@ -919,6 +934,63 @@ class AppDatabase {
         } catch (_) {}
       }
     }
+    if (oldVersion < 26) {
+      // These tables are synced from now on, and the last-write-wins rule in
+      // SyncService compares updated_at. A table without it cannot participate.
+      //
+      // Backfill matters here. Defaulting every existing row to "now" would be
+      // easy but wrong: on the first sync after upgrading, every local row
+      // would look newer than whatever is already in the cloud and clobber it.
+      // Seeding from the row's own timestamp keeps the ordering the user
+      // actually created.
+      const backfill = {
+        'program_completions': 'completed_at',
+        'chat_messages': 'created_at',
+        'machine_scans': 'created_at',
+        'notifications': 'created_at',
+      };
+      for (final entry in backfill.entries) {
+        try {
+          await db.execute(
+            'ALTER TABLE ${entry.key} ADD COLUMN updated_at TEXT',
+          );
+          await db.execute(
+            'UPDATE ${entry.key} SET updated_at = ${entry.value} '
+            'WHERE updated_at IS NULL',
+          );
+        } catch (_) {}
+      }
+
+      // notification_prefs has no timestamp of its own to borrow. It is a
+      // single row of settings, so an epoch stamp is the safe choice: it loses
+      // to anything already in the cloud rather than overwriting it.
+      try {
+        await db.execute(
+          'ALTER TABLE notification_prefs ADD COLUMN updated_at TEXT',
+        );
+        await db.execute(
+          "UPDATE notification_prefs SET updated_at = '1970-01-01T00:00:00.000Z' "
+          'WHERE updated_at IS NULL',
+        );
+      } catch (_) {}
+
+      // food_catalog has always synced, but without a local updated_at the pull
+      // had nowhere to write the timestamp it resolves conflicts with.
+      try {
+        await db.execute('ALTER TABLE food_catalog ADD COLUMN updated_at TEXT');
+      } catch (_) {}
+
+      // A row with no updated_at can never be pushed, so make sure none slip
+      // through on tables that already had the column but allowed nulls.
+      for (final table in const ['saved_products', 'chat_conversations']) {
+        try {
+          await db.execute(
+            "UPDATE $table SET updated_at = '1970-01-01T00:00:00.000Z' "
+            'WHERE updated_at IS NULL',
+          );
+        } catch (_) {}
+      }
+    }
   }
 
   /// Populates `image_key` for catalog rows that predate the column, using the
@@ -954,11 +1026,60 @@ class AppDatabase {
     );
   }
 
+  /// Key under which [localDataOwner] is stored in `sync_metadata`.
+  static const _dataOwnerKey = 'data_owner_user_id';
+
+  /// The account whose data currently sits in this database, or null when the
+  /// rows were created by a signed-out (guest) session.
+  ///
+  /// Without this the app could not tell "data I made as a guest" from "data
+  /// belonging to whoever signed in last". Both look identical on disk, so
+  /// signing in as B while A's rows were still present offered to merge A's
+  /// food logs and profile into B's account — and showed A's name over B's
+  /// email until the pull finished.
+  static Future<String?> localDataOwner(Database db) async {
+    try {
+      final rows = await db.query(
+        'sync_metadata',
+        where: 'key = ?',
+        whereArgs: [_dataOwnerKey],
+        limit: 1,
+      );
+      if (rows.isEmpty) return null;
+      final value = rows.first['value'];
+      return value is String && value.isNotEmpty ? value : null;
+    } catch (_) {
+      // sync_metadata is created lazily by SyncService; absence just means
+      // "nobody has claimed this data yet", which is the null case anyway.
+      return null;
+    }
+  }
+
+  /// Records which account owns the rows now on disk. Call after a sign-in has
+  /// finished reconciling, and after a guest merge.
+  static Future<void> setLocalDataOwner(Database db, String? userId) async {
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS sync_metadata (key TEXT PRIMARY KEY, value TEXT)',
+    );
+    if (userId == null) {
+      await db.delete(
+        'sync_metadata',
+        where: 'key = ?',
+        whereArgs: [_dataOwnerKey],
+      );
+      return;
+    }
+    await db.insert('sync_metadata', {
+      'key': _dataOwnerKey,
+      'value': userId,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   /// Wipes all user-specific data from the local database and resets the profile.
   /// This must be called during sign-out to prevent data bleeding between accounts.
   static Future<void> clearUserData(Database db) async {
     final batch = db.batch();
-    
+
     batch.delete('food_logs');
     batch.delete('weight_entries');
     batch.delete('burn_completions');
@@ -966,22 +1087,30 @@ class AppDatabase {
     batch.delete('program_completions');
     batch.delete('saved_products');
 
-    // Local-only tables. These never reach Supabase, so nothing else would
-    // ever clear them — leaving one account's coach conversations, machine
-    // scans or notifications visible to whoever signs in next on this phone.
-    // Each is wrapped because an older install may predate the table.
+    // Foods the user typed in themselves. Seed rows (is_verified = 1) are
+    // bundled content and stay; a custom food belongs to whoever created it and
+    // would otherwise show up in the next account's search results.
+    batch.delete('food_catalog', where: 'is_verified = 0');
+
+    // Tables the sync now carries per account. Each is wrapped because an
+    // older install may predate the table.
     for (final table in const [
       'chat_messages',
       'chat_conversations',
       'machine_scans',
       'notifications',
+      // Settings, not content — but still one account's settings. Leaving this
+      // behind meant the next user inherited someone else's reminder times.
+      'notification_prefs',
     ]) {
       try {
         batch.delete(table);
       } catch (_) {}
     }
 
-    // Clear sync metadata so the next user triggers a full initial pull
+    // Clear sync metadata so the next user triggers a full initial pull. This
+    // also drops the data-owner stamp, which is correct: after the wipe the
+    // rows below belong to nobody until someone signs in and claims them.
     try {
       batch.delete('sync_metadata');
     } catch (_) {}
@@ -1002,7 +1131,7 @@ class AppDatabase {
       'unit_kg_lb': 'kg',
       'week_starts_mon': 1,
       'haptics_on': 1,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
     });
 
     await batch.commit();

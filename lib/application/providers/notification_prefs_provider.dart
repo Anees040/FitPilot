@@ -3,6 +3,8 @@ import 'package:fitpilot/domain/entities/notification_preferences.dart';
 import 'package:fitpilot/core/utils/type_readers.dart';
 import 'package:fitpilot/application/providers/database_providers.dart';
 import 'package:fitpilot/application/providers/notification_inbox_provider.dart';
+import 'package:fitpilot/application/providers/auth_provider.dart';
+import 'package:fitpilot/data/sync/sync_queue_writer.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 
@@ -66,9 +68,18 @@ class NotificationPrefsNotifier extends AsyncNotifier<NotificationPreferences> {
         'quiet_hours_enabled': newPrefs.quietHoursEnabled ? 1 : 0,
         'quiet_from': newPrefs.quietFrom,
         'quiet_to': newPrefs.quietTo,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    // Notification settings belong to the account, not the handset. The row is
+    // a singleton keyed id = 1 locally, so '1' is the queue's row id.
+    final sync = SyncQueueWriter(
+      db,
+      isGuest: () => ref.read(currentUserProvider) == null,
+    );
+    await sync.enqueue('notification_prefs', '1', 'upsert');
+
     ref.invalidateSelf();
 
     // Re-derive the inbox and re-register the OS alarms straight away, so a

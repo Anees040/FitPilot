@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import 'package:fitpilot/core/utils/type_readers.dart';
+import 'package:fitpilot/data/sync/sync_queue_writer.dart';
 import 'package:fitpilot/domain/entities/program.dart';
 
 /// Progress through one program, derived from `program_completions`.
@@ -29,14 +30,15 @@ class ProgramProgress {
 /// All SQL for the training-programs feature.
 ///
 /// `programs`, `program_sessions` and `program_session_items` are bundled seed
-/// content; `program_completions` is per-device progress. None of them are
-/// synced, so this repository never touches `sync_queue` — unlike the food and
-/// burn repositories, it takes no `isGuest` callback because there is nothing
-/// to guard.
+/// content — identical for every user, so they are never synced. But
+/// `program_completions` is the user's own progress, and it IS synced: leaving
+/// it per-device meant signing out abandoned whatever program you were part way
+/// through, which no one expects from an account.
 class ProgramRepository {
   final Database db;
+  final SyncQueueWriter? sync;
 
-  const ProgramRepository(this.db);
+  const ProgramRepository(this.db, {this.sync});
 
   /// Loads every program with its sessions and each session's exercise list,
   /// ordered for display. Three queries total, stitched in memory.
@@ -151,7 +153,11 @@ class ProgramRepository {
       'day_number': session.dayNumber,
       'kcal': kcal,
       'completed_at': completedAt.toIso8601String(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    if (inserted != 0) {
+      await sync?.enqueue('program_completions', session.id, 'upsert');
+    }
     return inserted != 0;
   }
 
@@ -169,10 +175,24 @@ class ProgramRepository {
   /// Wipes progress for one program. Called on enroll, switch and abandon so a
   /// re-enrolled program never shows stale ticks or a wrong percentage.
   Future<void> clearProgress(String programId) async {
+    // The ids are read before the delete so each row can be tombstoned:
+    // without that the cloud keeps the completions and the next pull restores
+    // the ticks the user just cleared.
+    final rows = await db.query(
+      'program_completions',
+      columns: ['session_id'],
+      where: 'program_id = ?',
+      whereArgs: [programId],
+    );
     await db.delete(
       'program_completions',
       where: 'program_id = ?',
       whereArgs: [programId],
+    );
+    await sync?.enqueueAll(
+      'program_completions',
+      rows.map((r) => r['session_id'] as String),
+      'delete',
     );
   }
 

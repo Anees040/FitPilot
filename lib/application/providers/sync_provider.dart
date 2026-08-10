@@ -10,7 +10,11 @@ import 'package:fitpilot/core/config/env.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final remoteDataSourceProvider = Provider<RemoteDataSource>((ref) {
-  if (Env.isSupabaseConfigured) {
+  // Gated on the warm-up for the same reason as authRepositoryProvider: the
+  // client does not exist until Supabase.initialize() lands, and that now
+  // happens after the first frame.
+  final isReady = ref.watch(supabaseReadyProvider).valueOrNull ?? false;
+  if (Env.isSupabaseConfigured && isReady) {
     return RemoteDataSource(Supabase.instance.client);
   }
   return RemoteDataSource(null);
