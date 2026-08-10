@@ -467,8 +467,30 @@ class SyncService {
     }
   }
 
+  /// Pulls every table from scratch, after first pushing whatever is queued.
+  ///
+  /// The push is not optional. Sign-in queues the guest's rows and then calls
+  /// this, and a pull-only version overwrote them with the cloud copy before
+  /// they were ever uploaded — which is precisely how "keep my data" lost the
+  /// user's enrolled program and reset their profile to defaults while the
+  /// food logs (already pushed by an earlier background sync) survived.
   Future<void> forcePullAll() async {
-    await db.delete('sync_metadata');
+    try {
+      await _pushPhase();
+    } catch (e) {
+      // A failed push must not block the pull: the queue survives and retries,
+      // so the worst case is that local data uploads a little later.
+      debugPrint('forcePullAll: push phase failed, continuing to pull: $e');
+    }
+    // Only the per-table pull cursors, not the whole table: sync_metadata also
+    // holds the data-owner stamp that tells sign-in whose rows are on disk, and
+    // wiping that would make the next sign-in treat another account's leftovers
+    // as guest data to merge.
+    await db.delete(
+      'sync_metadata',
+      where: 'key LIKE ?',
+      whereArgs: ['last_pull_%'],
+    );
     await _pullPhase(throwOnFailure: true);
   }
 

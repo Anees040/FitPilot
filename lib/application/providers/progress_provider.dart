@@ -168,17 +168,21 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
         'row_id': id,
         'op': 'upsert',
         'payload': null,
-        'queued_at': now.toIso8601String(),
+        'queued_at': now.toUtc().toIso8601String(),
       });
     }
 
+    // Both grabbed before the profile save below. build() watches
+    // profileProvider, so saving marks this provider dirty, and a ref call
+    // after that point throws `!_didChangeDependency`.
+    final syncTrigger = ref.read(syncTriggerManagerProvider);
     final repo = await ref.read(profileRepositoryProvider.future);
+
     final currentProfile = await repo.get();
     if (currentProfile != null) {
       await repo.save(currentProfile.copyWith(weightKg: weightKg));
     }
 
-    final syncTrigger = ref.read(syncTriggerManagerProvider);
     syncTrigger?.onLocalWrite();
 
     ref.invalidate(profileProvider);
@@ -202,17 +206,18 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
         'row_id': id,
         'op': 'upsert',
         'payload': null,
-        'queued_at': now.toIso8601String(),
+        'queued_at': now.toUtc().toIso8601String(),
       });
     }
 
+    final syncTrigger = ref.read(syncTriggerManagerProvider);
     final repo = await ref.read(profileRepositoryProvider.future);
+
     final currentProfile = await repo.get();
     if (currentProfile != null) {
       await repo.save(currentProfile.copyWith(weightKg: newWeight));
     }
 
-    final syncTrigger = ref.read(syncTriggerManagerProvider);
     syncTrigger?.onLocalWrite();
 
     ref.invalidate(profileProvider);
@@ -235,7 +240,7 @@ class ProgressNotifier extends AsyncNotifier<ProgressState> {
         'row_id': id,
         'op': 'delete',
         'payload': null,
-        'queued_at': now.toIso8601String(),
+        'queued_at': now.toUtc().toIso8601String(),
       });
     }
 

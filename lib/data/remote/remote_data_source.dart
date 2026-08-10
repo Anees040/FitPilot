@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RemoteDataSource {
@@ -49,23 +50,47 @@ class RemoteDataSource {
   }
 
   /// Checks if the cloud account has meaningful data by querying tables.
+  ///
+  /// Scoped to [userId] explicitly. It used to rely on RLS alone, which is
+  /// correct but leaves the query answering "does anyone have rows" if a policy
+  /// is ever missing — a bad thing to branch a data-merge decision on.
   Future<bool> hasCloudData(String userId) async {
     if (_client == null) return false;
-    try {
-      final List<String> tablesToCheck = ['food_logs', 'weight_entries', 'burn_completions'];
-      for (final table in tablesToCheck) {
-        final res = await _client.from(table).select('id').limit(1);
+    // Deliberately outside the try: a network failure must be distinguishable
+    // from a genuine "no data", because the two lead to opposite decisions.
+    for (final table in const [
+      'food_logs',
+      'weight_entries',
+      'burn_completions',
+      'program_completions',
+    ]) {
+      try {
+        final res =
+            await _client.from(table).select('id').eq('user_id', userId).limit(1);
         if (res.isNotEmpty) return true;
+      } on Object catch (e) {
+        // A missing table (schema not migrated yet) is not an answer — skip it
+        // and keep asking the others rather than guessing.
+        if (kDebugMode) debugPrint('hasCloudData: $table unavailable: $e');
       }
-      
-      // Also check profile: if they have any profiles row, count it as cloud data
-      final profile = await _client.from('profiles').select('id').maybeSingle();
-      if (profile != null) {
+    }
+
+    try {
+      final profile = await _client
+          .from('profiles')
+          .select('onboarding_complete')
+          .eq('id', userId)
+          .maybeSingle();
+      // A bare profiles row is created by sign-up itself, so its existence
+      // proves nothing. Completed onboarding is what makes it *the user's*
+      // account rather than an empty shell — treating the shell as "cloud
+      // data" is what made a brand-new account skip the guest merge and lose
+      // everything the user set up before signing in.
+      if (profile != null && profile['onboarding_complete'] == true) {
         return true;
       }
     } catch (e) {
-      // In case of error, err on the side of caution and assume data exists to trigger the dialog
-      return true;
+      if (kDebugMode) debugPrint('hasCloudData: profiles unavailable: $e');
     }
     return false;
   }

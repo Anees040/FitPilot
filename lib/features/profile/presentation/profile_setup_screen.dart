@@ -121,7 +121,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     try {
       final container = ProviderScope.containerOf(context, listen: false);
       final repoFuture = ref.read(profileRepositoryProvider.future);
-      final progressNotifier = ref.read(progressProvider.notifier);
 
       final repo = await repoFuture;
       if (!mounted) return;
@@ -157,9 +156,16 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
       await repo.save(profile);
       if (!mounted) return;
-      
-      // Log the initial weight
-      await progressNotifier.addWeight(_weightKg);
+
+      // Log the initial weight.
+      //
+      // The notifier is read *here*, after the profile save, rather than being
+      // captured at the top of this method. progressProvider watches
+      // profileProvider, so saving the profile marks it dirty — and calling a
+      // ref method on a notifier that was fetched before its dependency
+      // changed is exactly what trips Riverpod's `!_didChangeDependency`
+      // assertion.
+      await ref.read(progressProvider.notifier).addWeight(_weightKg);
 
       container.invalidate(profileProvider);
 

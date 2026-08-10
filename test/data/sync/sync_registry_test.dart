@@ -3,6 +3,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/data/remote/remote_data_source.dart';
+import 'package:fitpilot/data/sync/guest_merge_service.dart';
 import 'package:fitpilot/data/sync/sync_service.dart';
 import 'package:fitpilot/data/sync/sync_tables.dart';
 
@@ -231,6 +232,77 @@ void main() {
 
     expect(await db.query('sync_queue'), isEmpty);
     expect(remote.pushed, isNot(contains('exercises')));
+  });
+
+  test('guest data is carried into the account, not overwritten by the pull',
+      () async {
+    // The exact scenario the user hit: enrol in a program and set a height as
+    // a guest, then sign in. The merge queues every local row and the push
+    // must run BEFORE the pull, or the cloud's empty profile lands on top and
+    // the program enrolment is gone.
+    await db.update('profile', {
+      'height_cm': 178,
+      'active_program_id': 'p-1',
+      'active_program_week': 1,
+      'onboarding_complete': 1,
+      'updated_at': '2026-08-11T09:00:00.000Z',
+    }, where: 'id = 1');
+    await db.insert('program_completions', {
+      'session_id': 's-1',
+      'program_id': 'p-1',
+      'week_number': 1,
+      'day_number': 1,
+      'kcal': 200,
+      'completed_at': '2026-08-11T09:00:00.000Z',
+      'updated_at': '2026-08-11T09:00:00.000Z',
+    });
+
+    await GuestMergeService(db).mergeGuestData(_userId);
+
+    // The cloud holds an older, emptier profile — the state a fresh account is
+    // in. It must lose to the guest row on updated_at.
+    remote.pullData['profiles'] = [
+      {
+        'id': _userId,
+        'user_id': _userId,
+        'height_cm': null,
+        'active_program_id': null,
+        'onboarding_complete': false,
+        'updated_at': '2026-08-01T00:00:00.000Z',
+      },
+    ];
+
+    await sync.forcePullAll();
+
+    // Pushed up...
+    final pushedProfile = remote.pushed['profiles']!.single;
+    expect(pushedProfile['height_cm'], 178);
+    expect(pushedProfile['active_program_id'], 'p-1');
+    expect(remote.pushed['program_completions'], hasLength(1));
+
+    // ...and not clobbered on the way back down.
+    final local = (await db.query('profile', where: 'id = 1')).single;
+    expect(local['height_cm'], 178, reason: 'the older cloud row must lose');
+    expect(local['active_program_id'], 'p-1');
+    expect(await db.query('program_completions'), hasLength(1));
+  });
+
+  test('hasGuestData sees a program enrolment, not just food logs', () async {
+    // A blank profile row always exists, so it must not read as guest data.
+    expect(await GuestMergeService(db).hasGuestData(), isFalse);
+
+    await db.insert('program_completions', {
+      'session_id': 's-9',
+      'program_id': 'p-9',
+      'week_number': 1,
+      'day_number': 1,
+      'kcal': 100,
+      'completed_at': '2026-08-11T09:00:00.000Z',
+      'updated_at': '2026-08-11T09:00:00.000Z',
+    });
+
+    expect(await GuestMergeService(db).hasGuestData(), isTrue,
+        reason: 'losing an enrolment silently is what the old version did');
   });
 
   test('a local-time updated_at is normalized to UTC before it is pushed',

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/application/providers/auth_provider.dart';
 import 'package:fitpilot/application/providers/sync_provider.dart';
+import 'package:fitpilot/application/providers/database_providers.dart';
+import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/domain/entities/auth_failure.dart';
 import 'package:fitpilot/core/ui/app_snackbar.dart';
 import 'package:fitpilot/core/utils/require_online.dart';
@@ -77,6 +79,19 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       if (user != null) {
         final merger = ref.read(guestMergeServiceProvider);
         await merger?.mergeGuestData(user.id);
+        // The merge only queues rows, so without this the new account owns
+        // nothing until some later background sync happens to fire. Claiming
+        // the data now also stops the next sign-in mistaking these rows for a
+        // different account's leftovers.
+        final db = await ref.read(databaseProvider.future);
+        await AppDatabase.setLocalDataOwner(db, user.id);
+        try {
+          await ref.read(syncServiceProvider)?.syncNow();
+        } catch (e) {
+          // The queue survives a failed upload and retries, so a flaky network
+          // here must not block a verified user from reaching onboarding.
+          debugPrint('Post-verification sync failed, will retry later: $e');
+        }
       }
 
       if (mounted) {

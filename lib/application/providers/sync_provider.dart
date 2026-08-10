@@ -13,7 +13,7 @@ final remoteDataSourceProvider = Provider<RemoteDataSource>((ref) {
   // Gated on the warm-up for the same reason as authRepositoryProvider: the
   // client does not exist until Supabase.initialize() lands, and that now
   // happens after the first frame.
-  final isReady = ref.watch(supabaseReadyProvider).valueOrNull ?? false;
+  final isReady = ref.watch(supabaseReadyProvider);
   if (Env.isSupabaseConfigured && isReady) {
     return RemoteDataSource(Supabase.instance.client);
   }
@@ -24,8 +24,9 @@ final guestMergeServiceProvider = Provider<GuestMergeService?>((ref) {
   if (!Env.isSupabaseConfigured) return null;
   final db = ref.watch(databaseProvider).value;
   if (db == null) return null;
-  final remote = ref.watch(remoteDataSourceProvider);
-  return GuestMergeService(db, remote);
+  // Takes no RemoteDataSource: the merge queues rows and lets SyncService's
+  // push upload them, rather than duplicating the column mapping.
+  return GuestMergeService(db);
 });
 
 final syncServiceProvider = Provider<SyncService?>((ref) {

@@ -383,33 +383,41 @@ class _ConversationRow extends ConsumerWidget {
 
   Future<void> _rename(BuildContext context, WidgetRef ref) async {
     final controller = TextEditingController(text: conversation.title);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Rename chat'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 60,
-          decoration: const InputDecoration(hintText: 'Chat name'),
-          onSubmitted: (v) => Navigator.of(c).pop(v),
+    try {
+      final result = await showDialog<String>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Rename chat'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLength: 60,
+            decoration: const InputDecoration(hintText: 'Chat name'),
+            onSubmitted: (v) => Navigator.of(c).pop(v),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(c).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(c).pop(controller.text),
+              child: const Text('Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(c).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(c).pop(controller.text),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
+      );
 
-    if (result == null || result.trim().isEmpty) return;
-    await ref.read(coachChatProvider.notifier).rename(conversation.id, result);
+      if (result == null || result.trim().isEmpty) return;
+      await ref.read(coachChatProvider.notifier).rename(conversation.id, result);
+    } finally {
+      // Disposed only after the dialog route has finished animating out. The
+      // TextField is still mounted and still listening during that animation,
+      // so disposing the moment showDialog returns left it depending on a dead
+      // controller — which surfaced as '_dependents.isEmpty is not true' and a
+      // "dirty widget in the wrong build scope" crash on Save.
+      WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
+    }
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {

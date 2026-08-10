@@ -15,7 +15,7 @@ import 'package:fitpilot/data/sync/guest_merge_service.dart';
 import 'package:fitpilot/features/auth/presentation/auth_screen.dart';
 
 class MockGuestMergeService extends GuestMergeService {
-  MockGuestMergeService(super.db, super.remote);
+  MockGuestMergeService(super.db);
 
   @override
   Future<bool> hasGuestData() async => false;

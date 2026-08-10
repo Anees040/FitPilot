@@ -62,14 +62,21 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     try {
-      // Supabase is initialized after the first frame. Routing before it
-      // resolves would read a session that is not restored yet and bounce a
-      // signed-in user to /welcome.
-      await FitPilotBootstrap.warmUp();
+      // Started together, awaited together. The warm-up is network-bound and
+      // the database work is disk-bound, so running them in sequence spent the
+      // sum of both for no reason — on a first launch the seed import alone is
+      // most of a second.
+      final warmUp = FitPilotBootstrap.warmUp();
+      final dbReady = AppDatabase.instance();
 
-      final db = await AppDatabase.instance();
+      // Routing has to wait for the warm-up: until Supabase has restored its
+      // session, authRepositoryProvider still reports a guest, and /today
+      // rendered as a guest would write rows that never get queued for upload.
+      await warmUp;
+      final db = await dbReady;
       await FitPilotBootstrap.importSeedData();
-      final rows = await db.query('profile');
+
+      final rows = await db.query('profile', limit: 1);
       final isFirstLaunch = rows.isEmpty;
 
       await minimumOnScreen;

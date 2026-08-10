@@ -53,13 +53,16 @@ class FitPilotBootstrap {
     if (Env.isSupabaseConfigured) {
       try {
         // A hard cap so a captive portal or a dead DNS server cannot strand the
-        // splash forever. On timeout the app continues; the auth repository
-        // simply has no session to read and the user lands on /welcome.
+        // splash. Four seconds, not twelve: this sits directly on the launch
+        // path, and a user staring at a splash screen reads anything longer as
+        // the app being broken. On timeout the app continues — the auth
+        // repository simply has no session yet, and the listener in
+        // FitPilotApp picks the session up when it does arrive.
         await Supabase.initialize(
           url: Env.supabaseUrl,
           // ignore: deprecated_member_use
           anonKey: Env.supabaseAnonKey,
-        ).timeout(const Duration(seconds: 12));
+        ).timeout(const Duration(seconds: 4));
         supabaseReady = true;
       } catch (e) {
         debugPrint(

@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The window background the OS paints from process start until Flutter's
+     first frame. It used to be the bare splash colour, so launching showed a
+     flat orange rectangle with nothing on it, and only once Dart was running
+     did the branded splash appear. Drawing the logo here makes that first
+     stretch look like the splash screen instead of a blank fill. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_color" />
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/splash" />
+    </item>
 </layer-list>
