@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The window background the OS paints from process start until Flutter's
-     first frame. It used to be the bare splash colour, so launching showed a
-     flat orange rectangle with nothing on it, and only once Dart was running
-     did the branded splash appear. Drawing the logo here makes that first
-     stretch look like the splash screen instead of a blank fill. -->
+     first frame.
+
+     It draws the same artwork the Dart SplashScreen does, filling the window
+     the way BoxFit.cover does there. That is the whole point: showing a
+     different image here — a square icon on a flat fill — made the handoff to
+     Flutter look like two separate splash screens flashing in sequence.
+     Matching them makes the transition invisible, so the user sees one splash
+     that simply holds until the app is ready. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Fallback fill: visible for the instant before the bitmap decodes, and
+         behind it on any aspect ratio the artwork cannot quite cover. -->
     <item android:drawable="@color/splash_color" />
     <item>
         <bitmap
-            android:gravity="center"
-            android:src="@drawable/splash" />
+            android:gravity="fill"
+            android:src="@drawable/splash_bg" />
     </item>
 </layer-list>
