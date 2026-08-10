@@ -8,6 +8,113 @@
 // the failure was invisible because the queue just retried forever.
 import 'package:fitpilot/data/sync/sync_tables.dart';
 
+/// Repairs columns that already exist with the wrong type.
+///
+/// ADD COLUMN IF NOT EXISTS is a no-op when the column is present, so it
+/// cannot fix a type mismatch — and the very first schema shipped
+/// `food_logs.food_id` as `bigint references foods(id)` while the app sends
+/// catalog ids like 'biryani-chicken-1'. Every food-log push was rejected by
+/// Postgres, silently, for as long as that mismatch stood. An ALTER TYPE
+/// repairs it in place, which is the non-destructive answer to the DROP TABLE
+/// the earlier hand-written migration reached for.
+String _coerceTypes(SyncTableSpec spec) {
+  final t = spec.remote;
+
+  // Arrays are handled separately, below. Keeping them out of the loop means
+  // the loop's format() string contains no quoted literals at all, which is
+  // what keeps its escaping readable and correct.
+  final scalar = [
+    for (final c in spec.columns)
+      if (c.pgType != 'text[]') "    ('${c.name}', '${c.pgType}')",
+    // Legacy scripts created this as `text NOT NULL DEFAULT now()::text`.
+    // Postgres renders that as '2026-08-11 14:23:45+00' — a space, not a 'T'.
+    // The pull compares with .gt(), which on a text column is a string
+    // comparison, and ' ' sorts before 'T': rows would be skipped by the very
+    // cursor meant to find them. As timestamptz the comparison is temporal.
+    "    ('updated_at', 'timestamp with time zone')",
+  ].join(',\n');
+
+  final buffer = StringBuffer('''
+-- Coerce legacy column types in place (data is preserved).
+DO \$do\$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+$scalar
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = '$t'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE $t ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE '$t.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING '$t.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END \$do\$;
+''');
+
+  // A JSON string has to be unpacked into an array, not cast to one, so these
+  // get literal DDL rather than a format() template.
+  for (final c in spec.columns.where((c) => c.pgType == 'text[]')) {
+    buffer.write('''
+DO \$do\$
+DECLARE have text;
+BEGIN
+  SELECT format_type(a.atttypid, a.atttypmod) INTO have
+  FROM pg_attribute a
+  WHERE a.attrelid = '$t'::regclass AND a.attname = '${c.name}'
+    AND a.attnum > 0 AND NOT a.attisdropped;
+  IF have IS NOT NULL AND have <> 'text[]' THEN
+    ALTER TABLE $t ALTER COLUMN ${c.name} TYPE text[]
+      USING CASE
+        WHEN ${c.name} IS NULL
+          OR btrim(${c.name}::text) IN ('', '[]') THEN '{}'::text[]
+        ELSE translate(${c.name}::text, '[]"', '')::text[]
+      END;
+    RAISE NOTICE '$t.${c.name}: % -> text[]', have;
+  END IF;
+END \$do\$;
+''');
+  }
+
+  return buffer.toString();
+}
+
+/// Removes foreign keys that force an insert order the sync cannot honour.
+///
+/// The original schema pointed every table at `profiles(id)`, so a food log
+/// could not be inserted before its profile row existed. The push uploads
+/// tables in queue order, not dependency order, so that constraint turns a
+/// perfectly valid batch into a rejected one. The `auth.users` reference is
+/// kept — that is what makes account deletion cascade.
+String _dropLegacyForeignKeys(String t) => '''
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO \$do\$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = '$t'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE $t DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE '$t: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END \$do\$;
+''';
+
 void main() {
   final b = StringBuffer();
 
@@ -85,6 +192,9 @@ void main() {
       b.writeln('UPDATE $t SET user_id = id WHERE user_id IS NULL;');
       b.writeln();
     }
+
+    b.writeln(_coerceTypes(spec));
+    b.writeln(_dropLegacyForeignKeys(t));
 
     // The app writes rows during onboarding with most fields still empty, so
     // any legacy NOT NULL has to come off or the upsert is rejected.

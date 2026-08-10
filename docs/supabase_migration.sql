@@ -47,6 +47,88 @@ END $$;
 -- A singleton row is keyed by the owner, so id IS user_id.
 UPDATE profiles SET user_id = id WHERE user_id IS NULL;
 
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('name', 'text'),
+    ('avatar_url', 'text'),
+    ('weight_kg', 'real'),
+    ('goal_weight_kg', 'real'),
+    ('height_cm', 'real'),
+    ('age', 'integer'),
+    ('gender', 'text'),
+    ('goal', 'text'),
+    ('activity_level', 'text'),
+    ('allowance_kcal', 'integer'),
+    ('target_override', 'integer'),
+    ('theme_mode', 'text'),
+    ('theme_color', 'text'),
+    ('plan_category_pref', 'text'),
+    ('plan_pace_pref', 'text'),
+    ('unit_kg_lb', 'text'),
+    ('week_starts_mon', 'boolean'),
+    ('haptics_on', 'boolean'),
+    ('active_program_id', 'text'),
+    ('active_program_week', 'integer'),
+    ('active_program_day', 'integer'),
+    ('onboarding_complete', 'boolean'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'profiles'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE profiles ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'profiles.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'profiles.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+DO $do$
+DECLARE have text;
+BEGIN
+  SELECT format_type(a.atttypid, a.atttypmod) INTO have
+  FROM pg_attribute a
+  WHERE a.attrelid = 'profiles'::regclass AND a.attname = 'equipment'
+    AND a.attnum > 0 AND NOT a.attisdropped;
+  IF have IS NOT NULL AND have <> 'text[]' THEN
+    ALTER TABLE profiles ALTER COLUMN equipment TYPE text[]
+      USING CASE
+        WHEN equipment IS NULL
+          OR btrim(equipment::text) IN ('', '[]') THEN '{}'::text[]
+        ELSE translate(equipment::text, '[]"', '')::text[]
+      END;
+    RAISE NOTICE 'profiles.equipment: % -> text[]', have;
+  END IF;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'profiles'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE profiles DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'profiles: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
+
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
 DO $$
@@ -95,6 +177,58 @@ DO $$ BEGIN
   BEGIN ALTER TABLE food_logs ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
 
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('food_id', 'text'),
+    ('food_name', 'text'),
+    ('custom_name', 'text'),
+    ('quantity', 'real'),
+    ('kcal_min', 'integer'),
+    ('kcal_max', 'integer'),
+    ('source', 'text'),
+    ('logged_at', 'text'),
+    ('deleted_at', 'text'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'food_logs'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE food_logs ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'food_logs.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'food_logs.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'food_logs'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE food_logs DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'food_logs: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
+
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
 DO $$
@@ -140,6 +274,54 @@ DO $$ BEGIN
   BEGIN ALTER TABLE burn_completions ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
 
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('for_date', 'text'),
+    ('activity', 'text'),
+    ('minutes', 'integer'),
+    ('kcal', 'integer'),
+    ('completed_at', 'text'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'burn_completions'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE burn_completions ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'burn_completions.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'burn_completions.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'burn_completions'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE burn_completions DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'burn_completions: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
+
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
 DO $$
@@ -181,6 +363,51 @@ DO $$ BEGIN
   BEGIN ALTER TABLE weight_entries ADD COLUMN user_id uuid; EXCEPTION WHEN duplicate_column THEN NULL; END;
   BEGIN ALTER TABLE weight_entries ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
+
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('for_date', 'text'),
+    ('weight_kg', 'real'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'weight_entries'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE weight_entries ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'weight_entries.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'weight_entries.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'weight_entries'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE weight_entries DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'weight_entries: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
 
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
@@ -236,6 +463,57 @@ DO $$ BEGIN
   BEGIN ALTER TABLE food_catalog ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
 
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('name', 'text'),
+    ('name_ur', 'text'),
+    ('portion_label', 'text'),
+    ('grams', 'integer'),
+    ('kcal_min', 'integer'),
+    ('kcal_max', 'integer'),
+    ('image_url', 'text'),
+    ('is_verified', 'boolean'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'food_catalog'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE food_catalog ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'food_catalog.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'food_catalog.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'food_catalog'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE food_catalog DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'food_catalog: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
+
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
 DO $$
@@ -280,6 +558,54 @@ DO $$ BEGIN
   BEGIN ALTER TABLE program_completions ADD COLUMN user_id uuid; EXCEPTION WHEN duplicate_column THEN NULL; END;
   BEGIN ALTER TABLE program_completions ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
+
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('program_id', 'text'),
+    ('week_number', 'integer'),
+    ('day_number', 'integer'),
+    ('kcal', 'integer'),
+    ('completed_at', 'text'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'program_completions'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE program_completions ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'program_completions.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'program_completions.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'program_completions'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE program_completions DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'program_completions: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
 
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
@@ -338,6 +664,63 @@ END $$;
 -- A singleton row is keyed by the owner, so id IS user_id.
 UPDATE notification_prefs SET user_id = id WHERE user_id IS NULL;
 
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('meal_reminders_enabled', 'boolean'),
+    ('meal_times', 'text'),
+    ('streak_risk_enabled', 'boolean'),
+    ('milestones_enabled', 'boolean'),
+    ('global_mute', 'boolean'),
+    ('burn_reminders_enabled', 'boolean'),
+    ('program_reminders_enabled', 'boolean'),
+    ('weigh_in_enabled', 'boolean'),
+    ('weigh_in_day', 'integer'),
+    ('weigh_in_time', 'text'),
+    ('water_reminders_enabled', 'boolean'),
+    ('quiet_hours_enabled', 'boolean'),
+    ('quiet_from', 'text'),
+    ('quiet_to', 'text'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'notification_prefs'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE notification_prefs ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'notification_prefs.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'notification_prefs.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'notification_prefs'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE notification_prefs DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'notification_prefs: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
+
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
 DO $$
@@ -378,6 +761,51 @@ DO $$ BEGIN
   BEGIN ALTER TABLE chat_conversations ADD COLUMN user_id uuid; EXCEPTION WHEN duplicate_column THEN NULL; END;
   BEGIN ALTER TABLE chat_conversations ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
+
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('title', 'text'),
+    ('created_at', 'text'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'chat_conversations'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE chat_conversations ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'chat_conversations.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'chat_conversations.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'chat_conversations'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE chat_conversations DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'chat_conversations: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
 
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
@@ -423,6 +851,53 @@ DO $$ BEGIN
   BEGIN ALTER TABLE chat_messages ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
 
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('conversation_id', 'text'),
+    ('role', 'text'),
+    ('content', 'text'),
+    ('created_at', 'text'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'chat_messages'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE chat_messages ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'chat_messages.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'chat_messages.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'chat_messages'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE chat_messages DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'chat_messages: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
+
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
 DO $$
@@ -465,6 +940,52 @@ DO $$ BEGIN
   BEGIN ALTER TABLE machine_scans ADD COLUMN user_id uuid; EXCEPTION WHEN duplicate_column THEN NULL; END;
   BEGIN ALTER TABLE machine_scans ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
+
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('machine_name', 'text'),
+    ('response_json', 'text'),
+    ('created_at', 'text'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'machine_scans'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE machine_scans ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'machine_scans.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'machine_scans.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'machine_scans'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE machine_scans DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'machine_scans: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
 
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
@@ -512,6 +1033,55 @@ DO $$ BEGIN
   BEGIN ALTER TABLE notifications ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
 
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('category', 'text'),
+    ('title', 'text'),
+    ('body', 'text'),
+    ('payload', 'text'),
+    ('created_at', 'text'),
+    ('read_at', 'text'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'notifications'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE notifications ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'notifications.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'notifications.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'notifications'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE notifications DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'notifications: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
+
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
 DO $$
@@ -552,6 +1122,50 @@ DO $$ BEGIN
   BEGIN ALTER TABLE saved_products ADD COLUMN user_id uuid; EXCEPTION WHEN duplicate_column THEN NULL; END;
   BEGIN ALTER TABLE saved_products ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now(); EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
+
+-- Coerce legacy column types in place (data is preserved).
+DO $do$
+DECLARE
+  want record;
+  have text;
+BEGIN
+  FOR want IN SELECT * FROM (VALUES
+    ('quantity', 'real'),
+    ('updated_at', 'timestamp with time zone')
+  ) AS t(col, typ) LOOP
+    SELECT format_type(a.atttypid, a.atttypmod) INTO have
+    FROM pg_attribute a
+    WHERE a.attrelid = 'saved_products'::regclass
+      AND a.attname = want.col AND a.attnum > 0 AND NOT a.attisdropped;
+    CONTINUE WHEN have IS NULL OR have = want.typ;
+    BEGIN
+      EXECUTE format(
+        'ALTER TABLE saved_products ALTER COLUMN %I TYPE %s USING %I::text::%s',
+        want.col, want.typ, want.col, want.typ);
+      RAISE NOTICE 'saved_products.%: % -> %', want.col, have, want.typ;
+    EXCEPTION WHEN others THEN
+      -- Reported, not fatal. One stubborn column must not abort the migration
+      -- for every table after it.
+      RAISE WARNING 'saved_products.% could not become % (currently %): %',
+        want.col, want.typ, have, SQLERRM;
+    END;
+  END LOOP;
+END $do$;
+
+-- Drop legacy FKs that impose an insert order the sync cannot guarantee.
+DO $do$
+DECLARE fk record;
+BEGIN
+  FOR fk IN
+    SELECT conname, confrelid::regclass::text AS target
+    FROM pg_constraint
+    WHERE conrelid = 'saved_products'::regclass AND contype = 'f'
+  LOOP
+    CONTINUE WHEN fk.target IN ('users', 'auth.users');
+    EXECUTE format('ALTER TABLE saved_products DROP CONSTRAINT %I', fk.conname);
+    RAISE NOTICE 'saved_products: dropped FK % -> %', fk.conname, fk.target;
+  END LOOP;
+END $do$;
 
 -- Drop legacy NOT NULLs: the app saves partial rows during
 -- onboarding and would otherwise be rejected.
