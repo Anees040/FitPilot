@@ -237,8 +237,6 @@ class AppDatabase {
     ''');
 
     // Per-device record of which program days the user finished.
-    // LOCAL-ONLY: deliberately absent from the Supabase schema, like the
-    // profile's active_program_* columns. Never enqueued to sync_queue.
     batch.execute('''
       CREATE TABLE program_completions (
         session_id TEXT PRIMARY KEY,

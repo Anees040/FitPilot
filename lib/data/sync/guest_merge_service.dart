@@ -19,9 +19,7 @@ class GuestMergeService {
         if (!hasCloudProfile) {
           final profile = Map<String, dynamic>.from(profiles.first);
           profile.remove('id');
-          profile.remove('active_program_id');
-          profile.remove('active_program_week');
-          profile.remove('active_program_day');
+          profile.remove('onboarding_complete');
           profile['id'] = userId;
           // Convert equipment JSON string → Dart List for Postgres text[] column
           _fixProfileArrayFields(profile);
@@ -61,6 +59,16 @@ class GuestMergeService {
         await _remote.upsertRows('burn_completions', mapped);
       }
 
+      final programCompletions = await _db.query('program_completions');
+      if (programCompletions.isNotEmpty) {
+        final List<Map<String, dynamic>> mapped = programCompletions.map((e) {
+          final map = Map<String, dynamic>.from(e);
+          map['user_id'] = userId;
+          return map;
+        }).toList();
+        await _remote.upsertRows('program_completions', mapped);
+      }
+
       debugPrint('Guest data successfully merged to cloud for user $userId');
     } catch (e) {
       debugPrint('Failed to merge guest data: $e');
@@ -77,6 +85,8 @@ class GuestMergeService {
       if (weights.isNotEmpty) return true;
       final burns = await _db.query('burn_completions', limit: 1);
       if (burns.isNotEmpty) return true;
+      final programCompletions = await _db.query('program_completions', limit: 1);
+      if (programCompletions.isNotEmpty) return true;
     } catch (_) {}
     return false;
   }

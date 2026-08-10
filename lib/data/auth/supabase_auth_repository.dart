@@ -99,8 +99,8 @@ class SupabaseAuthRepository implements AuthRepository {
       await _client.auth.signInWithPassword(email: email, password: password);
       final user = _client.auth.currentUser;
       if (user != null && user.userMetadata?['deleted'] == true) {
-        await signOut();
-        throw const AccountDeletedFailure();
+        // Undelete the account and let them sign in as a fresh user
+        await _client.auth.updateUser(supa.UserAttributes(data: {'deleted': false}));
       }
     } catch (e) {
       throw _mapException(e);
@@ -182,8 +182,8 @@ class SupabaseAuthRepository implements AuthRepository {
       }
       final user = _client.auth.currentUser;
       if (user != null && user.userMetadata?['deleted'] == true) {
-        await signOut();
-        throw const AccountDeletedFailure();
+        // Undelete the account and let them sign in as a fresh user
+        await _client.auth.updateUser(supa.UserAttributes(data: {'deleted': false}));
       }
     } catch (e) {
       if (e is UnknownAuthFailure) rethrow;
