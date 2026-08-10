@@ -26,6 +26,8 @@ class ProgramProgress {
   }
 }
 
+
+
 /// All SQL for the training-programs feature.
 ///
 /// `programs`, `program_sessions` and `program_session_items` are bundled seed
@@ -35,8 +37,9 @@ class ProgramProgress {
 /// to guard.
 class ProgramRepository {
   final Database db;
+  final bool Function() isGuest;
 
-  const ProgramRepository(this.db);
+  const ProgramRepository(this.db, {required this.isGuest});
 
   /// Loads every program with its sessions and each session's exercise list,
   /// ordered for display. Three queries total, stitched in memory.

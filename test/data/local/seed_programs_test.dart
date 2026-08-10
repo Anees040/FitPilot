@@ -22,7 +22,7 @@ void main() {
 
     db = await AppDatabase.inMemory();
     await SeedImporter(db).importAll();
-    repo = ProgramRepository(db);
+    repo = ProgramRepository(db, isGuest: () => false);
     programs = await repo.all();
   });
 
@@ -229,7 +229,7 @@ void main() {
     expect(row['sort_index'], 60);
   });
 
-  test('program tables never enqueue sync work', () async {
+  test('program seed tables never enqueue sync work, but completions do', () async {
     await db.delete('sync_queue');
     await SeedImporter(db).importAll();
 
@@ -244,12 +244,18 @@ void main() {
     final queued = await db.query('sync_queue');
     expect(
       queued.where(
-        (row) => (row['table_name'] as String).startsWith('program'),
+        (row) =>
+            (row['table_name'] as String).startsWith('program') &&
+            row['table_name'] != 'program_completions',
       ),
       isEmpty,
-      reason: 'program tables are local-only and must never sync',
+      reason: 'program seed tables must never sync',
     );
-    expect(queued, isEmpty);
+    expect(
+      queued.where((row) => row['table_name'] == 'program_completions'),
+      isNotEmpty,
+      reason: 'program_completions are user progress and must sync',
+    );
   });
 
   test('recordCompletion is idempotent per session', () async {
