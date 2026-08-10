@@ -67,9 +67,9 @@ final exerciseRepositoryProvider = FutureProvider<ExerciseRepository>((
   return ExerciseRepository(db);
 });
 
-/// Exposes the ProgramRepository.
+/// Exposes the ProgramRepository. Takes no guest guard: every table it touches
+/// is local-only, so nothing it writes is ever queued for sync.
 final programRepositoryProvider = FutureProvider<ProgramRepository>((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  bool isGuest() => ref.read(currentUserProvider) == null;
-  return ProgramRepository(db, isGuest: isGuest);
+  return ProgramRepository(db);
 });

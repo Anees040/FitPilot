@@ -31,7 +31,7 @@ void main() {
     db = await AppDatabase.inMemory();
     await SeedImporter(db).importAll();
 
-    programRepo = ProgramRepository(db, isGuest: () => false);
+    programRepo = ProgramRepository(db);
     profileRepo = ProfileRepository(db, isGuest: () => true);
     await profileRepo.save(
       Profile(

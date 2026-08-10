@@ -26,8 +26,6 @@ class ProgramProgress {
   }
 }
 
-
-
 /// All SQL for the training-programs feature.
 ///
 /// `programs`, `program_sessions` and `program_session_items` are bundled seed
@@ -37,9 +35,8 @@ class ProgramProgress {
 /// to guard.
 class ProgramRepository {
   final Database db;
-  final bool Function() isGuest;
 
-  const ProgramRepository(this.db, {required this.isGuest});
+  const ProgramRepository(this.db);
 
   /// Loads every program with its sessions and each session's exercise list,
   /// ordered for display. Three queries total, stitched in memory.
@@ -155,9 +152,6 @@ class ProgramRepository {
       'kcal': kcal,
       'completed_at': completedAt.toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
-    if (inserted != 0) {
-      await _enqueue('program_completions', session.id, 'upsert');
-    }
     return inserted != 0;
   }
 
@@ -175,31 +169,11 @@ class ProgramRepository {
   /// Wipes progress for one program. Called on enroll, switch and abandon so a
   /// re-enrolled program never shows stale ticks or a wrong percentage.
   Future<void> clearProgress(String programId) async {
-    final rows = await db.query(
-      'program_completions',
-      columns: ['session_id'],
-      where: 'program_id = ?',
-      whereArgs: [programId],
-    );
     await db.delete(
       'program_completions',
       where: 'program_id = ?',
       whereArgs: [programId],
     );
-    for (final row in rows) {
-      await _enqueue('program_completions', row['session_id'] as String, 'delete');
-    }
-  }
-
-  Future<void> _enqueue(String table, String rowId, String op) async {
-    if (isGuest()) return;
-    await db.insert('sync_queue', {
-      'table_name': table,
-      'row_id': rowId,
-      'op': op,
-      'payload': null,
-      'queued_at': DateTime.now().toIso8601String(),
-    });
   }
 
   Program _rowToProgram(Map<String, Object?> row) {

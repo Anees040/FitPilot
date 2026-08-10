@@ -11,8 +11,9 @@ import 'dart:async';
 
 /// Utility to bootstrap the application's required data layers.
 class FitPilotBootstrap {
-  /// Initializes required dependencies synchronously and launches async tasks in background.
-  static void initialize() {
+  /// Initializes required dependencies. Awaiting Supabase keeps the native
+  /// splash visible until the SDK is ready, preventing a blank scaffold flash.
+  static Future<void> initialize() async {
     if (kIsWeb) {
       databaseFactory = databaseFactoryFfiWeb;
     } else if (defaultTargetPlatform == TargetPlatform.windows ||
@@ -23,16 +24,17 @@ class FitPilotBootstrap {
     }
 
     if (Env.isSupabaseConfigured) {
-      Supabase.initialize(
-        url: Env.supabaseUrl,
-        // ignore: deprecated_member_use
-        anonKey: Env.supabaseAnonKey,
-      ).catchError((e) {
+      try {
+        await Supabase.initialize(
+          url: Env.supabaseUrl,
+          // ignore: deprecated_member_use
+          anonKey: Env.supabaseAnonKey,
+        );
+      } catch (e) {
         debugPrint(
           'Supabase initialization failed, continuing in guest mode: $e',
         );
-        return Supabase.instance;
-      });
+      }
     }
   }
 

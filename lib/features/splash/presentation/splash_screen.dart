@@ -54,18 +54,14 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
-    final start = DateTime.now();
+    // Wait for the animation to finish
+    await Future.delayed(const Duration(milliseconds: 1200));
 
     try {
       final db = await AppDatabase.instance();
       await FitPilotBootstrap.importSeedData();
       final rows = await db.query('profile');
       final isFirstLaunch = rows.isEmpty;
-
-      final elapsed = DateTime.now().difference(start).inMilliseconds;
-      if (elapsed < 1400) {
-        await Future.delayed(Duration(milliseconds: 1400 - elapsed));
-      }
 
       if (mounted) {
         if (isFirstLaunch) {

@@ -12,7 +12,7 @@ import 'package:fitpilot/core/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  FitPilotBootstrap.initialize();
+  await FitPilotBootstrap.initialize();
   await NotificationService().init();
   runApp(const ProviderScope(child: FitPilotApp()));
 }

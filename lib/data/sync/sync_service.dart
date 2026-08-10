@@ -207,10 +207,9 @@ class SyncService {
         if (localData.isNotEmpty) {
           final data = Map<String, dynamic>.from(localData.first);
 
-            if (table == 'profile') {
-              // Supabase 'profiles' table uses a UUID id (the user's auth id).
-              data.remove('id');
-              data.remove('onboarding_complete');
+          if (table == 'profile') {
+            // Supabase 'profiles' table uses a UUID id (the user's auth id).
+            data.remove('id');
             data['id'] = userId;
             // Convert equipment JSON string → Dart List for Postgres text[] column
             _fixProfileArrayFields(data);
@@ -297,7 +296,6 @@ class SyncService {
       'burn_completions',
       'weight_entries',
       'food_catalog',
-      'program_completions',
     ];
 
     for (final table in tables) {
@@ -317,12 +315,12 @@ class SyncService {
               maxUpdated = remoteUpdated;
             }
 
-            final rowId = table == 'profile' ? 1 : (table == 'program_completions' ? row['session_id'] : row['id']);
+            final rowId = table == 'profile' ? 1 : row['id'];
 
             // Conflict resolution: last write wins
             final localRows = await txn.query(
               table,
-              where: table == 'program_completions' ? 'session_id = ?' : 'id = ?',
+              where: 'id = ?',
               whereArgs: [rowId],
             );
             if (localRows.isNotEmpty) {
@@ -408,15 +406,6 @@ class SyncService {
                 'image_url': row['image_url'],
                 'is_verified': TolerantReader.toSqliteValue(row['is_verified']),
               };
-            } else if (table == 'program_completions') {
-              dataToInsert = {
-                'session_id': row['session_id'],
-                'program_id': row['program_id'],
-                'week_number': row['week_number'],
-                'day_number': row['day_number'],
-                'kcal': row['kcal'],
-                'completed_at': row['completed_at'],
-              };
             }
 
             // If it's a tombstone, we can physically delete or soft delete
@@ -427,8 +416,7 @@ class SyncService {
 
             if (isDeleted && table != 'food_logs') {
               // physical delete
-              final pkCol = table == 'program_completions' ? 'session_id' : 'id';
-              await txn.delete(table, where: '$pkCol = ?', whereArgs: [rowId]);
+              await txn.delete(table, where: 'id = ?', whereArgs: [rowId]);
             } else {
               // ConflictAlgorithm.replace is INSERT OR REPLACE, which deletes
               // the existing row and reinserts it — any column missing from
