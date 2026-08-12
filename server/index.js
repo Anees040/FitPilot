@@ -181,6 +181,12 @@ async function callModel(model, request) {
 
     console.warn(`Gemini: ${model} rejected thinkingConfig, retrying without it`);
     const { thinkingConfig, ...config } = request.config;
+    // Without the override the model is free to spend thinking tokens out of
+    // maxOutputTokens before it writes a word, so the same cap that was ample
+    // with thinking off can leave nothing for the answer. Give the retry room.
+    if (typeof config.maxOutputTokens === 'number') {
+      config.maxOutputTokens = config.maxOutputTokens * 2;
+    }
     const response = await ai.models.generateContent({ ...request, config, model });
     preferredModel = model;
     return response;
@@ -473,6 +479,32 @@ const COACH_SYSTEM_INSTRUCTION =
   'Formatting: reply in short prose. When listing options or steps, use "- " bullets, one per line. ' +
   'Use **bold** only for the single most important number or action. Never use headings, tables, or links.';
 
+// Whether generation stopped because it ran out of output tokens rather than
+// because the model was finished. Gemini reports this per candidate, and the
+// field has been spelled both ways across SDK versions, so check both.
+function hitTokenCeiling(response) {
+  const candidates = response && response.candidates;
+  if (!Array.isArray(candidates) || candidates.length === 0) return false;
+  const reason = candidates[0].finishReason || candidates[0].finish_reason;
+  return typeof reason === 'string' && reason.toUpperCase() === 'MAX_TOKENS';
+}
+
+// Cuts a truncated reply back to its last complete sentence or bullet line.
+// Returns the text unchanged when there is no clean break to cut at, because a
+// short fragment is still better than nothing.
+function trimToCompleteThought(text) {
+  const lastBreak = Math.max(
+    text.lastIndexOf('. '),
+    text.lastIndexOf('.\n'),
+    text.lastIndexOf('!'),
+    text.lastIndexOf('?'),
+    text.lastIndexOf('\n')
+  );
+  if (lastBreak < text.length * 0.4) return text;
+  const cut = text.slice(0, lastBreak + 1).trim();
+  return cut.length > 0 ? cut : text;
+}
+
 // Renders the caller's context into a line the model can actually use. Every
 // field is optional — a guest with an empty profile still gets a useful coach.
 function contextLine(context) {
@@ -526,14 +558,26 @@ app.post('/api/chat', chatQuota, async (req, res) => {
         // whole budget for the answer, and a coach reply is short prose that
         // gains nothing from a reasoning pass.
         thinkingConfig: { thinkingBudget: 0 },
-        maxOutputTokens: 800,
+        // Headroom, not a target: the system instruction asks for under 120
+        // words, so a well-behaved answer never comes close. The old 800 was
+        // close enough to a real answer's length that a bulleted reply — or one
+        // served by a model that rejected thinkingBudget and spent the budget
+        // reasoning instead — ran out of tokens and stopped mid-sentence. That
+        // is the "sometimes the reply looks incomplete" report.
+        maxOutputTokens: 2048,
       },
     });
 
-    const reply = (response.text || '').trim();
+    let reply = (response.text || '').trim();
     if (!reply) {
       return res.status(502).json({ error: 'Coach did not reply. Try again.' });
     }
+
+    // A reply that hit the ceiling ends mid-word. Cut back to the last complete
+    // sentence or bullet so the user reads a whole thought, and say so rather
+    // than passing a dangling fragment off as the answer.
+    const truncated = hitTokenCeiling(response);
+    if (truncated) reply = trimToCompleteThought(reply);
 
     const entry = chatUsage.get(req.deviceId);
     if (!entry || entry.day !== req.today) {
@@ -542,7 +586,7 @@ app.post('/api/chat', chatQuota, async (req, res) => {
       entry.count += 1;
     }
 
-    return res.json({ reply });
+    return res.json({ reply, truncated });
   } catch (error) {
     console.error('Error in coach chat:', error && error.message ? error.message : error);
     if (isModelUnavailable(error)) {
