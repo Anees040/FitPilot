@@ -352,12 +352,21 @@ class SyncService {
     }
   }
 
-  Future<void> _pullPhase({bool throwOnFailure = false}) async {
+  Future<void> _pullPhase({
+    bool throwOnFailure = false,
+    bool adopt = false,
+  }) async {
     final failures = <String>[];
 
     for (final spec in kSyncTables) {
       final table = spec.local;
       final lastPull = await _getLastPull(table);
+      // When adopting an account's data (sign-in), the cloud copy *is* the
+      // truth: the push has already run, so anything the device should have
+      // contributed is up there. Rows still sitting in the queue are the one
+      // exception — they carry local edits that failed to upload, and applying
+      // the cloud row over them would throw the user's change away.
+      final pending = adopt ? await _pendingRowIds(table) : const <String>{};
       try {
         // Pull from the Supabase table (which may have a different name).
         final remoteRows = await remote.pullSince(spec.remote, lastPull);
@@ -387,7 +396,8 @@ class SyncService {
                   ? rawUpdated
                   : DateTime.fromMillisecondsSinceEpoch(0).toIso8601String();
               final localUpdated = DateTime.parse(localUpdatedStr);
-              if (localUpdated.isAfter(remoteUpdated)) {
+              if (localUpdated.isAfter(remoteUpdated) &&
+                  (!adopt || pending.contains(rowId.toString()))) {
                 // Local is newer, ignore remote
                 continue;
               }
@@ -437,6 +447,22 @@ class SyncService {
 
     if (throwOnFailure && failures.isNotEmpty) {
       throw Exception('Pull failed for tables: ${failures.join(", ")}');
+    }
+  }
+
+  /// Local primary keys for [table] that still have an unpushed queue entry.
+  Future<Set<String>> _pendingRowIds(String table) async {
+    try {
+      final rows = await db.query(
+        'sync_queue',
+        columns: ['row_id'],
+        where: 'table_name = ?',
+        whereArgs: [table],
+      );
+      return rows.map((r) => r['row_id'].toString()).toSet();
+    } catch (_) {
+      // No queue table yet means nothing is pending.
+      return const <String>{};
     }
   }
 
@@ -491,7 +517,7 @@ class SyncService {
       where: 'key LIKE ?',
       whereArgs: ['last_pull_%'],
     );
-    await _pullPhase(throwOnFailure: true);
+    await _pullPhase(throwOnFailure: true, adopt: true);
   }
 
   Future<void> _removeFromQueue(List<int> ids) async {
