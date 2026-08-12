@@ -3,14 +3,16 @@ import 'package:go_router/go_router.dart';
 import 'package:fitpilot/data/local/app_database.dart';
 import 'package:fitpilot/application/bootstrap.dart';
 
-/// The first Flutter screen, showing the same artwork the Android launch
-/// window already painted.
+/// The first Flutter screen, and the only thing in the whole startup that draws
+/// the splash artwork.
 ///
-/// It deliberately does not animate. The native `launch_background.xml` draws
-/// `splash_bg` from process start, so this widget's job is to continue that
-/// image without a seam — fading or scaling it in made the handoff look like a
-/// second splash screen appearing on top of the first, which is exactly the
-/// double-splash the app used to show.
+/// It deliberately does not animate. The native launch window and the Android
+/// 12+ system splash are both a flat fill of `@color/splash_color` — the same
+/// orange as this artwork's own background — so when Flutter's first frame lands
+/// the picture simply appears on an already-orange screen. Fading or scaling it
+/// in, or letting the native side draw a copy of it at a different scale, is
+/// what made the handoff look like a second, slightly zoomed splash appearing on
+/// top of the first. That was the blink; there is one image now, drawn once.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -79,7 +81,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     // Matches @color/splash_color, so the fill behind the artwork is identical
-    // to the one the native launch window used.
+    // to the one the native launch window and the Android 12+ system splash
+    // both used — which is what lets the artwork appear without a seam.
     const bgColor = Color(0xFFE56A2B);
 
     return const Scaffold(
@@ -92,8 +95,8 @@ class _SplashScreenState extends State<SplashScreen> {
           image: AssetImage('assets/images/splash_bg.webp'),
           fit: BoxFit.cover,
           alignment: Alignment.center,
-          // The image is already on screen from the native window, so there is
-          // nothing to fade in and no placeholder worth showing.
+          // Nothing to fade in: the screen underneath is already this exact
+          // orange, so the artwork landing in one frame is the seamless case.
           gaplessPlayback: true,
         ),
       ),
