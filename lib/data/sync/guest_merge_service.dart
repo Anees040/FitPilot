@@ -30,6 +30,17 @@ class GuestMergeService {
     var queued = 0;
     for (final spec in kSyncTables) {
       try {
+        if (spec.singleton && !await _singletonWorthPushing(spec.local)) {
+          // A singleton is one row that already exists on the device, so
+          // queueing it unconditionally means the placeholder profile written at
+          // sign-out gets pushed *over* the account's real cloud profile the
+          // moment anything stamps it with a fresh `updated_at`. That is how
+          // signing back in wiped the user's height, units, theme and enrolled
+          // program while their food logs came back fine. Only push a singleton
+          // the user has actually filled in.
+          debugPrint('Guest merge skipped empty singleton ${spec.local}');
+          continue;
+        }
         final rows = await _db.query(spec.local, columns: [spec.localPk]);
         for (final row in rows) {
           final rowId = row[spec.localPk]?.toString();
@@ -50,6 +61,26 @@ class GuestMergeService {
       }
     }
     debugPrint('Guest merge queued $queued rows for $userId');
+  }
+
+  /// Whether a one-row-per-account table holds anything the user chose.
+  ///
+  /// The profile row is judged by content, because a blank one always exists.
+  /// Other singletons are judged by presence: `notification_prefs` has no row
+  /// until the user opens the reminder settings and saves them.
+  Future<bool> _singletonWorthPushing(String table) async {
+    if (table != 'profile') {
+      final rows = await _db.query(table, limit: 1);
+      return rows.isNotEmpty;
+    }
+    final rows = await _db.query(
+      'profile',
+      where:
+          'onboarding_complete = 1 OR weight_kg IS NOT NULL '
+          'OR height_cm IS NOT NULL OR active_program_id IS NOT NULL',
+      limit: 1,
+    );
+    return rows.isNotEmpty;
   }
 
   /// Whether the device holds anything worth asking the user about.
