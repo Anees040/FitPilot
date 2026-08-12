@@ -472,6 +472,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final ext = theme.extension<AppColors>()!;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -482,10 +483,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0, top: 8.0),
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
-                    onPressed: () => context.pop(),
+                  padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+                  // A tonal circle behind the chevron so it reads as a control
+                  // rather than a stray glyph in the corner.
+                  child: Material(
+                    color: ext.surfaceRaised,
+                    shape: CircleBorder(side: BorderSide(color: ext.hairline)),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () => context.pop(),
+                      child: SizedBox(
+                        width: 42,
+                        height: 42,
+                        child: Icon(
+                          Icons.arrow_back_rounded,
+                          size: 20,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -499,44 +515,43 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Centered logo — no text, just the mark. Clean on
+                      // both light and dark surfaces.
                       Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                              width: 2,
-                            ),
-                          ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
                           child: Image.asset(
                             'assets/images/logo_mark_orange.png',
-                            height: 48,
-                            fit: BoxFit.contain,
-                            errorBuilder: (c, e, s) => Icon(Icons.fitness_center, size: 48, color: theme.colorScheme.primary),
+                            height: 56,
+                            width: 56,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => Icon(
+                              Icons.local_fire_department,
+                              size: 56,
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 36),
                       Text(
-                        _isLogin ? 'Welcome back 👋' : 'Create account',
+                        _isLogin ? 'Welcome back' : 'Create your account',
                         style: theme.textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.w800,
-                          fontSize: 32,
+                          height: 1.15,
                           color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         _isLogin
-                            ? 'Login to continue your journey'
-                            : 'Let\'s get you started',
+                            ? 'Log in to pick up where you left off.'
+                            : 'A minute to set up, and your data follows you.',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: ext.textDisabled,
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 30),
 
                       if (!_isLogin) ...[
                         _buildTextField(
@@ -665,11 +680,37 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ],
 
                       if (_formError != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          _formError!,
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: theme.colorScheme.error),
+                        const SizedBox(height: 18),
+                        // A tinted card, not bare red text. A form error is the
+                        // one thing on this screen the user must not skim past.
+                        Container(
+                          padding: const EdgeInsets.all(13),
+                          decoration: BoxDecoration(
+                            color: ext.error.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: ext.error.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.error_outline_rounded,
+                                size: 18,
+                                color: ext.error,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  _formError!,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: ext.error,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
 
@@ -769,7 +810,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     VoidCallback? onSuffixTap,
   }) {
     final theme = Theme.of(context);
-    
+    final ext = theme.extension<AppColors>()!;
+
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
@@ -779,34 +821,40 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       style: TextStyle(color: theme.colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
-        prefixIcon: Icon(icon, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+        hintStyle: TextStyle(color: ext.textDisabled),
+        prefixIcon: Icon(icon, size: 20, color: ext.textDisabled),
         suffixIcon: onSuffixTap != null
             ? IconButton(
                 icon: Icon(
-                  obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  obscureText
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 20,
+                  color: ext.textDisabled,
                 ),
                 onPressed: onSuffixTap,
               )
             : null,
         filled: true,
-        fillColor: theme.colorScheme.surface,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        // surfaceRaised, not surface: filling a field with the page's own colour
+        // left nothing but a hairline outline, which is most of why the form
+        // looked unfinished. A raised fill is what makes an input look tappable.
+        fillColor: ext.surfaceRaised,
+        contentPadding: const EdgeInsets.symmetric(vertical: 18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.extension<AppColors>()!.hairline),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: ext.hairline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.extension<AppColors>()!.hairline),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: ext.hairline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.colorScheme.primary),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: theme.colorScheme.error),
         ),
       ),
