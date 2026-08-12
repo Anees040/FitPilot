@@ -44,8 +44,15 @@
 - [x] J9 — Real Scanner Operational Guarantee, Device Exercise Seed Repair & Guest Profile Sync
 - [x] J10 — Web & Riverpod Runtime Stability (v16 DB migration, gemini-2.0-flash, Google auth metadata, Riverpod ref order, Web notification guard, SliverList layout, StatefulShellRoute keys)
 - [x] J12 — Account Identity & Profile Avatar Fix
+- [x] J14 — Auth Logo, AI Coach Image & Overflow Fixes
 
 ## Last completed
+
+- J14 — Auth Logo, AI Coach Image & Overflow Fixes
+  - Centered the app logo on auth (login/signup) screens and removed the adjacent "FitPilot" / "Eat it. Burn it." text. Logo now displays cleanly in both light and dark themes.
+  - Replaced the custom-painted `CoachMark` widget (flame + pulse + sparks) with the user's designed `ai_coach.png` logo, rendered as a clean rounded-rect image at all sizes.
+  - Redesigned the AI coach typing indicator from a shimmer gradient sweep to a Claude/Notion-style staggered dot animation with smooth crossfading stage labels.
+  - Fixed `ListTile` trailing widget overflow errors ("Trailing widget consumes the entire tile width", "BoxConstraints has a negative minimum width") in `profile_screen.dart` by wrapping all four `DropdownButton` trailing widgets in `ConstrainedBox(maxWidth: 150)` with `isExpanded: true`.
 
 - J13 — Workout Hub Accuracy Fix
   - Disconnected Hub screens (`muscle_detail_screen` and `category_detail_screen`) from the Exercise Library's `exerciseListProvider` to isolate their state from sticky user search filters.
