@@ -95,6 +95,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ext = theme.extension<AppColors>()!;
+
+    // Signing out wipes the local profile and invalidates every provider while
+    // this screen is still mounted, so without this the last thing the user saw
+    // was their own settings page redrawn with blank guest defaults — a visible
+    // flash of the wrong data on the way out. Hold a plain curtain instead.
+    if (_isSigningOut) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              Text('Signing out…', style: theme.textTheme.bodyMedium),
+            ],
+          ),
+        ),
+      );
+    }
+
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
@@ -197,67 +217,83 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text('Theme Mode', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        trailing: DropdownButton<ThemeModePref>(
-                          value: profile.themeMode,
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(value: ThemeModePref.system, child: Text('System')),
-                            DropdownMenuItem(value: ThemeModePref.light, child: Text('Light')),
-                            DropdownMenuItem(value: ThemeModePref.dark, child: Text('Dark')),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) _updateProfile(profile.copyWith(themeMode: v));
-                          },
+                        trailing: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 150),
+                          child: DropdownButton<ThemeModePref>(
+                            value: profile.themeMode,
+                            underline: const SizedBox(),
+                            isExpanded: true,
+                            items: const [
+                              DropdownMenuItem(value: ThemeModePref.system, child: Text('System')),
+                              DropdownMenuItem(value: ThemeModePref.light, child: Text('Light')),
+                              DropdownMenuItem(value: ThemeModePref.dark, child: Text('Dark')),
+                            ],
+                            onChanged: (v) {
+                              if (v != null) _updateProfile(profile.copyWith(themeMode: v));
+                            },
+                          ),
                         ),
                       ),
                       Divider(color: theme.dividerColor, height: 1),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text('Theme Color', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        trailing: DropdownButton<String>(
-                          value: const ['orange', 'blue', 'purple', 'green', 'red'].contains(profile.themeColor) ? profile.themeColor : 'orange',
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(value: 'orange', child: Text('Orange')),
-                            DropdownMenuItem(value: 'blue', child: Text('Blue')),
-                            DropdownMenuItem(value: 'purple', child: Text('Purple')),
-                            DropdownMenuItem(value: 'green', child: Text('Green')),
-                            DropdownMenuItem(value: 'red', child: Text('Red')),
-                          ],
-                          onChanged: (v) => _updateProfile(profile.copyWith(themeColor: v)),
+                        trailing: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 150),
+                          child: DropdownButton<String>(
+                            value: const ['orange', 'blue', 'purple', 'green', 'red'].contains(profile.themeColor) ? profile.themeColor : 'orange',
+                            underline: const SizedBox(),
+                            isExpanded: true,
+                            items: const [
+                              DropdownMenuItem(value: 'orange', child: Text('Orange')),
+                              DropdownMenuItem(value: 'blue', child: Text('Blue')),
+                              DropdownMenuItem(value: 'purple', child: Text('Purple')),
+                              DropdownMenuItem(value: 'green', child: Text('Green')),
+                              DropdownMenuItem(value: 'red', child: Text('Red')),
+                            ],
+                            onChanged: (v) => _updateProfile(profile.copyWith(themeColor: v)),
+                          ),
                         ),
                       ),
                       Divider(color: theme.dividerColor, height: 1),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text('Plan Category', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        trailing: DropdownButton<String>(
-                          value: const ['recommended', 'cardio', 'strength', 'fun', 'core'].contains(profile.planCategoryPref) ? profile.planCategoryPref : 'recommended',
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(value: 'recommended', child: Text('Recommended')),
-                            DropdownMenuItem(value: 'cardio', child: Text('Cardio')),
-                            DropdownMenuItem(value: 'strength', child: Text('Strength')),
-                            DropdownMenuItem(value: 'fun', child: Text('Fun')),
-                            DropdownMenuItem(value: 'core', child: Text('Core')),
-                          ],
-                          onChanged: (v) => _updateProfile(profile.copyWith(planCategoryPref: v)),
+                        trailing: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 150),
+                          child: DropdownButton<String>(
+                            value: const ['recommended', 'cardio', 'strength', 'fun', 'core'].contains(profile.planCategoryPref) ? profile.planCategoryPref : 'recommended',
+                            underline: const SizedBox(),
+                            isExpanded: true,
+                            items: const [
+                              DropdownMenuItem(value: 'recommended', child: Text('Recommended')),
+                              DropdownMenuItem(value: 'cardio', child: Text('Cardio')),
+                              DropdownMenuItem(value: 'strength', child: Text('Strength')),
+                              DropdownMenuItem(value: 'fun', child: Text('Fun')),
+                              DropdownMenuItem(value: 'core', child: Text('Core')),
+                            ],
+                            onChanged: (v) => _updateProfile(profile.copyWith(planCategoryPref: v)),
+                          ),
                         ),
                       ),
                       Divider(color: theme.dividerColor, height: 1),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text('Plan Pace', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        trailing: DropdownButton<String>(
-                          value: const ['any', 'easy', 'moderate', 'quick'].contains(profile.planPacePref) ? profile.planPacePref : 'any',
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(value: 'any', child: Text('Any Pace')),
-                            DropdownMenuItem(value: 'easy', child: Text('Easy')),
-                            DropdownMenuItem(value: 'moderate', child: Text('Moderate')),
-                            DropdownMenuItem(value: 'quick', child: Text('Quick')),
-                          ],
-                          onChanged: (v) => _updateProfile(profile.copyWith(planPacePref: v)),
+                        trailing: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 150),
+                          child: DropdownButton<String>(
+                            value: const ['any', 'easy', 'moderate', 'quick'].contains(profile.planPacePref) ? profile.planPacePref : 'any',
+                            underline: const SizedBox(),
+                            isExpanded: true,
+                            items: const [
+                              DropdownMenuItem(value: 'any', child: Text('Any Pace')),
+                              DropdownMenuItem(value: 'easy', child: Text('Easy')),
+                              DropdownMenuItem(value: 'moderate', child: Text('Moderate')),
+                              DropdownMenuItem(value: 'quick', child: Text('Quick')),
+                            ],
+                            onChanged: (v) => _updateProfile(profile.copyWith(planPacePref: v)),
+                          ),
                         ),
                       ),
                       Divider(color: theme.dividerColor, height: 1),
@@ -667,11 +703,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       // The avatar is a file in the sandbox, so a database wipe
                       // cannot reach it — it would otherwise greet the next user.
                       await AvatarService.clear();
-                      resetApplicationState(ref);
+                      // Leave first, then tear down. Invalidating providers while
+                      // this route is still on top rebuilds it against the wiped
+                      // database, which is what made the profile screen flash
+                      // before the welcome screen appeared.
                       if (context.mounted) {
                         context.go('/welcome');
                       }
-                    } finally {
+                      resetApplicationState(ref);
+                    } catch (_) {
+                      // Nothing left to show them here; drop the curtain so the
+                      // screen is usable again rather than stuck on the spinner.
                       if (mounted) setState(() => _isSigningOut = false);
                     }
                   },
