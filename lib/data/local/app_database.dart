@@ -1075,6 +1075,13 @@ class AppDatabase {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// `updated_at` for the placeholder profile written by [clearUserData].
+  ///
+  /// The epoch, so that any real cloud profile is unambiguously newer and wins
+  /// the pull. Exposed so the sign-in path can recognise a profile row that has
+  /// never actually been filled in.
+  static const String blankProfileStamp = '1970-01-01T00:00:00.000Z';
+
   /// Wipes all user-specific data from the local database and resets the profile.
   /// This must be called during sign-out to prevent data bleeding between accounts.
   static Future<void> clearUserData(Database db) async {
@@ -1115,7 +1122,19 @@ class AppDatabase {
       batch.delete('sync_metadata');
     } catch (_) {}
 
-    // Reset profile to a blank guest state
+    // Reset profile to a blank guest state.
+    //
+    // `updated_at` is deliberately the epoch, not `DateTime.now()`. The profile
+    // is a singleton: local row 1 always exists, so a pull resolves it by
+    // last-write-wins instead of inserting it fresh the way it does for
+    // food logs. Stamping the blank row with the current time made it beat the
+    // cloud copy every time, so the pull right after sign-in skipped the real
+    // profile and the user's height, units, theme, plan preferences and enrolled
+    // program all came back as defaults — while their food logs, weights and
+    // coach threads (row-per-record tables, wiped above and re-inserted by the
+    // pull) survived. That asymmetry was the whole bug. The epoch guarantees any
+    // cloud profile is newer, and it also stops this placeholder from being
+    // pushed over a real cloud profile during a guest merge.
     batch.delete('profile');
     batch.insert('profile', {
       'id': 1,
@@ -1131,7 +1150,7 @@ class AppDatabase {
       'unit_kg_lb': 'kg',
       'week_starts_mon': 1,
       'haptics_on': 1,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
+      'updated_at': blankProfileStamp,
     });
 
     await batch.commit();
