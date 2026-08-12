@@ -142,7 +142,16 @@ class CoachService {
         final decoded = jsonDecode(response.body);
         if (decoded is Map<String, dynamic>) {
           final reply = decoded['reply'];
-          if (reply is String && reply.trim().isNotEmpty) return reply.trim();
+          if (reply is String && reply.trim().isNotEmpty) {
+            // The server trims a reply that hit the token ceiling back to its
+            // last complete sentence and flags it. Saying so is better than
+            // letting the user wonder whether the coach stopped mid-thought.
+            if (decoded['truncated'] == true) {
+              return '${reply.trim()}\n\n_That answer was cut short. Ask me to '
+                  'continue if you want the rest._';
+            }
+            return reply.trim();
+          }
         }
         throw Exception('The coach sent an empty reply. Try again.');
       }
