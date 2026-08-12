@@ -1,10 +1,23 @@
+# WARNING: the files this generates have been hand-tuned since. Re-running
+# `dart run flutter_native_splash:create` will overwrite
+# android/app/src/main/res/drawable*/launch_background.xml and
+# values*-v31/styles.xml, and will bring back the double-splash blink: the
+# generated Android 12+ config draws a small centred icon, which Flutter's first
+# frame then replaces with the full-bleed assets/images/splash_bg.webp.
+#
+# The shipped setup is deliberately different. The native window is a flat fill
+# of the colour below on every Android version, and splash_bg.webp is drawn
+# once, by lib/features/splash/presentation/splash_screen.dart, at BoxFit.cover.
+# One splash image, one scale, nothing to blink between.
+#
+# If you do regenerate, re-apply:
+#   - drawable*/launch_background.xml  -> <item android:drawable="@color/splash_color" /> only
+#   - values*-v31/styles.xml           -> windowSplashScreenAnimatedIcon = @drawable/splash_icon_none
 flutter_native_splash:
-  color: "#FAFAF8"
-  image: "assets/images/logo_mark_orange.png"
-  color_dark: "#121110"
-  image_dark: "assets/images/logo_mark_white.png"
+  # Matches @color/splash_color and the background of splash_bg.webp, so the
+  # native fill and the artwork are the same orange.
+  color: "#E56A2B"
+  color_dark: "#E56A2B"
   android_12:
-    color: "#FAFAF8"
-    image: "assets/images/logo_mark_orange.png"
-    color_dark: "#121110"
-    image_dark: "assets/images/logo_mark_white.png"
+    color: "#E56A2B"
+    color_dark: "#E56A2B"

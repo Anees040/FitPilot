@@ -2,19 +2,14 @@
 <!-- The window background the OS paints from process start until Flutter's
      first frame.
 
-     It draws the same artwork the Dart SplashScreen does, filling the window
-     the way BoxFit.cover does there. That is the whole point: showing a
-     different image here — a square icon on a flat fill — made the handoff to
-     Flutter look like two separate splash screens flashing in sequence.
-     Matching them makes the transition invisible, so the user sees one splash
-     that simply holds until the app is ready. -->
+     A flat fill of the splash artwork's own background colour, and nothing
+     else. It used to draw `splash_bg` here too, with android:gravity="fill" —
+     which stretches, while the Dart SplashScreen draws the same image with
+     BoxFit.cover, which crops. On any screen whose aspect ratio differs from
+     the artwork's, the handoff therefore rescaled the picture: the "splash,
+     then a slightly zoomed splash" blink. Leaving the artwork to Flutter alone
+     means it is drawn once, at one scale, and the only thing the native window
+     contributes is the colour behind it. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Fallback fill: visible for the instant before the bitmap decodes, and
-         behind it on any aspect ratio the artwork cannot quite cover. -->
     <item android:drawable="@color/splash_color" />
-    <item>
-        <bitmap
-            android:gravity="fill"
-            android:src="@drawable/splash_bg" />
-    </item>
 </layer-list>
