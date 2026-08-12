@@ -41,6 +41,7 @@ import 'package:fitpilot/features/settings/presentation/image_credits_screen.dar
 import 'package:fitpilot/features/today/presentation/all_meals_screen.dart';
 import 'package:fitpilot/core/theme/app_theme.dart';
 import 'package:fitpilot/core/ui/offline_banner.dart';
+import 'package:fitpilot/core/ui/swipe_tab_switcher.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 final shellNavigatorTodayKey = GlobalKey<NavigatorState>(debugLabel: 'today');
@@ -323,6 +324,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
 
   final StatefulNavigationShell navigationShell;
 
+  /// Shell tabs: Today, Log, Plan, Progress, Programs. The swipe gesture needs
+  /// to know where the strip ends so it can resist instead of wrapping around.
+  static const int tabCount = 5;
+
   void _goBranch(int index) {
     if (index != navigationShell.currentIndex) {
       HapticFeedback.lightImpact();
@@ -350,7 +355,14 @@ class ScaffoldWithNavBar extends StatelessWidget {
         body: Column(
           children: [
             const OfflineBanner(),
-            Expanded(child: navigationShell),
+            Expanded(
+              child: SwipeTabSwitcher(
+                index: navigationShell.currentIndex,
+                count: tabCount,
+                onSwitch: _goBranch,
+                child: navigationShell,
+              ),
+            ),
           ],
         ),
       bottomNavigationBar: Container(
